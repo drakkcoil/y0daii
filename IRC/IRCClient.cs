@@ -23,6 +23,7 @@ namespace Y0daiiIRC.IRC
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _isConnected = false;
         private bool _useSSL = false;
+        private readonly SemaphoreSlim _streamLock = new SemaphoreSlim(1, 1);
 
         public event EventHandler<IRCMessage>? MessageReceived;
         public event EventHandler<string>? ConnectionStatusChanged;
@@ -152,39 +153,55 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
-                // Cancel background operations
+                // Cancel background operations first
                 if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
                 {
                     _cancellationTokenSource.Cancel();
                 }
 
-                // Send QUIT command if connected
-                if (_isConnected && _writer != null)
+                // Give a small delay for background tasks to finish
+                await Task.Delay(100).ConfigureAwait(false);
+
+                // Wait for any pending stream operations to complete
+                await _streamLock.WaitAsync();
+                try
                 {
-                    try
+                    // Send QUIT command if connected (while holding the lock)
+                    if (_isConnected && _writer != null)
                     {
-                        await SendCommandAsync("QUIT :Y0daii IRC Client").ConfigureAwait(false);
+                        try
+                        {
+                            // Use a timeout for the QUIT command to avoid hanging
+                            using var quitCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+                            await _writer.WriteLineAsync("QUIT :Y0daii IRC Client").ConfigureAwait(false);
+                            await _writer.FlushAsync(quitCts.Token).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Ignore errors when sending QUIT during disconnect
+                            Console.WriteLine($"Error sending QUIT command during disconnect: {ex.Message}");
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        OnErrorOccurred(ex);
-                    }
+
+                    // Close reader/writer/streams in proper order
+                    try { _reader?.Dispose(); } catch { }
+                    try { _writer?.Dispose(); } catch { }
+                    try { _sslStream?.Dispose(); } catch { }
+                    try { _stream?.Dispose(); } catch { }
+                    try { _tcpClient?.Close(); } catch { }
+
+                    _reader = null;
+                    _writer = null;
+                    _sslStream = null;
+                    _stream = null;
+                    _tcpClient = null;
+
+                    SetConnected(false);
                 }
-
-                // Close reader/writer/streams
-                try { _reader?.Dispose(); } catch { }
-                try { _writer?.Dispose(); } catch { }
-                try { _sslStream?.Dispose(); } catch { }
-                try { _stream?.Dispose(); } catch { }
-                try { _tcpClient?.Close(); } catch { }
-
-                _reader = null;
-                _writer = null;
-                _sslStream = null;
-                _stream = null;
-                _tcpClient = null;
-
-                SetConnected(false);
+                finally
+                {
+                    _streamLock.Release();
+                }
             }
             catch (Exception ex)
             {
@@ -205,8 +222,15 @@ namespace Y0daiiIRC.IRC
                 return;
             }
 
+            await _streamLock.WaitAsync();
             try
             {
+                // Double-check connection status after acquiring lock
+                if (_writer == null || !_isConnected)
+                {
+                    return;
+                }
+
                 // Ensure CRLF terminated as per IRC spec
                 await _writer.WriteLineAsync(command).ConfigureAwait(false);
                 // Raise command sent event (non-blocking)
@@ -215,6 +239,10 @@ namespace Y0daiiIRC.IRC
             catch (Exception ex)
             {
                 OnErrorOccurred(ex);
+            }
+            finally
+            {
+                _streamLock.Release();
             }
         }
 
@@ -706,6 +734,22 @@ namespace Y0daiiIRC.IRC
         private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
         {
             return sslPolicyErrors == SslPolicyErrors.None;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                DisconnectAsync().Wait(5000); // Wait up to 5 seconds for disconnect
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during dispose: {ex.Message}");
+            }
+            finally
+            {
+                try { _streamLock?.Dispose(); } catch { }
+            }
         }
     }
 }
