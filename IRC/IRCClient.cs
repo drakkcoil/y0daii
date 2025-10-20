@@ -50,6 +50,11 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
+                // Create cancellation token source FIRST - before any background tasks
+                _cancellationTokenSource?.Cancel();
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = new CancellationTokenSource();
+                
                 Server = server;
                 Port = port;
                 Nickname = nickname;
@@ -57,11 +62,9 @@ namespace Y0daiiIRC.IRC
                 RealName = realName;
                 _useSSL = useSSL;
 
-                // Create cancellation token source early
-                _cancellationTokenSource = new CancellationTokenSource();
                 Console.WriteLine($"Starting connection to {server}:{port}...");
 
-                // Start ident server if specified (optional)
+                // Start ident server if specified (optional) - after cancellation token exists
                 if (!string.IsNullOrEmpty(identServer))
                 {
                     Console.WriteLine($"Attempting to start ident server on {identServer}:{identPort}...");
@@ -73,42 +76,70 @@ namespace Y0daiiIRC.IRC
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Ident server failed: {ex.Message}");
+                            Console.WriteLine($"Ident server failed: {ex.GetType().Name}: {ex.Message}");
                             Console.WriteLine("Continuing without ident (server will use ~username)...");
+                            // Don't rethrow - ident is optional
                         }
-                    });
+                    }, _cancellationTokenSource.Token);
                 }
                 else
                 {
                     Console.WriteLine("No ident server configured - server will use ~username");
                 }
 
+                // Pre-resolve DNS to catch DNS issues early
+                Console.WriteLine($"Resolving DNS for {server}...");
+                try
+                {
+                    var addresses = await System.Net.Dns.GetHostAddressesAsync(server);
+                    var ipv4Address = addresses.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                    if (ipv4Address != null)
+                    {
+                        Console.WriteLine($"Resolved {server} to {ipv4Address}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"DNS resolution failed: {ex.Message}");
+                    throw new Exception($"Failed to resolve DNS for {server}: {ex.Message}", ex);
+                }
+
                 _tcpClient = new TcpClient();
                 
-                // Add connection timeout
+                // Add explicit connection timeout with proper cancellation
                 Console.WriteLine($"Attempting TCP connection to {server}:{port}...");
-                var connectTask = _tcpClient.ConnectAsync(server, port);
-                var timeoutTask = Task.Delay(30000, _cancellationTokenSource.Token); // 30 second timeout for initial connection
+                using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
+                connectCts.CancelAfter(TimeSpan.FromSeconds(15)); // 15 second timeout for TCP connect
                 
-                var completedTask = await Task.WhenAny(connectTask, timeoutTask);
-                if (completedTask == timeoutTask)
+                try
                 {
-                    Console.WriteLine($"Connection to {server}:{port} timed out after 30 seconds");
-                    throw new TimeoutException($"Connection to {server}:{port} timed out after 30 seconds");
+                    await _tcpClient.ConnectAsync(server, port);
+                    Console.WriteLine($"TCP connection established to {server}:{port}");
                 }
-                
-                await connectTask; // Ensure any exceptions from connect are propagated
-                Console.WriteLine($"TCP connection established to {server}:{port}");
+                catch (OperationCanceledException) when (connectCts.Token.IsCancellationRequested)
+                {
+                    throw new TimeoutException($"Connection to {server}:{port} timed out after 15 seconds");
+                }
                 _stream = _tcpClient.GetStream();
 
                 if (useSSL)
                 {
                     Console.WriteLine($"Starting SSL handshake with {server}...");
-                    _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
-                    await _sslStream.AuthenticateAsClientAsync(server);
-                    Console.WriteLine($"SSL handshake completed with {server}");
-                    _reader = new StreamReader(_sslStream, Encoding.UTF8);
-                    _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
+                    try
+                    {
+                        _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
+                        await _sslStream.AuthenticateAsClientAsync(server);
+                        Console.WriteLine($"SSL handshake completed with {server}");
+                        _reader = new StreamReader(_sslStream, Encoding.UTF8);
+                        _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"SSL handshake failed: {ex.GetType().Name}: {ex.Message}");
+                        _sslStream?.Dispose();
+                        _sslStream = null;
+                        throw new Exception($"SSL handshake failed for {server}: {ex.Message}", ex);
+                    }
                 }
                 else
                 {
@@ -145,35 +176,127 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
-                if (_isConnected)
+                Console.WriteLine("Disconnecting from IRC server...");
+                
+                // Cancel all background tasks first
+                _cancellationTokenSource?.Cancel();
+                
+                // Send QUIT command if connected
+                if (_isConnected && _writer != null)
                 {
-                    await SendCommandAsync("QUIT :Y0daii IRC Client");
+                    try
+                    {
+                        await SendCommandAsync("QUIT :Y0daii IRC Client");
+                        Console.WriteLine("QUIT command sent");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error sending QUIT command: {ex.Message}");
+                    }
                 }
+                
+                // Close streams in proper order
+                try
+                {
+                    _writer?.Close();
+                    _writer?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing writer: {ex.Message}");
+                }
+                
+                try
+                {
+                    _reader?.Close();
+                    _reader?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing reader: {ex.Message}");
+                }
+                
+                try
+                {
+                    _sslStream?.Close();
+                    _sslStream?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing SSL stream: {ex.Message}");
+                }
+                
+                try
+                {
+                    _stream?.Close();
+                    _stream?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing stream: {ex.Message}");
+                }
+                
+                try
+                {
+                    _tcpClient?.Close();
+                    _tcpClient?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing TCP client: {ex.Message}");
+                }
+                
+                // Dispose cancellation token source
+                try
+                {
+                    _cancellationTokenSource?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error disposing cancellation token: {ex.Message}");
+                }
+                
+                Console.WriteLine("Disconnection completed");
             }
-            catch { }
-
-            _cancellationTokenSource?.Cancel();
-            _reader?.Close();
-            _writer?.Close();
-            _sslStream?.Close();
-            _stream?.Close();
-            _tcpClient?.Close();
-
-            _isConnected = false;
-            OnConnectionStatusChanged("Disconnected");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during disconnect: {ex.GetType().Name}: {ex.Message}");
+                OnErrorOccurred(ex);
+            }
+            finally
+            {
+                _isConnected = false;
+                _writer = null;
+                _reader = null;
+                _sslStream = null;
+                _stream = null;
+                _tcpClient = null;
+                _cancellationTokenSource = null;
+                OnConnectionStatusChanged("Disconnected");
+            }
         }
 
         public async Task SendCommandAsync(string command)
         {
-            if (_writer != null)
+            if (_writer == null)
+            {
+                var error = "Cannot send command - writer is null (not connected)";
+                Console.WriteLine($"{error}: {command}");
+                throw new InvalidOperationException(error);
+            }
+
+            try
             {
                 await _writer.WriteLineAsync(command);
+                await _writer.FlushAsync(); // Ensure immediate send
                 Console.WriteLine($"Sending IRC command: {command}");
                 CommandSent?.Invoke(this, command);
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"Cannot send command - writer is null: {command}");
+                var error = $"Failed to send command: {ex.GetType().Name}: {ex.Message}";
+                Console.WriteLine($"{error} - Command: {command}");
+                throw new Exception(error, ex);
             }
         }
 
@@ -338,12 +461,13 @@ namespace Y0daiiIRC.IRC
 
         private async Task StartIdentServer(string identServer, int identPort, string username)
         {
+            TcpListener? listener = null;
             try
             {
                 Console.WriteLine($"Starting ident server on {identServer}:{identPort} for user {username}");
                 
                 // Bind to all interfaces (0.0.0.0) so IRC servers can connect
-                var listener = new TcpListener(System.Net.IPAddress.Any, identPort);
+                listener = new TcpListener(System.Net.IPAddress.Any, identPort);
                 listener.Start();
                 Console.WriteLine($"Ident server listening on port {identPort}");
 
@@ -353,21 +477,41 @@ namespace Y0daiiIRC.IRC
                     {
                         var client = await listener.AcceptTcpClientAsync();
                         Console.WriteLine($"Ident request received from {client.Client.RemoteEndPoint}");
-                        _ = Task.Run(() => HandleIdentRequest(client, username));
+                        // Handle ident request quickly to avoid server timeout
+                        _ = Task.Run(() => HandleIdentRequest(client, username), _cancellationTokenSource.Token);
                     }
                     catch (OperationCanceledException)
                     {
                         break;
                     }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Ident server accept error: {ex.GetType().Name}: {ex.Message}");
+                        // Continue listening unless it's a fatal error
+                        if (ex is SocketException se && se.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                        {
+                            Console.WriteLine("Port already in use - ident server cannot start");
+                            break;
+                        }
+                    }
                 }
-
-                listener.Stop();
-                Console.WriteLine("Ident server stopped");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ident server error: {ex.Message}");
-                OnErrorOccurred(ex);
+                Console.WriteLine($"Ident server error: {ex.GetType().Name}: {ex.Message}");
+                // Don't call OnErrorOccurred for ident failures - they're optional
+            }
+            finally
+            {
+                try
+                {
+                    listener?.Stop();
+                    Console.WriteLine("Ident server stopped");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error stopping ident server: {ex.Message}");
+                }
             }
         }
 
@@ -379,10 +523,21 @@ namespace Y0daiiIRC.IRC
                 using var reader = new StreamReader(stream);
                 using var writer = new StreamWriter(stream) { AutoFlush = true };
 
-                var request = await reader.ReadLineAsync();
+                // Read request with timeout to avoid hanging
+                var readTask = reader.ReadLineAsync();
+                var timeoutTask = Task.Delay(5000); // 5 second timeout for ident request
+                var completedTask = await Task.WhenAny(readTask, timeoutTask);
+                
+                if (completedTask == timeoutTask)
+                {
+                    Console.WriteLine("Ident request timeout - closing connection");
+                    return;
+                }
+
+                var request = await readTask;
                 Console.WriteLine($"Ident request: {request}");
                 
-                if (request != null)
+                if (!string.IsNullOrEmpty(request))
                 {
                     var parts = request.Split(',');
                     if (parts.Length >= 2)
@@ -390,16 +545,32 @@ namespace Y0daiiIRC.IRC
                         var response = $"{parts[0].Trim()}, {parts[1].Trim()} : USERID : UNIX : {username}";
                         Console.WriteLine($"Ident response: {response}");
                         await writer.WriteLineAsync(response);
+                        await writer.FlushAsync(); // Ensure immediate response
+                    }
+                    else
+                    {
+                        // Send error response for malformed request
+                        var errorResponse = $"{request} : ERROR : NO-USER";
+                        Console.WriteLine($"Ident error response: {errorResponse}");
+                        await writer.WriteLineAsync(errorResponse);
+                        await writer.FlushAsync();
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ident request handling error: {ex.Message}");
+                Console.WriteLine($"Ident request handling error: {ex.GetType().Name}: {ex.Message}");
             }
             finally
             {
-                client.Close();
+                try
+                {
+                    client.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error closing ident client: {ex.Message}");
+                }
             }
         }
 
