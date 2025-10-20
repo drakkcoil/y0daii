@@ -203,16 +203,24 @@ namespace Y0daiiIRC.Services
         {
             if (args.Length < 1)
             {
-                CommandError?.Invoke(this, "Usage: /connect <server> [port] [password]");
+                CommandError?.Invoke(this, "Usage: /connect <server> [port] [nickname] [ssl]");
                 return;
             }
 
             var server = args[0];
             var port = args.Length > 1 && int.TryParse(args[1], out int p) ? p : 6667;
-            var password = args.Length > 2 ? args[2] : null;
+            var nickname = args.Length > 2 ? args[2] : "Y0daiiUser";
+            var useSSL = args.Length > 3 && bool.TryParse(args[3], out bool ssl) ? ssl : false;
 
-            // TODO: Implement connection logic
-            CommandExecuted?.Invoke(this, $"Connecting to {server}:{port}...");
+            var success = await _ircClient.ConnectAsync(server, port, nickname, "y0daii", "Y0daii IRC User", useSSL, null);
+            if (success)
+            {
+                CommandExecuted?.Invoke(this, $"Connected to {server}:{port} {(useSSL ? "(SSL)" : "")}");
+            }
+            else
+            {
+                CommandError?.Invoke(this, $"Failed to connect to {server}:{port}");
+            }
         }
 
         private async Task HandleDisconnectCommand(string[] args)

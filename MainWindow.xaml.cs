@@ -220,20 +220,90 @@ namespace Y0daiiIRC
         {
             switch (message.Command)
             {
-                case "001": // Welcome message
+                case "001": // RPL_WELCOME
                     AddSystemMessage($"Connected to {_ircClient.Server}");
                     break;
+                case "002": // RPL_YOURHOST
+                    AddSystemMessage($"Your host is {message.Content}");
+                    break;
+                case "003": // RPL_CREATED
+                    AddSystemMessage($"This server was created {message.Content}");
+                    break;
+                case "004": // RPL_MYINFO
+                    AddSystemMessage($"Server info: {message.Content}");
+                    break;
+                case "005": // RPL_ISUPPORT
+                    // Server capabilities - could be used for feature detection
+                    break;
+                case "250": // RPL_STATSCONN
+                    AddSystemMessage($"Highest connection count: {message.Content}");
+                    break;
+                case "251": // RPL_LUSERCLIENT
+                    AddSystemMessage($"User info: {message.Content}");
+                    break;
+                case "252": // RPL_LUSEROP
+                    AddSystemMessage($"Operator info: {message.Content}");
+                    break;
+                case "253": // RPL_LUSERUNKNOWN
+                    AddSystemMessage($"Unknown connections: {message.Content}");
+                    break;
+                case "254": // RPL_LUSERCHANNELS
+                    AddSystemMessage($"Channels formed: {message.Content}");
+                    break;
+                case "255": // RPL_LUSERME
+                    AddSystemMessage($"Local users: {message.Content}");
+                    break;
+                case "265": // RPL_LOCALUSERS
+                    AddSystemMessage($"Local users: {message.Content}");
+                    break;
+                case "266": // RPL_GLOBALUSERS
+                    AddSystemMessage($"Global users: {message.Content}");
+                    break;
                 case "353": // RPL_NAMREPLY - User list
-                    var channel = message.Parameters[2];
-                    var users = message.Parameters[3].Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    foreach (var user in users)
+                    if (message.Parameters.Count >= 4)
                     {
-                        var cleanUser = user.TrimStart('@', '+', '%', '&', '~');
-                        AddUser(new User { Nickname = cleanUser });
+                        var channel = message.Parameters[2];
+                        var users = message.Parameters[3].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var user in users)
+                        {
+                            var cleanUser = user.TrimStart('@', '+', '%', '&', '~');
+                            AddUser(new User { Nickname = cleanUser });
+                        }
                     }
                     break;
                 case "366": // RPL_ENDOFNAMES
                     // End of user list
+                    break;
+                case "372": // RPL_MOTD
+                    AddSystemMessage($"MOTD: {message.Content}");
+                    break;
+                case "375": // RPL_MOTDSTART
+                    AddSystemMessage("--- Message of the Day ---");
+                    break;
+                case "376": // RPL_ENDOFMOTD
+                    AddSystemMessage("--- End of Message of the Day ---");
+                    break;
+                case "433": // ERR_NICKNAMEINUSE
+                    AddSystemMessage($"Nickname {message.Parameters[1]} is already in use");
+                    break;
+                case "436": // ERR_NICKCOLLISION
+                    AddSystemMessage($"Nickname collision: {message.Content}");
+                    break;
+                case "451": // ERR_NOTREGISTERED
+                    AddSystemMessage("You have not registered");
+                    break;
+                case "464": // ERR_PASSWDMISMATCH
+                    AddSystemMessage("Password incorrect");
+                    break;
+                case "465": // ERR_YOUREBANNEDCREEP
+                    AddSystemMessage("You are banned from this server");
+                    break;
+                default:
+                    // Log unknown numeric responses for debugging
+                    if (message.Content != null)
+                    {
+                        AddSystemMessage($"[{message.Command}] {message.Content}");
+                    }
                     break;
             }
         }
@@ -474,7 +544,7 @@ namespace Y0daiiIRC
                     var success = await _ircClient.ConnectAsync(
                         server.Host, server.Port, server.Nickname ?? "Y0daiiUser", 
                         server.Username ?? "y0daii", server.RealName ?? "Y0daii IRC User",
-                        server.IdentServer, server.IdentPort);
+                        server.UseSSL, null, server.IdentServer, server.IdentPort);
                     
                     if (!success)
                     {

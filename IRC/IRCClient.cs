@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,10 +16,12 @@ namespace Y0daiiIRC.IRC
     {
         private TcpClient? _tcpClient;
         private NetworkStream? _stream;
+        private SslStream? _sslStream;
         private StreamReader? _reader;
         private StreamWriter? _writer;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _isConnected = false;
+        private bool _useSSL = false;
 
         public event EventHandler<IRCMessage>? MessageReceived;
         public event EventHandler<string>? ConnectionStatusChanged;
@@ -32,7 +36,7 @@ namespace Y0daiiIRC.IRC
         public string? Username { get; private set; }
         public string? RealName { get; private set; }
 
-        public async Task<bool> ConnectAsync(string server, int port, string nickname, string username, string realName, string? identServer = null, int identPort = 113)
+        public async Task<bool> ConnectAsync(string server, int port, string nickname, string username, string realName, bool useSSL = false, string? password = null, string? identServer = null, int identPort = 113)
         {
             try
             {
@@ -41,6 +45,7 @@ namespace Y0daiiIRC.IRC
                 Nickname = nickname;
                 Username = username;
                 RealName = realName;
+                _useSSL = useSSL;
 
                 // Start ident server if specified
                 if (!string.IsNullOrEmpty(identServer))
@@ -51,12 +56,27 @@ namespace Y0daiiIRC.IRC
                 _tcpClient = new TcpClient();
                 await _tcpClient.ConnectAsync(server, port);
                 _stream = _tcpClient.GetStream();
-                _reader = new StreamReader(_stream, Encoding.UTF8);
-                _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
+
+                if (useSSL)
+                {
+                    _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
+                    await _sslStream.AuthenticateAsClientAsync(server);
+                    _reader = new StreamReader(_sslStream, Encoding.UTF8);
+                    _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
+                }
+                else
+                {
+                    _reader = new StreamReader(_stream, Encoding.UTF8);
+                    _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
+                }
 
                 _cancellationTokenSource = new CancellationTokenSource();
 
                 // Send initial IRC commands
+                if (!string.IsNullOrEmpty(password))
+                {
+                    await SendCommandAsync($"PASS {password}");
+                }
                 await SendCommandAsync($"NICK {nickname}");
                 await SendCommandAsync($"USER {username} 0 * :{realName}");
 
@@ -89,6 +109,7 @@ namespace Y0daiiIRC.IRC
             _cancellationTokenSource?.Cancel();
             _reader?.Close();
             _writer?.Close();
+            _sslStream?.Close();
             _stream?.Close();
             _tcpClient?.Close();
 
@@ -468,6 +489,13 @@ namespace Y0daiiIRC.IRC
         protected virtual void OnErrorOccurred(Exception ex)
         {
             ErrorOccurred?.Invoke(this, ex);
+        }
+
+        private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
+        {
+            // For IRC, we'll accept all certificates for now
+            // In a production environment, you might want to implement proper certificate validation
+            return true;
         }
     }
 }
