@@ -68,23 +68,20 @@ namespace Y0daiiIRC.IRC
 
                 OnConnectionStatusChanged("Connecting");
 
-                // Start ident server (if requested) but make it tolerant to bind failures.
-                if (!string.IsNullOrEmpty(identServer))
+                // Always start ident server to prevent server timeouts
+                Console.WriteLine("ConnectAsync: Starting ident server to prevent server timeouts");
+                _ = Task.Run(async () =>
                 {
-                    // Fire-and-forget but swallow exceptions inside StartIdentServer.
-                    _ = Task.Run(async () =>
+                    try
                     {
-                        try
-                        {
-                            await StartIdentServer(identServer, identPort, username, _cancellationTokenSource.Token).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            // Log/wrap but don't let ident failure kill connect flow.
-                            OnErrorOccurred(ex);
-                        }
-                    }, _cancellationTokenSource.Token);
-                }
+                        await StartIdentServer("127.0.0.1", 113, username, _cancellationTokenSource.Token).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log but don't let ident failure kill connect flow.
+                        Console.WriteLine($"ConnectAsync: Ident server failed: {ex.Message}");
+                    }
+                }, _cancellationTokenSource.Token);
 
                 // Create TCP client and attempt connection with timeout.
                 Console.WriteLine("ConnectAsync: Creating TCP client");
@@ -158,6 +155,10 @@ namespace Y0daiiIRC.IRC
                 // Start listening for server messages using the cancellation token
                 Console.WriteLine("ConnectAsync: Starting message listening loop");
                 _ = Task.Run(() => ListenForMessagesAsync(), _cancellationTokenSource.Token);
+
+                // Start keep-alive mechanism to prevent server timeouts
+                Console.WriteLine("ConnectAsync: Starting keep-alive mechanism");
+                _ = Task.Run(() => KeepAliveAsync(), _cancellationTokenSource.Token);
 
                 // Don't set connected yet - wait for welcome message (001) instead
                 Console.WriteLine("ConnectAsync: Connection setup completed, waiting for server welcome");
@@ -345,6 +346,42 @@ namespace Y0daiiIRC.IRC
             {
                 Console.WriteLine($"SendPongDirectly: Error sending PONG {payload}: {ex.GetType().Name}: {ex.Message}");
                 OnErrorOccurred(ex);
+            }
+        }
+
+        private async Task KeepAliveAsync()
+        {
+            Console.WriteLine("KeepAliveAsync: Starting keep-alive mechanism");
+            var token = _cancellationTokenSource?.Token ?? CancellationToken.None;
+            
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    // Wait 30 seconds between keep-alive attempts
+                    await Task.Delay(30000, token).ConfigureAwait(false);
+                    
+                    if (!token.IsCancellationRequested && _isConnected && _writer != null)
+                    {
+                        Console.WriteLine("KeepAliveAsync: Sending keep-alive PING");
+                        try
+                        {
+                            await SendCommandAsync("PING :keepalive").ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"KeepAliveAsync: Error sending keep-alive: {ex.Message}");
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("KeepAliveAsync: Operation cancelled");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"KeepAliveAsync: Error: {ex.Message}");
             }
         }
 
