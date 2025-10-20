@@ -65,7 +65,18 @@ namespace Y0daiiIRC.IRC
                 if (!string.IsNullOrEmpty(identServer))
                 {
                     Console.WriteLine($"Starting ident server on {identServer}:{identPort}...");
-                    _ = Task.Run(() => StartIdentServer(identServer, identPort, username));
+                    _ = Task.Run(async () => 
+                    {
+                        try
+                        {
+                            await StartIdentServer(identServer, identPort, username);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to start ident server: {ex.Message}");
+                            Console.WriteLine("Continuing without ident server...");
+                        }
+                    });
                 }
 
                 _tcpClient = new TcpClient();
@@ -319,19 +330,33 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
-                var listener = new TcpListener(System.Net.IPAddress.Parse(identServer), identPort);
+                Console.WriteLine($"Starting ident server on {identServer}:{identPort} for user {username}");
+                
+                // Bind to all interfaces (0.0.0.0) so IRC servers can connect
+                var listener = new TcpListener(System.Net.IPAddress.Any, identPort);
                 listener.Start();
+                Console.WriteLine($"Ident server listening on port {identPort}");
 
                 while (!_cancellationTokenSource!.Token.IsCancellationRequested)
                 {
-                    var client = await listener.AcceptTcpClientAsync();
-                    _ = Task.Run(() => HandleIdentRequest(client, username));
+                    try
+                    {
+                        var client = await listener.AcceptTcpClientAsync();
+                        Console.WriteLine($"Ident request received from {client.Client.RemoteEndPoint}");
+                        _ = Task.Run(() => HandleIdentRequest(client, username));
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
                 }
 
                 listener.Stop();
+                Console.WriteLine("Ident server stopped");
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Ident server error: {ex.Message}");
                 OnErrorOccurred(ex);
             }
         }
@@ -345,19 +370,22 @@ namespace Y0daiiIRC.IRC
                 using var writer = new StreamWriter(stream) { AutoFlush = true };
 
                 var request = await reader.ReadLineAsync();
+                Console.WriteLine($"Ident request: {request}");
+                
                 if (request != null)
                 {
                     var parts = request.Split(',');
                     if (parts.Length >= 2)
                     {
-                        var response = $"{parts[0]}, {parts[1]} : USERID : UNIX : {username}";
+                        var response = $"{parts[0].Trim()}, {parts[1].Trim()} : USERID : UNIX : {username}";
+                        Console.WriteLine($"Ident response: {response}");
                         await writer.WriteLineAsync(response);
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore ident request errors
+                Console.WriteLine($"Ident request handling error: {ex.Message}");
             }
             finally
             {
