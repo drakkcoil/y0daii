@@ -49,6 +49,9 @@ namespace Y0daiiIRC.IRC
         public async Task<bool> ConnectAsync(string server, int port, string nickname, string username, string realName, bool useSSL = false, string? password = null, string? identServer = null, int identPort = 113)
         {
             Console.WriteLine($"ConnectAsync: Starting connection to {server}:{port}");
+            Console.WriteLine($"ConnectAsync: Current _isConnected state: {_isConnected}");
+            Console.WriteLine($"ConnectAsync: Current _writer state: {_writer != null}");
+            Console.WriteLine($"ConnectAsync: Current _reader state: {_reader != null}");
             try
             {
                 Server = server;
@@ -130,19 +133,29 @@ namespace Y0daiiIRC.IRC
                     _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
                 }
 
-                // Send initial commands
+                // Send initial commands BEFORE starting message listening
+                Console.WriteLine("ConnectAsync: Sending initial IRC commands");
                 if (!string.IsNullOrEmpty(password))
                 {
+                    Console.WriteLine("ConnectAsync: Sending PASS command");
                     await SendCommandAsync($"PASS {password}").ConfigureAwait(false);
                 }
 
+                Console.WriteLine("ConnectAsync: Sending NICK command");
                 await SendCommandAsync($"NICK {nickname}").ConfigureAwait(false);
+                Console.WriteLine("ConnectAsync: Sending USER command");
                 await SendCommandAsync($"USER {username} 0 * :{realName}").ConfigureAwait(false);
+                Console.WriteLine("ConnectAsync: Initial commands sent successfully");
+
+                // Small delay to ensure commands are fully sent before starting message listening
+                await Task.Delay(100).ConfigureAwait(false);
 
                 // Start listening for server messages using the cancellation token
+                Console.WriteLine("ConnectAsync: Starting message listening loop");
                 _ = Task.Run(() => ListenForMessagesAsync(), _cancellationTokenSource.Token);
 
                 // mark connected; you might want to wait for RPL_WELCOME (001) instead
+                Console.WriteLine("ConnectAsync: Setting connected state to true");
                 SetConnected(true);
 
                 return true;
@@ -503,6 +516,8 @@ namespace Y0daiiIRC.IRC
 
         protected virtual void OnErrorOccurred(Exception ex)
         {
+            Console.WriteLine($"OnErrorOccurred: {ex.GetType().Name}: {ex.Message}");
+            Console.WriteLine($"OnErrorOccurred: Stack trace: {ex.StackTrace}");
             try { ErrorOccurred?.Invoke(this, ex); } catch { }
         }
 

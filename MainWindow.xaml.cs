@@ -61,6 +61,7 @@ namespace Y0daiiIRC
 
         private void OnIRCMessageReceived(object? sender, IRCMessage message)
         {
+            Console.WriteLine($"MainWindow.OnIRCMessageReceived: Received message: {message.Command}");
             Dispatcher.Invoke(() =>
             {
                 // Log incoming IRC messages for debugging
@@ -108,6 +109,8 @@ namespace Y0daiiIRC
 
         private void OnErrorOccurred(object? sender, Exception ex)
         {
+            Console.WriteLine($"MainWindow.OnErrorOccurred: {ex.GetType().Name}: {ex.Message}");
+            Console.WriteLine($"MainWindow.OnErrorOccurred: Stack trace: {ex.StackTrace}");
             Dispatcher.Invoke(() =>
             {
                 AddSystemMessage($"Error: {ex.Message}");
