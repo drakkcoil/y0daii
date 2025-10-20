@@ -168,11 +168,12 @@ namespace Y0daiiIRC.IRC
                     var line = await _reader!.ReadLineAsync();
                     if (line == null) break;
 
+                    // Debug: Log raw IRC messages to console
+                    System.Diagnostics.Debug.WriteLine($"IRC Raw: {line}");
+                    
                     var message = ParseIRCMessage(line);
                     if (message != null)
                     {
-                        // Debug: Log raw IRC messages
-                        System.Diagnostics.Debug.WriteLine($"IRC Raw: {line}");
                         // Check for CTCP messages
                         if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
                         {

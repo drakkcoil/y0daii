@@ -190,7 +190,7 @@ namespace Y0daiiIRC
             if (message.IsPing)
             {
                 var pingData = message.Parameters.FirstOrDefault();
-                AddSystemMessage($"🏓 Received PING from server, sending PONG");
+                AddSystemMessage($"🏓 Received PING from server, sending PONG: {pingData}");
                 _ = Task.Run(async () => await _ircClient.SendCommandAsync($"PONG {pingData}"));
                 return;
             }
@@ -255,6 +255,11 @@ namespace Y0daiiIRC
             else if (message.IsNumeric)
             {
                 HandleNumericMessage(message);
+            }
+            else if (message.Command == "ERROR")
+            {
+                AddSystemMessage($"❌ Server Error: {message.Content}");
+                _ircClient.SetConnected(false);
             }
         }
 
