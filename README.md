@@ -143,7 +143,6 @@ Future enhancements may include:
 - [ ] File transfer support
 - [ ] Plugin system
 - [ ] Cross-platform support
-- [ ] Voice/video chat integration
 - [ ] Advanced scripting support
 
 ## Support
