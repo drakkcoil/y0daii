@@ -31,6 +31,79 @@
         <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
         <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
         <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+
+        <!-- Context Menus -->
+        <ContextMenu x:Key="UserContextMenu">
+            <MenuItem Header="Send Private Message" Click="UserContextMenu_PrivateMessage_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Message" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Whois" Click="UserContextMenu_Whois_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="AccountSearch" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="CTCP Version" Click="UserContextMenu_Version_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Information" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="CTCP Time" Click="UserContextMenu_Time_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Clock" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="CTCP Ping" Click="UserContextMenu_Ping_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Network" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <ContextMenu x:Key="ChannelContextMenu">
+            <MenuItem Header="Join Channel" Click="ChannelContextMenu_Join_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="AccountPlus" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Leave Channel" Click="ChannelContextMenu_Leave_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="AccountMinus" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Channel Settings" Click="ChannelContextMenu_Settings_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Settings" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+
+        <ContextMenu x:Key="MessageContextMenu">
+            <MenuItem Header="Copy Message" Click="MessageContextMenu_Copy_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="ContentCopy" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Copy Timestamp" Click="MessageContextMenu_CopyTimestamp_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Clock" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Send Private Message" Click="MessageContextMenu_PrivateMessage_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Message" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Whois User" Click="MessageContextMenu_Whois_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="AccountSearch" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
         <SolidColorBrush x:Key="OfficeGray950" Color="#201F1E"/>
         
         <!-- Modern Button Styles -->
@@ -315,7 +388,7 @@
                                   VerticalScrollBarVisibility="Auto"
                                   Background="White"
                                   Padding="16">
-                        <ItemsControl x:Name="MessageList">
+                        <ItemsControl x:Name="MessageList" ContextMenu="{StaticResource MessageContextMenu}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Margin="0,4" Padding="12,8" Background="{StaticResource OfficeGray50}" CornerRadius="4">
@@ -399,7 +472,7 @@
                     
                     <!-- User List -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                        <StackPanel x:Name="UserList" Margin="8,8,8,0"/>
+                        <StackPanel x:Name="UserList" Margin="8,8,8,0" ContextMenu="{StaticResource UserContextMenu}"/>
                     </ScrollViewer>
                 </Grid>
             </Border>

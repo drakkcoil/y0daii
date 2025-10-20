@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using Y0daiiIRC.Configuration;
 
 namespace Y0daiiIRC
 {
@@ -15,6 +16,19 @@ namespace Y0daiiIRC
         public ConnectionDialog()
         {
             InitializeComponent();
+            LoadUserSettings();
+        }
+
+        private void LoadUserSettings()
+        {
+            var settings = AppSettings.Load();
+            
+            NicknameTextBox.Text = settings.User.DefaultNickname;
+            UsernameTextBox.Text = settings.User.DefaultUsername;
+            RealNameTextBox.Text = settings.User.DefaultRealName;
+            UseIdentCheckBox.IsChecked = settings.User.UseIdent;
+            IdentServerTextBox.Text = settings.User.IdentServer;
+            IdentPortTextBox.Text = settings.User.IdentPort.ToString();
         }
 
         private void ConnectButton_Click(object sender, RoutedEventArgs e)

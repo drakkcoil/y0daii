@@ -143,6 +143,11 @@ namespace Y0daiiIRC.Services
                         await HandleKickCommand(args, currentChannel);
                         break;
 
+                    // CTCP commands
+                    case "ctcp":
+                        await HandleCTCPCommand(args, currentChannel);
+                        break;
+
                     // Utility commands
                     case "clear":
                         HandleClearCommand();
@@ -610,5 +615,23 @@ namespace Y0daiiIRC.Services
             _serverListService.RemoveServer(name);
             CommandExecuted?.Invoke(this, $"Removed server: {name}");
         }
+
+        // CTCP Command Handlers
+        private async Task HandleCTCPCommand(string[] args, Channel? currentChannel)
+        {
+            if (args.Length < 2)
+            {
+                CommandError?.Invoke(this, "Usage: /ctcp <target> <command> [parameter]");
+                return;
+            }
+
+            var target = args[0];
+            var command = args[1].ToUpper();
+            var parameter = args.Length > 2 ? string.Join(" ", args.Skip(2)) : null;
+
+            await _ircClient.SendCTCPAsync(target, command, parameter);
+            CommandExecuted?.Invoke(this, $"Sent CTCP {command} to {target}");
+        }
+
     }
 }

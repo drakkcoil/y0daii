@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Y0daiiIRC.Models;
 
 namespace Y0daiiIRC.IRC
 {
@@ -21,6 +22,7 @@ namespace Y0daiiIRC.IRC
         public event EventHandler<IRCMessage>? MessageReceived;
         public event EventHandler<string>? ConnectionStatusChanged;
         public event EventHandler<Exception>? ErrorOccurred;
+        public event EventHandler<CTCPRequest>? CTCPRequestReceived;
 
         public bool IsConnected => _isConnected;
         public string? Server { get; private set; }
@@ -136,6 +138,32 @@ namespace Y0daiiIRC.IRC
                     var message = ParseIRCMessage(line);
                     if (message != null)
                     {
+                        // Check for CTCP messages
+                        if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
+                        {
+                            var target = message.Parameters[0];
+                            var msgText = message.Parameters[1];
+                            
+                            // Check if this is a CTCP message
+                            if (msgText.StartsWith("\u0001") && msgText.EndsWith("\u0001"))
+                            {
+                                var sender = ExtractNicknameFromPrefix(message.Prefix);
+                                HandleCTCPMessage(sender, target, msgText);
+                            }
+                        }
+                        else if (message.Command == "NOTICE" && message.Parameters.Count >= 2)
+                        {
+                            var target = message.Parameters[0];
+                            var msgText = message.Parameters[1];
+                            
+                            // Check if this is a CTCP response
+                            if (msgText.StartsWith("\u0001") && msgText.EndsWith("\u0001"))
+                            {
+                                var sender = ExtractNicknameFromPrefix(message.Prefix);
+                                HandleCTCPResponse(sender, target, msgText);
+                            }
+                        }
+                        
                         OnMessageReceived(message);
                     }
                 }
@@ -259,6 +287,107 @@ namespace Y0daiiIRC.IRC
             finally
             {
                 client.Close();
+            }
+        }
+
+        // Helper Methods
+        private string ExtractNicknameFromPrefix(string? prefix)
+        {
+            if (string.IsNullOrEmpty(prefix))
+                return "";
+            
+            var exclamationIndex = prefix.IndexOf('!');
+            return exclamationIndex > 0 ? prefix.Substring(0, exclamationIndex) : prefix;
+        }
+
+        private void HandleCTCPResponse(string sender, string target, string message)
+        {
+            if (!message.StartsWith("\u0001") || !message.EndsWith("\u0001"))
+                return;
+
+            var ctcpContent = message.Substring(1, message.Length - 2);
+            var parts = ctcpContent.Split(' ', 2);
+            var command = parts[0].ToUpper();
+            var response = parts.Length > 1 ? parts[1] : "";
+
+            // Create a special message for CTCP responses
+            var ctcpResponse = new IRCMessage
+            {
+                Command = "CTCP_RESPONSE",
+                Prefix = sender,
+                Parameters = new List<string> { target, command, response }
+            };
+            
+            OnMessageReceived(ctcpResponse);
+        }
+
+        // CTCP Methods
+        public async Task SendCTCPAsync(string target, string command, string? parameter = null)
+        {
+            if (!_isConnected || _writer == null) return;
+
+            var message = parameter != null ? $"{command} {parameter}" : command;
+            var ctcpMessage = $"\u0001{message}\u0001";
+            await _writer.WriteLineAsync($"PRIVMSG {target} :{ctcpMessage}");
+            await _writer.FlushAsync();
+        }
+
+        public async Task SendCTCPResponseAsync(string target, string command, string response)
+        {
+            if (!_isConnected || _writer == null) return;
+
+            var ctcpResponse = $"\u0001{command} {response}\u0001";
+            await _writer.WriteLineAsync($"NOTICE {target} :{ctcpResponse}");
+            await _writer.FlushAsync();
+        }
+
+        private void HandleCTCPMessage(string sender, string target, string message)
+        {
+            if (!message.StartsWith("\u0001") || !message.EndsWith("\u0001"))
+                return;
+
+            var ctcpContent = message.Substring(1, message.Length - 2);
+            var parts = ctcpContent.Split(' ', 2);
+            var command = parts[0].ToUpper();
+            var parameter = parts.Length > 1 ? parts[1] : null;
+
+            var ctcpRequest = new CTCPRequest(sender, target, command, parameter);
+            CTCPRequestReceived?.Invoke(this, ctcpRequest);
+
+            // Handle automatic responses
+            if (target.Equals(Nickname, StringComparison.OrdinalIgnoreCase))
+            {
+                HandleAutomaticCTCPResponse(sender, command, parameter);
+            }
+        }
+
+        private async void HandleAutomaticCTCPResponse(string sender, string command, string? parameter)
+        {
+            switch (command)
+            {
+                case "VERSION":
+                    var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+                    var versionString = version != null ? version.ToString() : "1.0.0";
+                    var response = $"y0daii - Soon you will be with him - {versionString}";
+                    await SendCTCPResponseAsync(sender, "VERSION", response);
+                    break;
+
+                case "PING":
+                    if (!string.IsNullOrEmpty(parameter))
+                    {
+                        await SendCTCPResponseAsync(sender, "PING", parameter);
+                    }
+                    break;
+
+                case "TIME":
+                    var time = DateTime.Now.ToString("ddd MMM dd HH:mm:ss yyyy");
+                    await SendCTCPResponseAsync(sender, "TIME", time);
+                    break;
+
+                case "FINGER":
+                    var fingerInfo = $"{RealName} ({Username}@{Server})";
+                    await SendCTCPResponseAsync(sender, "FINGER", fingerInfo);
+                    break;
             }
         }
 

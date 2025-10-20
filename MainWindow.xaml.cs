@@ -651,5 +651,106 @@ namespace Y0daiiIRC
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
+        // Context Menu Handlers
+        private string? _selectedUser;
+        private string? _selectedChannel;
+
+        private void UserContextMenu_PrivateMessage_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser))
+            {
+                var channel = new Channel { Name = _selectedUser, Type = ChannelType.Private };
+                SwitchToChannel(channel);
+            }
+        }
+
+        private async void UserContextMenu_Whois_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected)
+            {
+                await _ircClient.SendCommandAsync($"WHOIS {_selectedUser}");
+            }
+        }
+
+        private async void UserContextMenu_Version_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected)
+            {
+                await _ircClient.SendCTCPAsync(_selectedUser, "VERSION");
+            }
+        }
+
+        private async void UserContextMenu_Time_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected)
+            {
+                await _ircClient.SendCTCPAsync(_selectedUser, "TIME");
+            }
+        }
+
+        private async void UserContextMenu_Ping_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected)
+            {
+                await _ircClient.SendCTCPAsync(_selectedUser, "PING", DateTime.Now.Ticks.ToString());
+            }
+        }
+
+        private void ChannelContextMenu_Join_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedChannel))
+            {
+                var joinDialog = new JoinChannelDialog();
+                joinDialog.Owner = this;
+                if (joinDialog.ShowDialog() == true)
+                {
+                    _ = Task.Run(async () => await _ircClient.JoinChannelAsync(joinDialog.ChannelName));
+                }
+            }
+        }
+
+        private async void ChannelContextMenu_Leave_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedChannel) && _ircClient.IsConnected)
+            {
+                await _ircClient.LeaveChannelAsync(_selectedChannel);
+            }
+        }
+
+        private void ChannelContextMenu_Settings_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Implement channel settings dialog
+            MessageBox.Show("Channel settings not yet implemented.", "Information", 
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MessageContextMenu_Copy_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Implement message copying
+            MessageBox.Show("Message copying not yet implemented.", "Information", 
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MessageContextMenu_CopyTimestamp_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Implement timestamp copying
+            MessageBox.Show("Timestamp copying not yet implemented.", "Information", 
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MessageContextMenu_PrivateMessage_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Implement private message from message context
+            MessageBox.Show("Private message from message context not yet implemented.", "Information", 
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void MessageContextMenu_Whois_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Implement whois from message context
+            MessageBox.Show("Whois from message context not yet implemented.", "Information", 
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

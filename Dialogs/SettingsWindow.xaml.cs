@@ -50,6 +50,14 @@ namespace Y0daiiIRC
             IncludePrereleasesCheckBox.IsChecked = settings.Updates.IncludePrereleases;
             NotifyOnUpdateAvailableCheckBox.IsChecked = settings.Updates.NotifyOnUpdateAvailable;
             UpdateCheckIntervalComboBox.SelectedIndex = GetUpdateIntervalIndex(settings.Updates.UpdateCheckIntervalDays);
+            
+            // Load user settings
+            DefaultNicknameTextBox.Text = settings.User.DefaultNickname;
+            DefaultUsernameTextBox.Text = settings.User.DefaultUsername;
+            DefaultRealNameTextBox.Text = settings.User.DefaultRealName;
+            UseIdentCheckBox.IsChecked = settings.User.UseIdent;
+            IdentServerTextBox.Text = settings.User.IdentServer;
+            IdentPortTextBox.Text = settings.User.IdentPort.ToString();
         }
 
         private void SaveSettings()
@@ -83,6 +91,15 @@ namespace Y0daiiIRC
             settings.Updates.IncludePrereleases = IncludePrereleasesCheckBox.IsChecked ?? false;
             settings.Updates.NotifyOnUpdateAvailable = NotifyOnUpdateAvailableCheckBox.IsChecked ?? false;
             settings.Updates.UpdateCheckIntervalDays = GetSelectedUpdateInterval();
+            
+            // Save user settings
+            settings.User.DefaultNickname = DefaultNicknameTextBox.Text.Trim();
+            settings.User.DefaultUsername = DefaultUsernameTextBox.Text.Trim();
+            settings.User.DefaultRealName = DefaultRealNameTextBox.Text.Trim();
+            settings.User.UseIdent = UseIdentCheckBox.IsChecked ?? false;
+            settings.User.IdentServer = IdentServerTextBox.Text.Trim();
+            if (int.TryParse(IdentPortTextBox.Text, out int identPort))
+                settings.User.IdentPort = identPort;
             
             settings.Save();
         }

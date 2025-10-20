@@ -11,6 +11,7 @@ namespace Y0daiiIRC.Configuration
         public NotificationSettings Notifications { get; set; } = new();
         public BehaviorSettings Behavior { get; set; } = new();
         public UpdateSettings Updates { get; set; } = new();
+        public UserSettings User { get; set; } = new();
 
         private static readonly string SettingsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -103,5 +104,15 @@ namespace Y0daiiIRC.Configuration
         public string LastCheckedVersion { get; set; } = "";
         public bool NotifyOnUpdateAvailable { get; set; } = true;
         public int UpdateCheckIntervalDays { get; set; } = 7;
+    }
+
+    public class UserSettings
+    {
+        public string DefaultNickname { get; set; } = "Y0daiiUser";
+        public string DefaultUsername { get; set; } = "y0daii";
+        public string DefaultRealName { get; set; } = "Y0daii IRC User";
+        public string IdentServer { get; set; } = "127.0.0.1";
+        public int IdentPort { get; set; } = 113;
+        public bool UseIdent { get; set; } = false;
     }
 }

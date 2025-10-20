@@ -185,6 +185,54 @@
                 </ScrollViewer>
             </TabItem>
 
+            <TabItem Header="User Information">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16">
+                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="User Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Default Nickname:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="DefaultNicknameTextBox" Width="200" Text="Y0daiiUser" Padding="8"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Default Username:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="DefaultUsernameTextBox" Width="200" Text="y0daii" Padding="8"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Default Real Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="DefaultRealNameTextBox" Width="300" Text="Y0daii IRC User" Padding="8"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8">
+                            <StackPanel>
+                                <TextBlock Text="Ident Server Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                
+                                <CheckBox x:Name="UseIdentCheckBox"
+                                          Content="Use Ident Server"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Ident Server:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="IdentServerTextBox" Width="200" Text="127.0.0.1" Padding="8"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Ident Port:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="IdentPortTextBox" Width="100" Text="113" Padding="8"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
             <TabItem Header="Connection">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16">
