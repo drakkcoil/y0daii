@@ -1,6 +1,10 @@
 # Y0daii IRC Client
 
-A modern, full-featured IRC client built with C# and WPF, featuring a beautiful Material Design user interface.
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/drakkcoil/y0daii)
+[![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+A modern, full-featured IRC client built with C# and WPF, featuring a beautiful Office 365-style user interface.
 
 ## Features
 
@@ -46,6 +50,13 @@ The client features a clean, modern interface with:
 2. Open the solution in Visual Studio or your preferred IDE
 3. Restore NuGet packages
 4. Build and run the application
+
+### Quick Start
+1. **Download**: Clone or download the repository
+2. **Build**: Run `dotnet build` in the project directory
+3. **Run**: Execute `dotnet run` or run the built executable
+4. **Connect**: Click "Connect" and select a server from the list
+5. **Chat**: Join channels and start chatting!
 
 ### Usage
 1. Click "Connect" to open the connection dialog
@@ -96,9 +107,33 @@ The client supports standard IRC commands:
 4. Test thoroughly
 5. Submit a pull request
 
+## Version History
+
+### Version 1.0.0 (Current)
+- Initial release
+- Modern Office 365-style interface
+- Full IRC protocol support
+- mIRC-style slash commands
+- ANSI color support
+- Server list management
+- Ident server support
+- Tabbed interface with console
+- Comprehensive help system
+
 ## License
 
 This project is open source and available under the MIT License.
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+## Support
+
+For issues, feature requests, or questions:
+- Open an issue on [GitHub](https://github.com/drakkcoil/y0daii/issues)
+- Check the Help menu in the application
+- Review the documentation in this README
 
 ## Roadmap
 

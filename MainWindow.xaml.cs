@@ -550,5 +550,114 @@ namespace Y0daiiIRC
         {
             Close();
         }
+
+        private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var aboutDialog = new AboutDialog();
+            aboutDialog.Owner = this;
+            aboutDialog.ShowDialog();
+        }
+
+        private void ShortcutsMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var shortcuts = """
+                Keyboard Shortcuts:
+                
+                General:
+                • Ctrl+N - New connection
+                • Ctrl+J - Join channel
+                • Ctrl+Q - Quit application
+                • F1 - Show help
+                
+                Chat:
+                • Enter - Send message
+                • Shift+Enter - New line in message
+                • Ctrl+A - Select all text
+                • Ctrl+C - Copy selected text
+                • Ctrl+V - Paste text
+                
+                Navigation:
+                • Ctrl+Tab - Switch between channels
+                • Ctrl+1-9 - Switch to channel by number
+                • Alt+Left/Right - Navigate message history
+                
+                IRC Commands:
+                • /help - Show command help
+                • /join #channel - Join a channel
+                • /part - Leave current channel
+                • /msg user message - Send private message
+                • /nick newname - Change nickname
+                • /quit - Disconnect from server
+                """;
+            
+            MessageBox.Show(shortcuts, "Keyboard Shortcuts", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void CommandsHelpMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var commands = """
+                IRC Commands Help:
+                
+                Connection Commands:
+                • /connect <server> [port] - Connect to IRC server
+                • /disconnect - Disconnect from server
+                • /reconnect - Reconnect to current server
+                
+                Channel Commands:
+                • /join <channel> [password] - Join a channel
+                • /part [channel] [reason] - Leave a channel
+                • /topic [new topic] - Get or set channel topic
+                • /list [channels] - List channels on server
+                • /names [channel] - List users in channel
+                
+                User Commands:
+                • /nick <newnick> - Change your nickname
+                • /whois <nickname> - Get user information
+                • /msg <nickname> <message> - Send private message
+                • /notice <nickname> <message> - Send notice
+                • /me <action> - Send action message
+                
+                Channel Management:
+                • /op <nickname> - Give operator status
+                • /deop <nickname> - Remove operator status
+                • /voice <nickname> - Give voice status
+                • /kick <nickname> [reason] - Kick user
+                • /ban <nickname> - Ban user
+                • /unban <nickname> - Unban user
+                
+                Server Commands:
+                • /ping - Ping server
+                • /time - Get server time
+                • /version - Get server version
+                • /motd - Get message of the day
+                • /lusers - Get user statistics
+                
+                Utility Commands:
+                • /clear - Clear current chat
+                • /help [command] - Show help for command
+                • /raw <command> - Send raw IRC command
+                • /servers - Show saved servers
+                • /addserver <name> <host> [port] - Add server
+                """;
+            
+            MessageBox.Show(commands, "IRC Commands Help", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void GitHubMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://github.com/drakkcoil/y0daii",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open GitHub repository: {ex.Message}", "Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }

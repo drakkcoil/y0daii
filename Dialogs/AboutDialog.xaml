@@ -1,0 +1,160 @@
+<Window x:Class="Y0daiiIRC.AboutDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="About Y0daii IRC Client" 
+        Height="500" 
+        Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F8F9FA"
+        TextElement.Foreground="#323130"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="14"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        FontFamily="Segoe UI">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,0,0,1">
+            <Grid Height="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <materialDesign:PackIcon Kind="Information" Width="20" Height="20" VerticalAlignment="Center" Foreground="#0078D4" Margin="0,0,8,0"/>
+                    <TextBlock Text="About Y0daii IRC Client" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#323130"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                        Width="32" 
+                        Height="32" 
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Click="CloseButton_Click"
+                        Margin="16,0">
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="#605E5C"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
+            <StackPanel Margin="32" Spacing="24">
+                <!-- App Icon and Title -->
+                <StackPanel HorizontalAlignment="Center" Spacing="16">
+                    <Border Background="#0078D4" Width="80" Height="80" CornerRadius="16">
+                        <materialDesign:PackIcon Kind="Chat" Width="48" Height="48" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    
+                    <StackPanel HorizontalAlignment="Center" Spacing="4">
+                        <TextBlock x:Name="AppTitleText" Text="Y0daii IRC Client" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="#323130"/>
+                        <TextBlock x:Name="VersionText" Text="Version 1.0.0" FontSize="16" HorizontalAlignment="Center" Foreground="#605E5C"/>
+                        <TextBlock x:Name="BuildText" Text="Build 1.0.0.0 (2025-01-01)" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Description -->
+                <Border Background="#F8F9FA" Padding="16" CornerRadius="8">
+                    <TextBlock TextWrapping="Wrap" FontSize="14" Foreground="#323130" TextAlignment="Center">
+                        A modern, full-featured IRC client built with C# and WPF, featuring a beautiful Office 365-style user interface. 
+                        Connect to IRC servers, join channels, send private messages, and enjoy a professional chatting experience.
+                    </TextBlock>
+                </Border>
+
+                <!-- Features -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Key Features" FontSize="16" FontWeight="SemiBold" Foreground="#323130"/>
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Modern Office 365-style interface" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Full IRC protocol support with SSL/TLS" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="mIRC-style slash commands" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="ANSI color support and rich formatting" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Server list management and auto-connect" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Ident server support and notifications" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Technical Info -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Technical Information" FontSize="16" FontWeight="SemiBold" Foreground="#323130"/>
+                    <Border Background="#F8F9FA" Padding="16" CornerRadius="8">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Framework:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
+                                <TextBlock x:Name="FrameworkText" Text=".NET 8.0" FontSize="14" Foreground="#323130"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="UI Framework:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
+                                <TextBlock Text="WPF with Material Design" FontSize="14" Foreground="#323130"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Build Date:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
+                                <TextBlock x:Name="BuildDateText" Text="2025-01-01" FontSize="14" Foreground="#323130"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Copyright -->
+                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock x:Name="CopyrightText" Text="Copyright © 2025 Y0daii. All rights reserved." FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
+                    <TextBlock Text="Built with ❤️ using C# and WPF" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Margin="16,12">
+                <Button x:Name="GitHubButton"
+                        Content="View on GitHub"
+                        Background="Transparent"
+                        Foreground="#0078D4"
+                        BorderThickness="1"
+                        BorderBrush="#E1DFDD"
+                        Padding="16,8"
+                        FontWeight="SemiBold"
+                        Click="GitHubButton_Click"
+                        Margin="0,0,8,0"/>
+                <Button x:Name="CloseButton"
+                        Content="Close"
+                        Background="#0078D4"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Padding="16,8"
+                        FontWeight="SemiBold"
+                        Click="CloseButton_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
