@@ -172,8 +172,19 @@ namespace Y0daiiIRC.Services
                 },
                 new ServerInfo
                 {
-                    Name = "Freenode",
-                    Host = "chat.freenode.net",
+                    Name = "IRCNet (US)",
+                    Host = "irc1.us.open-ircnet.net",
+                    Port = 6667,
+                    UseSSL = false,
+                    Nickname = "Y0daiiUser",
+                    Username = "y0daii",
+                    RealName = "Y0daii IRC User",
+                    IsFavorite = true
+                },
+                new ServerInfo
+                {
+                    Name = "IRCNet (EU)",
+                    Host = "ircnet.choopa.net",
                     Port = 6667,
                     UseSSL = false,
                     Nickname = "Y0daiiUser",
@@ -182,8 +193,18 @@ namespace Y0daiiIRC.Services
                 },
                 new ServerInfo
                 {
-                    Name = "EFnet",
-                    Host = "irc.efnet.org",
+                    Name = "QuakeNet",
+                    Host = "irc.quakenet.org",
+                    Port = 6667,
+                    UseSSL = false,
+                    Nickname = "Y0daiiUser",
+                    Username = "y0daii",
+                    RealName = "Y0daii IRC User"
+                },
+                new ServerInfo
+                {
+                    Name = "Undernet",
+                    Host = "us.undernet.org",
                     Port = 6667,
                     UseSSL = false,
                     Nickname = "Y0daiiUser",
