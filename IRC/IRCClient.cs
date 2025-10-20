@@ -156,6 +156,9 @@ namespace Y0daiiIRC.IRC
                 await SendCommandAsync($"NICK {nickname}");
                 await SendCommandAsync($"USER {username} 0 * :{realName}");
                 Console.WriteLine($"Initial IRC commands sent, waiting for server response...");
+                
+                // Add a small delay to ensure commands are processed
+                await Task.Delay(100);
 
                 // Don't set connected yet - wait for welcome message (001)
                 OnConnectionStatusChanged("Connecting");
@@ -328,12 +331,14 @@ namespace Y0daiiIRC.IRC
             try
             {
                 Console.WriteLine("Message listening loop started");
+                var startTime = DateTime.Now;
                 while (!_cancellationTokenSource!.Token.IsCancellationRequested)
                 {
                     var line = await _reader!.ReadLineAsync();
                     if (line == null) 
                     {
-                        Console.WriteLine("Received null line from server - connection closed");
+                        var elapsed = DateTime.Now - startTime;
+                        Console.WriteLine($"Received null line from server - connection closed after {elapsed.TotalSeconds:F1} seconds");
                         break;
                     }
 
@@ -345,6 +350,23 @@ namespace Y0daiiIRC.IRC
                     {
                         // Debug: Log parsed messages
                         Console.WriteLine($"IRC Parsed: {message.Command} | {string.Join(" ", message.Parameters)}");
+                        
+                        // Check for PING immediately to respond quickly
+                        if (message.IsPing)
+                        {
+                            var pingData = message.Parameters.FirstOrDefault();
+                            Console.WriteLine($"🏓 PING received, responding immediately with PONG: {pingData}");
+                            try
+                            {
+                                await SendCommandAsync($"PONG {pingData}");
+                                Console.WriteLine($"✅ PONG sent successfully");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"❌ Failed to send PONG: {ex.Message}");
+                            }
+                            continue; // Skip normal message processing for PING
+                        }
                         // Check for CTCP messages
                         if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
                         {
