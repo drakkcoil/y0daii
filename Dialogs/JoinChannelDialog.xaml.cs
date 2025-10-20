@@ -39,5 +39,11 @@ namespace Y0daiiIRC
                 ChannelTextBox.Text = button.Content.ToString();
             }
         }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
     }
 }

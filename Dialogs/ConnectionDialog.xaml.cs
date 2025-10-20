@@ -10,7 +10,7 @@ namespace Y0daiiIRC
         public string Nickname => NicknameTextBox.Text.Trim();
         public string Username => UsernameTextBox.Text.Trim();
         public string RealName => RealNameTextBox.Text.Trim();
-        public bool UseSSL => UseSSLCheckBox.IsChecked == true;
+        public bool UseSSL => UseSslCheckBox.IsChecked == true;
 
         public ConnectionDialog()
         {
@@ -32,6 +32,12 @@ namespace Y0daiiIRC
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();

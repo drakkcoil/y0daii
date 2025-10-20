@@ -3,19 +3,97 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Edit Server" 
-        Height="500" 
-        Width="600"
+        Height="600" 
+        Width="700"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="{DynamicResource MaterialDesignPaper}"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="#F8F9FA"
+        TextElement.Foreground="#323130"
         TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
+        TextElement.FontSize="14"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="Auto"
-        FontFamily="{DynamicResource MaterialDesignFont}">
+        FontFamily="Segoe UI">
 
-    <Grid Margin="24">
+    <Window.Resources>
+        <!-- Office 365 Color Scheme -->
+        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
+        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
+        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
+        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
+        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
+        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
+        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
+        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
+        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
+        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
+        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
+        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
+        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+
+        <!-- Button Styles -->
+        <Style x:Key="OfficeButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -23,112 +101,130 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,24">
-            <materialDesign:PackIcon Kind="ServerNetwork" Width="48" Height="48" 
-                                     HorizontalAlignment="Center" 
-                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
-            <TextBlock Text="Server Configuration" 
-                       Style="{StaticResource MaterialDesignHeadline5TextBlock}"
-                       HorizontalAlignment="Center"
-                       Margin="0,8,0,0"/>
-        </StackPanel>
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+            <Grid Height="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <materialDesign:PackIcon Kind="ServerEdit" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Edit Server" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                        Width="32" 
+                        Height="32" 
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Click="CloseButton_Click"
+                        Margin="16,0">
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource OfficeGray700}"/>
+                </Button>
+            </Grid>
+        </Border>
 
-        <!-- Form -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel >
-                <materialDesign:Card Padding="16">
-                    <StackPanel >
-                        <TextBlock Text="Basic Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
+            <StackPanel Margin="32">
+                <!-- Server Information -->
+                <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Server Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                         
-                        <TextBox x:Name="NameTextBox"
-                                 materialDesign:HintAssist.Hint="Server Name"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Server Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="ServerNameTextBox" Width="300" Text="Libera Chat" Padding="8"/>
+                        </StackPanel>
 
-                        <TextBox x:Name="HostTextBox"
-                                 materialDesign:HintAssist.Hint="Host Address"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Host:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="HostTextBox" Width="300" Text="irc.libera.chat" Padding="8"/>
+                        </StackPanel>
 
-                        <TextBox x:Name="PortTextBox"
-                                 materialDesign:HintAssist.Hint="Port"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="6667"/>
-
-                        <CheckBox x:Name="UseSSLCheckBox"
-                                  Content="Use SSL/TLS"
-                                  Style="{StaticResource MaterialDesignCheckBox}"/>
-
-                        <TextBox x:Name="PasswordTextBox"
-                                 materialDesign:HintAssist.Hint="Server Password (optional)"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Port:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="PortTextBox" Width="100" Text="6667" Padding="8"/>
+                            <CheckBox x:Name="UseSslCheckBox" Content="Use SSL" Margin="16,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
                     </StackPanel>
-                </materialDesign:Card>
+                </Border>
 
-                <materialDesign:Card Padding="16">
-                    <StackPanel >
-                        <TextBlock Text="User Information" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                <!-- User Information -->
+                <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="User Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                         
-                        <TextBox x:Name="NicknameTextBox"
-                                 materialDesign:HintAssist.Hint="Nickname"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Nickname:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="NicknameTextBox" Width="200" Text="Y0daiiUser" Padding="8"/>
+                        </StackPanel>
 
-                        <TextBox x:Name="UsernameTextBox"
-                                 materialDesign:HintAssist.Hint="Username"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Username:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="UsernameTextBox" Width="200" Text="y0daii" Padding="8"/>
+                        </StackPanel>
 
-                        <TextBox x:Name="RealNameTextBox"
-                                 materialDesign:HintAssist.Hint="Real Name"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Real Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="RealNameTextBox" Width="300" Text="Y0daii IRC User" Padding="8"/>
+                        </StackPanel>
                     </StackPanel>
-                </materialDesign:Card>
+                </Border>
 
-                <materialDesign:Card Padding="16">
-                    <StackPanel >
-                        <TextBlock Text="Ident Server" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                <!-- Ident Server -->
+                <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Ident Server (Optional)" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                         
-                        <TextBox x:Name="IdentServerTextBox"
-                                 materialDesign:HintAssist.Hint="Ident Server (optional)"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
-
-                        <TextBox x:Name="IdentPortTextBox"
-                                 materialDesign:HintAssist.Hint="Ident Port"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 Text="113"/>
-                    </StackPanel>
-                </materialDesign:Card>
-
-                <materialDesign:Card Padding="16">
-                    <StackPanel >
-                        <TextBlock Text="Advanced Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                        <CheckBox x:Name="UseIdentCheckBox" Content="Use Ident Server" Margin="0,0,0,8" FontWeight="SemiBold"/>
                         
-                        <CheckBox x:Name="AutoConnectCheckBox"
-                                  Content="Auto-connect on startup"
-                                  Style="{StaticResource MaterialDesignCheckBox}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Ident Server:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="IdentServerTextBox" Width="200" Text="127.0.0.1" Padding="8"/>
+                        </StackPanel>
 
-                        <CheckBox x:Name="IsFavoriteCheckBox"
-                                  Content="Mark as favorite"
-                                  Style="{StaticResource MaterialDesignCheckBox}"/>
-
-                        <TextBox x:Name="AutoJoinChannelsTextBox"
-                                 materialDesign:HintAssist.Hint="Auto-join channels (comma-separated)"
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Ident Port:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            <TextBox x:Name="IdentPortTextBox" Width="100" Text="113" Padding="8"/>
+                        </StackPanel>
                     </StackPanel>
-                </materialDesign:Card>
+                </Border>
+
+                <!-- Auto-join Channels -->
+                <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8">
+                    <StackPanel>
+                        <TextBlock Text="Auto-join Channels" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Enter channel names (one per line, include # prefix):" FontSize="12" Foreground="{StaticResource OfficeGray600}" Margin="0,0,0,8"/>
+                        
+                        <TextBox x:Name="AutoJoinChannelsTextBox" 
+                                 Height="80" 
+                                 TextWrapping="Wrap" 
+                                 AcceptsReturn="True" 
+                                 VerticalScrollBarVisibility="Auto"
+                                 Padding="8"
+                                 Text="#general&amp;#help"/>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    Margin="0,24,0,0">
-            <Button x:Name="CancelButton"
-                    Content="Cancel"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Click="CancelButton_Click"
-                    Margin="0,0,8,0"/>
-            <Button x:Name="SaveButton"
-                    Content="Save"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Click="SaveButton_Click"/>
-        </StackPanel>
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Margin="16,12">
+                <Button x:Name="CancelButton"
+                        Content="Cancel"
+                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Click="CancelButton_Click"
+                        Margin="0,0,8,0"/>
+                <Button x:Name="SaveButton"
+                        Content="Save"
+                        Style="{StaticResource OfficeButtonStyle}"
+                        Click="SaveButton_Click"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
