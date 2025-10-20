@@ -63,9 +63,8 @@ namespace Y0daiiIRC
         {
             Dispatcher.Invoke(() =>
             {
-                // Log incoming IRC messages for debugging (optional)
-                // Uncomment the line below to see raw IRC messages
-                // AddSystemMessage($"← {message.Command} {string.Join(" ", message.Parameters)}");
+                // Log incoming IRC messages for debugging
+                AddSystemMessage($"← {message.Command} {string.Join(" ", message.Parameters)}");
                 
                 HandleIRCMessage(message);
             });

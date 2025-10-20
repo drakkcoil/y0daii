@@ -129,7 +129,7 @@ namespace Y0daiiIRC.IRC
 
         public async Task SendCommandAsync(string command)
         {
-            if (_writer != null && _isConnected)
+            if (_writer != null)
             {
                 await _writer.WriteLineAsync(command);
                 CommandSent?.Invoke(this, command);
@@ -163,7 +163,7 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
-                while (_isConnected && !_cancellationTokenSource!.Token.IsCancellationRequested)
+                while (!_cancellationTokenSource!.Token.IsCancellationRequested)
                 {
                     var line = await _reader!.ReadLineAsync();
                     if (line == null) break;
@@ -171,6 +171,8 @@ namespace Y0daiiIRC.IRC
                     var message = ParseIRCMessage(line);
                     if (message != null)
                     {
+                        // Debug: Log raw IRC messages
+                        System.Diagnostics.Debug.WriteLine($"IRC Raw: {line}");
                         // Check for CTCP messages
                         if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
                         {
@@ -286,7 +288,7 @@ namespace Y0daiiIRC.IRC
                 var listener = new TcpListener(System.Net.IPAddress.Parse(identServer), identPort);
                 listener.Start();
 
-                while (_isConnected)
+                while (!_cancellationTokenSource!.Token.IsCancellationRequested)
                 {
                     var client = await listener.AcceptTcpClientAsync();
                     _ = Task.Run(() => HandleIdentRequest(client, username));
@@ -349,15 +351,8 @@ namespace Y0daiiIRC.IRC
             var command = parts[0].ToUpper();
             var response = parts.Length > 1 ? parts[1] : "";
 
-            // Create a special message for CTCP responses
-            var ctcpResponse = new IRCMessage
-            {
-                Command = "CTCP_RESPONSE",
-                Prefix = sender,
-                Parameters = new List<string> { target, command, response }
-            };
-            
-            OnMessageReceived(ctcpResponse);
+            // Handle CTCP response - no need to create fake messages
+            // CTCP responses are handled by the main message processing
         }
 
         private void HandleDCCMessage(string sender, string target, string message)
