@@ -68,20 +68,32 @@ namespace Y0daiiIRC.IRC
 
                 OnConnectionStatusChanged("Connecting");
 
-                // Always start ident server to prevent server timeouts
-                Console.WriteLine("ConnectAsync: Starting ident server to prevent server timeouts");
-                _ = Task.Run(async () =>
+                // Start ident server FIRST, before TCP connection
+                Console.WriteLine("ConnectAsync: Starting ident server BEFORE TCP connection");
+                var identTask = Task.Run(async () =>
                 {
                     try
                     {
-                        await StartIdentServer("127.0.0.1", 113, username, _cancellationTokenSource.Token).ConfigureAwait(false);
+                        // Try port 113 first, fall back to 1130 if it fails (Windows admin issue)
+                        try
+                        {
+                            await StartIdentServer("127.0.0.1", 113, username, _cancellationTokenSource.Token).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"ConnectAsync: Port 113 failed, trying 1130: {ex.Message}");
+                            await StartIdentServer("127.0.0.1", 1130, username, _cancellationTokenSource.Token).ConfigureAwait(false);
+                        }
                     }
                     catch (Exception ex)
                     {
                         // Log but don't let ident failure kill connect flow.
-                        Console.WriteLine($"ConnectAsync: Ident server failed: {ex.Message}");
+                        Console.WriteLine($"ConnectAsync: Ident server failed on all ports: {ex.Message}");
                     }
                 }, _cancellationTokenSource.Token);
+                
+                // Give ident server a moment to start
+                await Task.Delay(1000).ConfigureAwait(false);
 
                 // Create TCP client and attempt connection with timeout.
                 Console.WriteLine("ConnectAsync: Creating TCP client");
@@ -104,6 +116,10 @@ namespace Y0daiiIRC.IRC
                 // Ensure any exception from ConnectAsync is observed
                 await connectTask.ConfigureAwait(false);
                 Console.WriteLine("ConnectAsync: TCP connection established");
+
+                // Set TCP keep-alive to prevent server timeouts
+                _tcpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                Console.WriteLine("ConnectAsync: TCP keep-alive enabled");
 
                 _stream = _tcpClient.GetStream();
                 Console.WriteLine("ConnectAsync: Network stream obtained");
@@ -589,10 +605,12 @@ namespace Y0daiiIRC.IRC
                 try
                 {
                     listener.Start();
+                    Console.WriteLine($"StartIdentServer: Ident server started on {listenIp}:{identPort}");
                 }
                 catch (Exception ex)
                 {
                     // Binding failed (permission / port in use) — log and return; ident is non-fatal.
+                    Console.WriteLine($"StartIdentServer: Failed to bind on {listenIp}:{identPort}: {ex.Message}");
                     OnErrorOccurred(new Exception($"Ident server failed to bind on {listenIp}:{identPort}: {ex.Message}", ex));
                     return;
                 }
@@ -607,6 +625,7 @@ namespace Y0daiiIRC.IRC
                             continue;
 
                         var client = acceptTask.Result;
+                        Console.WriteLine($"StartIdentServer: Received ident request from {client.Client.RemoteEndPoint}");
                         // Fire-and-forget to handle ident request
                         _ = Task.Run(() => HandleIdentRequest(client, username), token);
                     }
