@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
@@ -34,11 +35,9 @@ namespace Y0daiiIRC.IRC
 
         public void SetConnected(bool connected)
         {
+            // ...existing code...
             _isConnected = connected;
-            if (connected)
-            {
-                OnConnectionStatusChanged("Connected");
-            }
+            OnConnectionStatusChanged(connected ? "Connected" : "Disconnected");
         }
         public string? Server { get; private set; }
         public int Port { get; private set; }
@@ -50,11 +49,6 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
-                // Create cancellation token source FIRST - before any background tasks
-                _cancellationTokenSource?.Cancel();
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = new CancellationTokenSource();
-                
                 Server = server;
                 Port = port;
                 Nickname = nickname;
@@ -62,84 +56,65 @@ namespace Y0daiiIRC.IRC
                 RealName = realName;
                 _useSSL = useSSL;
 
-                Console.WriteLine($"Starting connection to {server}:{port}...");
+                // Create the cancellation token source early so background tasks can observe it.
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = new CancellationTokenSource();
 
-                // Start ident server if specified (optional) - after cancellation token exists
+                OnConnectionStatusChanged("Connecting");
+
+                // Start ident server (if requested) but make it tolerant to bind failures.
                 if (!string.IsNullOrEmpty(identServer))
                 {
-                    Console.WriteLine($"Attempting to start ident server on {identServer}:{identPort}...");
-                    _ = Task.Run(async () => 
+                    // Fire-and-forget but swallow exceptions inside StartIdentServer.
+                    _ = Task.Run(async () =>
                     {
                         try
                         {
-                            await StartIdentServer(identServer, identPort, username);
+                            await StartIdentServer(identServer, identPort, username, _cancellationTokenSource.Token).ConfigureAwait(false);
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Ident server failed: {ex.GetType().Name}: {ex.Message}");
-                            Console.WriteLine("Continuing without ident (server will use ~username)...");
-                            // Don't rethrow - ident is optional
+                            // Log/wrap but don't let ident failure kill connect flow.
+                            OnErrorOccurred(ex);
                         }
                     }, _cancellationTokenSource.Token);
                 }
-                else
-                {
-                    Console.WriteLine("No ident server configured - server will use ~username");
-                }
 
-                // Pre-resolve DNS to catch DNS issues early
-                Console.WriteLine($"Resolving DNS for {server}...");
-                try
-                {
-                    var addresses = await System.Net.Dns.GetHostAddressesAsync(server);
-                    var ipv4Address = addresses.FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-                    if (ipv4Address != null)
-                    {
-                        Console.WriteLine($"Resolved {server} to {ipv4Address}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"DNS resolution failed: {ex.Message}");
-                    throw new Exception($"Failed to resolve DNS for {server}: {ex.Message}", ex);
-                }
-
+                // Create TCP client and attempt connection with timeout.
                 _tcpClient = new TcpClient();
-                
-                // Add explicit connection timeout with proper cancellation
-                Console.WriteLine($"Attempting TCP connection to {server}:{port}...");
-                using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
-                connectCts.CancelAfter(TimeSpan.FromSeconds(15)); // 15 second timeout for TCP connect
-                
-                try
+
+                var connectCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
+                var connectTimeout = TimeSpan.FromSeconds(30);
+                connectCts.CancelAfter(connectTimeout);
+
+                Task connectTask = _tcpClient.ConnectAsync(server, port);
+
+                var completed = await Task.WhenAny(connectTask, Task.Delay(Timeout.Infinite, connectCts.Token)).ConfigureAwait(false);
+                if (completed != connectTask)
                 {
-                    await _tcpClient.ConnectAsync(server, port);
-                    Console.WriteLine($"TCP connection established to {server}:{port}");
+                    throw new TimeoutException($"Connection to {server}:{port} timed out after {connectTimeout.TotalSeconds} seconds.");
                 }
-                catch (OperationCanceledException) when (connectCts.Token.IsCancellationRequested)
-                {
-                    throw new TimeoutException($"Connection to {server}:{port} timed out after 15 seconds");
-                }
+
+                // Ensure any exception from ConnectAsync is observed
+                await connectTask.ConfigureAwait(false);
+
                 _stream = _tcpClient.GetStream();
 
                 if (useSSL)
                 {
-                    Console.WriteLine($"Starting SSL handshake with {server}...");
-                    try
+                    _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
+                    // authenticate with a timeout
+                    var authTask = _sslStream.AuthenticateAsClientAsync(server);
+                    var authTimeout = Task.Delay(TimeSpan.FromSeconds(30), _cancellationTokenSource.Token);
+                    var authCompleted = await Task.WhenAny(authTask, authTimeout).ConfigureAwait(false);
+                    if (authCompleted != authTask)
                     {
-                        _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
-                        await _sslStream.AuthenticateAsClientAsync(server);
-                        Console.WriteLine($"SSL handshake completed with {server}");
-                        _reader = new StreamReader(_sslStream, Encoding.UTF8);
-                        _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
+                        throw new TimeoutException("SSL authentication timed out.");
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"SSL handshake failed: {ex.GetType().Name}: {ex.Message}");
-                        _sslStream?.Dispose();
-                        _sslStream = null;
-                        throw new Exception($"SSL handshake failed for {server}: {ex.Message}", ex);
-                    }
+                    await authTask.ConfigureAwait(false);
+
+                    _reader = new StreamReader(_sslStream, Encoding.UTF8);
+                    _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
                 }
                 else
                 {
@@ -147,30 +122,28 @@ namespace Y0daiiIRC.IRC
                     _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
                 }
 
-                // Send initial IRC commands
-                Console.WriteLine($"Sending initial IRC commands...");
+                // Send initial commands
                 if (!string.IsNullOrEmpty(password))
                 {
-                    await SendCommandAsync($"PASS {password}");
+                    await SendCommandAsync($"PASS {password}").ConfigureAwait(false);
                 }
-                await SendCommandAsync($"NICK {nickname}");
-                await SendCommandAsync($"USER {username} 0 * :{realName}");
-                Console.WriteLine($"Initial IRC commands sent, waiting for server response...");
-                
-                // Add a small delay to ensure commands are processed
-                await Task.Delay(100);
 
-                // Don't set connected yet - wait for welcome message (001)
-                OnConnectionStatusChanged("Connecting");
+                await SendCommandAsync($"NICK {nickname}").ConfigureAwait(false);
+                await SendCommandAsync($"USER {username} 0 * :{realName}").ConfigureAwait(false);
 
-                // Start listening for messages
-                _ = Task.Run(ListenForMessagesAsync, _cancellationTokenSource.Token);
+                // Start listening for server messages using the cancellation token
+                _ = Task.Run(() => ListenForMessagesAsync(), _cancellationTokenSource.Token);
+
+                // mark connected; you might want to wait for RPL_WELCOME (001) instead
+                SetConnected(true);
 
                 return true;
             }
             catch (Exception ex)
             {
                 OnErrorOccurred(ex);
+                // Clean up partial resources on failure
+                try { await DisconnectAsync().ConfigureAwait(false); } catch { }
                 return false;
             }
         }
@@ -179,242 +152,206 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
-                Console.WriteLine("Disconnecting from IRC server...");
-                
-                // Cancel all background tasks first
-                _cancellationTokenSource?.Cancel();
-                
+                // Cancel background operations
+                if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+
                 // Send QUIT command if connected
                 if (_isConnected && _writer != null)
                 {
                     try
                     {
-                        await SendCommandAsync("QUIT :Y0daii IRC Client");
-                        Console.WriteLine("QUIT command sent");
+                        await SendCommandAsync("QUIT :Y0daii IRC Client").ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error sending QUIT command: {ex.Message}");
+                        OnErrorOccurred(ex);
                     }
                 }
-                
-                // Close streams in proper order
-                try
-                {
-                    _writer?.Close();
-                    _writer?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error closing writer: {ex.Message}");
-                }
-                
-                try
-                {
-                    _reader?.Close();
-                    _reader?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error closing reader: {ex.Message}");
-                }
-                
-                try
-                {
-                    _sslStream?.Close();
-                    _sslStream?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error closing SSL stream: {ex.Message}");
-                }
-                
-                try
-                {
-                    _stream?.Close();
-                    _stream?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error closing stream: {ex.Message}");
-                }
-                
-                try
-                {
-                    _tcpClient?.Close();
-                    _tcpClient?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error closing TCP client: {ex.Message}");
-                }
-                
-                // Dispose cancellation token source
-                try
-                {
-                    _cancellationTokenSource?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error disposing cancellation token: {ex.Message}");
-                }
-                
-                Console.WriteLine("Disconnection completed");
+
+                // Close reader/writer/streams
+                try { _reader?.Dispose(); } catch { }
+                try { _writer?.Dispose(); } catch { }
+                try { _sslStream?.Dispose(); } catch { }
+                try { _stream?.Dispose(); } catch { }
+                try { _tcpClient?.Close(); } catch { }
+
+                _reader = null;
+                _writer = null;
+                _sslStream = null;
+                _stream = null;
+                _tcpClient = null;
+
+                SetConnected(false);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during disconnect: {ex.GetType().Name}: {ex.Message}");
                 OnErrorOccurred(ex);
             }
             finally
             {
-                _isConnected = false;
-                _writer = null;
-                _reader = null;
-                _sslStream = null;
-                _stream = null;
-                _tcpClient = null;
+                try { _cancellationTokenSource?.Dispose(); } catch { }
                 _cancellationTokenSource = null;
-                OnConnectionStatusChanged("Disconnected");
             }
         }
 
         public async Task SendCommandAsync(string command)
         {
-            if (_writer == null)
+            if (_writer == null || !_isConnected)
             {
-                var error = "Cannot send command - writer is null (not connected)";
-                Console.WriteLine($"{error}: {command}");
-                throw new InvalidOperationException(error);
+                OnErrorOccurred(new InvalidOperationException("Not connected or writer not initialized when sending command."));
+                return;
             }
 
             try
             {
-                await _writer.WriteLineAsync(command);
-                await _writer.FlushAsync(); // Ensure immediate send
-                Console.WriteLine($"Sending IRC command: {command}");
-                CommandSent?.Invoke(this, command);
+                // Ensure CRLF terminated as per IRC spec
+                await _writer.WriteLineAsync(command).ConfigureAwait(false);
+                // Raise command sent event (non-blocking)
+                try { CommandSent?.Invoke(this, command); } catch { }
             }
             catch (Exception ex)
             {
-                var error = $"Failed to send command: {ex.GetType().Name}: {ex.Message}";
-                Console.WriteLine($"{error} - Command: {command}");
-                throw new Exception(error, ex);
+                OnErrorOccurred(ex);
             }
         }
 
         public async Task JoinChannelAsync(string channel)
         {
-            if (!channel.StartsWith("#"))
+            if (string.IsNullOrWhiteSpace(channel))
+                return;
+
+            if (!channel.StartsWith("#") && !channel.StartsWith("&"))
+            {
+                // Normalize: prefix with #
                 channel = "#" + channel;
-            
-            await SendCommandAsync($"JOIN {channel}");
+            }
+
+            await SendCommandAsync($"JOIN {channel}").ConfigureAwait(false);
         }
 
         public async Task LeaveChannelAsync(string channel)
         {
-            await SendCommandAsync($"PART {channel}");
+            if (string.IsNullOrWhiteSpace(channel))
+                return;
+
+            await SendCommandAsync($"PART {channel}"). ConfigureAwait(false);
         }
 
         public async Task SendMessageAsync(string target, string message)
         {
-            await SendCommandAsync($"PRIVMSG {target} :{message}");
+            if (string.IsNullOrWhiteSpace(target) || string.IsNullOrWhiteSpace(message))
+                return;
+
+            await SendCommandAsync($"PRIVMSG {target} :{message}").ConfigureAwait(false);
         }
 
         public async Task SendNoticeAsync(string target, string message)
         {
-            await SendCommandAsync($"NOTICE {target} :{message}");
+            if (string.IsNullOrWhiteSpace(target) || string.IsNullOrWhiteSpace(message))
+                return;
+
+            await SendCommandAsync($"NOTICE {target} :{message}").ConfigureAwait(false);
         }
 
         private async Task ListenForMessagesAsync()
         {
+            if (_reader == null)
+                return;
+
+            var token = _cancellationTokenSource?.Token ?? CancellationToken.None;
+
             try
             {
-                Console.WriteLine("Message listening loop started");
-                var startTime = DateTime.Now;
-                while (!_cancellationTokenSource!.Token.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
                 {
-                    var line = await _reader!.ReadLineAsync();
-                    if (line == null) 
+                    Task<string?> readTask = _reader.ReadLineAsync();
+                    var completed = await Task.WhenAny(readTask, Task.Delay(1000, token)).ConfigureAwait(false);
+                    if (completed != readTask)
                     {
-                        var elapsed = DateTime.Now - startTime;
-                        Console.WriteLine($"Received null line from server - connection closed after {elapsed.TotalSeconds:F1} seconds");
+                        // check cancellation and loop
+                        continue;
+                    }
+
+                    string? line = await readTask.ConfigureAwait(false);
+                    if (line == null)
+                    {
+                        // remote closed
                         break;
                     }
 
-                    // Debug: Log raw IRC messages to console
-                    Console.WriteLine($"IRC Raw: {line}");
-                    
-                    var message = ParseIRCMessage(line);
-                    if (message != null)
+                    // Handle PING promptly
+                    if (line.StartsWith("PING ", StringComparison.OrdinalIgnoreCase))
                     {
-                        // Debug: Log parsed messages
-                        Console.WriteLine($"IRC Parsed: {message.Command} | {string.Join(" ", message.Parameters)}");
-                        
-                        // Check for PING immediately to respond quickly
-                        if (message.IsPing)
-                        {
-                            var pingData = message.Parameters.FirstOrDefault();
-                            Console.WriteLine($"🏓 PING received, responding immediately with PONG: {pingData}");
-                            try
-                            {
-                                await SendCommandAsync($"PONG {pingData}");
-                                Console.WriteLine($"✅ PONG sent successfully");
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"❌ Failed to send PONG: {ex.Message}");
-                            }
-                            continue; // Skip normal message processing for PING
-                        }
-                        // Check for CTCP messages
-                        if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
-                        {
-                            var target = message.Parameters[0];
-                            var msgText = message.Parameters[1];
-                            
-                            // Check if this is a CTCP message
-                            if (msgText.StartsWith("\u0001") && msgText.EndsWith("\u0001"))
-                            {
-                                var sender = ExtractNicknameFromPrefix(message.Prefix);
-                                HandleCTCPMessage(sender, target, msgText);
-                            }
-                            // Check if this is a DCC message
-                            else if (msgText.StartsWith("DCC "))
-                            {
-                                var sender = ExtractNicknameFromPrefix(message.Prefix);
-                                HandleDCCMessage(sender, target, msgText);
-                            }
-                        }
-                        else if (message.Command == "NOTICE" && message.Parameters.Count >= 2)
-                        {
-                            var target = message.Parameters[0];
-                            var msgText = message.Parameters[1];
-                            
-                            // Check if this is a CTCP response
-                            if (msgText.StartsWith("\u0001") && msgText.EndsWith("\u0001"))
-                            {
-                                var sender = ExtractNicknameFromPrefix(message.Prefix);
-                                HandleCTCPResponse(sender, target, msgText);
-                            }
-                        }
-                        
-                        OnMessageReceived(message);
+                        var pongPayload = line.Substring(5);
+                        await SendCommandAsync($"PONG {pongPayload}").ConfigureAwait(false);
+                        continue;
                     }
-                    else
+
+                    // Parse and raise message event where possible
+                    try
                     {
-                        // Debug: Log failed parsing
-                        Console.WriteLine($"IRC Parse Failed: {line}");
+                        var message = ParseIRCMessage(line);
+                        if (message != null)
+                        {
+                            // Check for CTCP messages
+                            if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
+                            {
+                                var target = message.Parameters[0];
+                                var msgText = message.Parameters[1];
+                                
+                                // Check if this is a CTCP message
+                                if (msgText.StartsWith("\u0001") && msgText.EndsWith("\u0001"))
+                                {
+                                    var sender = ExtractNicknameFromPrefix(message.Prefix);
+                                    HandleCTCPMessage(sender, target, msgText);
+                                }
+                                // Check if this is a DCC message
+                                else if (msgText.StartsWith("DCC "))
+                                {
+                                    var sender = ExtractNicknameFromPrefix(message.Prefix);
+                                    HandleDCCMessage(sender, target, msgText);
+                                }
+                            }
+                            else if (message.Command == "NOTICE" && message.Parameters.Count >= 2)
+                            {
+                                var target = message.Parameters[0];
+                                var msgText = message.Parameters[1];
+                                
+                                // Check if this is a CTCP response
+                                if (msgText.StartsWith("\u0001") && msgText.EndsWith("\u0001"))
+                                {
+                                    var sender = ExtractNicknameFromPrefix(message.Prefix);
+                                    HandleCTCPResponse(sender, target, msgText);
+                                }
+                            }
+                            
+                            try { MessageReceived?.Invoke(this, message); } catch { }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // ensure parsing errors don't kill the loop
+                        OnErrorOccurred(ex);
                     }
                 }
             }
+            catch (OperationCanceledException) { }
+            catch (IOException ex)
+            {
+                // network errors: notify and disconnect
+                OnErrorOccurred(ex);
+            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Message listening error: {ex.GetType().Name}: {ex.Message}");
-                if (!_cancellationTokenSource!.Token.IsCancellationRequested)
-                {
-                    OnErrorOccurred(ex);
-                }
+                OnErrorOccurred(ex);
+            }
+            finally
+            {
+                // ensure disconnected state
+                SetConnected(false);
             }
         }
 
@@ -473,125 +410,131 @@ namespace Y0daiiIRC.IRC
 
         protected virtual void OnMessageReceived(IRCMessage message)
         {
-            MessageReceived?.Invoke(this, message);
+            // ...existing code...
+            try { MessageReceived?.Invoke(this, message); } catch { }
         }
 
         protected virtual void OnConnectionStatusChanged(string status)
         {
-            ConnectionStatusChanged?.Invoke(this, status);
+            try { ConnectionStatusChanged?.Invoke(this, status); } catch { }
         }
 
-        private async Task StartIdentServer(string identServer, int identPort, string username)
+        protected virtual void OnErrorOccurred(Exception ex)
+        {
+            try { ErrorOccurred?.Invoke(this, ex); } catch { }
+        }
+
+        private async Task StartIdentServer(string identListenAddress, int identPort, string username, CancellationToken token)
         {
             TcpListener? listener = null;
             try
             {
-                Console.WriteLine($"Starting ident server on {identServer}:{identPort} for user {username}");
-                
-                // Bind to all interfaces (0.0.0.0) so IRC servers can connect
-                listener = new TcpListener(System.Net.IPAddress.Any, identPort);
-                listener.Start();
-                Console.WriteLine($"Ident server listening on port {identPort}");
+                IPAddress listenIp;
+                if (string.IsNullOrWhiteSpace(identListenAddress) || identListenAddress.Equals("any", StringComparison.OrdinalIgnoreCase))
+                {
+                    listenIp = IPAddress.Any;
+                }
+                else if (!IPAddress.TryParse(identListenAddress, out IPAddress? parsedIp) || parsedIp == null)
+                {
+                    // If a hostname was supplied, fallback to Any (binding to a hostname is non-trivial).
+                    listenIp = IPAddress.Any;
+                }
+                else
+                {
+                    listenIp = parsedIp;
+                }
 
-                while (!_cancellationTokenSource!.Token.IsCancellationRequested)
+                listener = new TcpListener(listenIp, identPort);
+
+                try
+                {
+                    listener.Start();
+                }
+                catch (Exception ex)
+                {
+                    // Binding failed (permission / port in use) — log and return; ident is non-fatal.
+                    OnErrorOccurred(new Exception($"Ident server failed to bind on {listenIp}:{identPort}: {ex.Message}", ex));
+                    return;
+                }
+
+                while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        var client = await listener.AcceptTcpClientAsync();
-                        Console.WriteLine($"Ident request received from {client.Client.RemoteEndPoint}");
-                        // Handle ident request quickly to avoid server timeout
-                        _ = Task.Run(() => HandleIdentRequest(client, username), _cancellationTokenSource.Token);
+                        var acceptTask = listener.AcceptTcpClientAsync();
+                        var completed = await Task.WhenAny(acceptTask, Task.Delay(1000, token)).ConfigureAwait(false);
+                        if (completed != acceptTask)
+                            continue;
+
+                        var client = acceptTask.Result;
+                        // Fire-and-forget to handle ident request
+                        _ = Task.Run(() => HandleIdentRequest(client, username), token);
                     }
-                    catch (OperationCanceledException)
-                    {
-                        break;
-                    }
+                    catch (OperationCanceledException) { break; }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Ident server accept error: {ex.GetType().Name}: {ex.Message}");
-                        // Continue listening unless it's a fatal error
-                        if (ex is SocketException se && se.SocketErrorCode == SocketError.AddressAlreadyInUse)
-                        {
-                            Console.WriteLine("Port already in use - ident server cannot start");
-                            break;
-                        }
+                        // Non-fatal loop error — log and continue
+                        OnErrorOccurred(ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Ident server error: {ex.GetType().Name}: {ex.Message}");
-                // Don't call OnErrorOccurred for ident failures - they're optional
+                OnErrorOccurred(ex);
             }
             finally
             {
-                try
-                {
-                    listener?.Stop();
-                    Console.WriteLine("Ident server stopped");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error stopping ident server: {ex.Message}");
-                }
+                try { listener?.Stop(); } catch { }
             }
         }
 
         private async Task HandleIdentRequest(TcpClient client, string username)
         {
-            try
-            {
-                using var stream = client.GetStream();
-                using var reader = new StreamReader(stream);
-                using var writer = new StreamWriter(stream) { AutoFlush = true };
-
-                // Read request with timeout to avoid hanging
-                var readTask = reader.ReadLineAsync();
-                var timeoutTask = Task.Delay(5000); // 5 second timeout for ident request
-                var completedTask = await Task.WhenAny(readTask, timeoutTask);
-                
-                if (completedTask == timeoutTask)
-                {
-                    Console.WriteLine("Ident request timeout - closing connection");
-                    return;
-                }
-
-                var request = await readTask;
-                Console.WriteLine($"Ident request: {request}");
-                
-                if (!string.IsNullOrEmpty(request))
-                {
-                    var parts = request.Split(',');
-                    if (parts.Length >= 2)
-                    {
-                        var response = $"{parts[0].Trim()}, {parts[1].Trim()} : USERID : UNIX : {username}";
-                        Console.WriteLine($"Ident response: {response}");
-                        await writer.WriteLineAsync(response);
-                        await writer.FlushAsync(); // Ensure immediate response
-                    }
-                    else
-                    {
-                        // Send error response for malformed request
-                        var errorResponse = $"{request} : ERROR : NO-USER";
-                        Console.WriteLine($"Ident error response: {errorResponse}");
-                        await writer.WriteLineAsync(errorResponse);
-                        await writer.FlushAsync();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Ident request handling error: {ex.GetType().Name}: {ex.Message}");
-            }
-            finally
+            using (client)
             {
                 try
                 {
-                    client.Close();
+                    var stream = client.GetStream();
+                    stream.ReadTimeout = 5000;
+                    stream.WriteTimeout = 5000;
+
+                    using var reader = new StreamReader(stream, Encoding.ASCII, false, 1024, true);
+                    using var writer = new StreamWriter(stream, Encoding.ASCII, 1024, true) { NewLine = "\r\n", AutoFlush = true };
+
+                    // Read one line (like "portA , portB")
+                    var readTask = reader.ReadLineAsync();
+                    var completed = await Task.WhenAny(readTask, Task.Delay(5000)).ConfigureAwait(false);
+                    if (completed != readTask)
+                        return;
+
+                    var request = readTask.Result;
+                    if (string.IsNullOrWhiteSpace(request))
+                        return;
+
+                    var parts = request.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length < 2)
+                    {
+                        await writer.WriteLineAsync($"{request} : ERROR : INVALID-REQUEST").ConfigureAwait(false);
+                        return;
+                    }
+
+                    if (!int.TryParse(parts[0], out int portA) || !int.TryParse(parts[1], out int portB))
+                    {
+                        await writer.WriteLineAsync($"{request} : ERROR : INVALID-PORT").ConfigureAwait(false);
+                        return;
+                    }
+
+                    // Send USERID response. Use UNIX as OS token to be accepted by most servers.
+                    var response = $"{portA} , {portB} : USERID : UNIX : {username}";
+                    await writer.WriteLineAsync(response).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error closing ident client: {ex.Message}");
+                    OnErrorOccurred(ex);
+                }
+                finally
+                {
+                    try { client.Close(); } catch { }
                 }
             }
         }
@@ -600,10 +543,12 @@ namespace Y0daiiIRC.IRC
         private string ExtractNicknameFromPrefix(string? prefix)
         {
             if (string.IsNullOrEmpty(prefix))
-                return "";
-            
-            var exclamationIndex = prefix.IndexOf('!');
-            return exclamationIndex > 0 ? prefix.Substring(0, exclamationIndex) : prefix;
+                return string.Empty;
+
+            var exIdx = prefix.IndexOf('!');
+            if (exIdx > 0)
+                return prefix.Substring(0, exIdx);
+            return prefix;
         }
 
         private void HandleCTCPResponse(string sender, string target, string message)
@@ -671,12 +616,14 @@ namespace Y0daiiIRC.IRC
         // CTCP Methods
         public async Task SendCTCPAsync(string target, string command, string? parameter = null)
         {
-            if (!_isConnected || _writer == null) return;
+            if (!_isConnected || _writer == null)
+            {
+                OnErrorOccurred(new InvalidOperationException("Cannot send CTCP: not connected."));
+                return;
+            }
 
-            var message = parameter != null ? $"{command} {parameter}" : command;
-            var ctcpMessage = $"\u0001{message}\u0001";
-            await _writer.WriteLineAsync($"PRIVMSG {target} :{ctcpMessage}");
-            await _writer.FlushAsync();
+            var payload = string.IsNullOrEmpty(parameter) ? $"\u0001{command}\u0001" : $"\u0001{command} {parameter}\u0001";
+            await SendMessageAsync(target, payload).ConfigureAwait(false);
         }
 
         public async Task SendCTCPResponseAsync(string target, string command, string response)
@@ -684,8 +631,7 @@ namespace Y0daiiIRC.IRC
             if (!_isConnected || _writer == null) return;
 
             var ctcpResponse = $"\u0001{command} {response}\u0001";
-            await _writer.WriteLineAsync($"NOTICE {target} :{ctcpResponse}");
-            await _writer.FlushAsync();
+            await SendCommandAsync($"NOTICE {target} :{ctcpResponse}").ConfigureAwait(false);
         }
 
         public async Task SendDCCOfferAsync(string target, string fileName, long fileSize, string ipAddress, int port)
@@ -702,8 +648,7 @@ namespace Y0daiiIRC.IRC
             {
                 var ipNumber = (a << 24) | (b << 16) | (c << 8) | d;
                 var dccMessage = $"DCC SEND {fileName} {fileSize} {port} {ipNumber}";
-                await _writer.WriteLineAsync($"PRIVMSG {target} :{dccMessage}");
-                await _writer.FlushAsync();
+                await SendCommandAsync($"PRIVMSG {target} :{dccMessage}").ConfigureAwait(false);
             }
         }
 
@@ -757,16 +702,10 @@ namespace Y0daiiIRC.IRC
             }
         }
 
-        protected virtual void OnErrorOccurred(Exception ex)
-        {
-            ErrorOccurred?.Invoke(this, ex);
-        }
-
+        // Minimal SSL certificate validator - returns true only if there are no SSL policy errors.
         private bool ValidateServerCertificate(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
         {
-            // For IRC, we'll accept all certificates for now
-            // In a production environment, you might want to implement proper certificate validation
-            return true;
+            return sslPolicyErrors == SslPolicyErrors.None;
         }
     }
 }
