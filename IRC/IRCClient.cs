@@ -132,12 +132,12 @@ namespace Y0daiiIRC.IRC
             if (_writer != null)
             {
                 await _writer.WriteLineAsync(command);
-                System.Diagnostics.Debug.WriteLine($"Sending IRC command: {command}");
+                Console.WriteLine($"Sending IRC command: {command}");
                 CommandSent?.Invoke(this, command);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"Cannot send command - writer is null: {command}");
+                Console.WriteLine($"Cannot send command - writer is null: {command}");
             }
         }
 
@@ -174,13 +174,13 @@ namespace Y0daiiIRC.IRC
                     if (line == null) break;
 
                     // Debug: Log raw IRC messages to console
-                    System.Diagnostics.Debug.WriteLine($"IRC Raw: {line}");
+                    Console.WriteLine($"IRC Raw: {line}");
                     
                     var message = ParseIRCMessage(line);
                     if (message != null)
                     {
                         // Debug: Log parsed messages
-                        System.Diagnostics.Debug.WriteLine($"IRC Parsed: {message.Command} | {string.Join(" ", message.Parameters)}");
+                        Console.WriteLine($"IRC Parsed: {message.Command} | {string.Join(" ", message.Parameters)}");
                         // Check for CTCP messages
                         if (message.Command == "PRIVMSG" && message.Parameters.Count >= 2)
                         {
@@ -218,7 +218,7 @@ namespace Y0daiiIRC.IRC
                     else
                     {
                         // Debug: Log failed parsing
-                        System.Diagnostics.Debug.WriteLine($"IRC Parse Failed: {line}");
+                        Console.WriteLine($"IRC Parse Failed: {line}");
                     }
                 }
             }

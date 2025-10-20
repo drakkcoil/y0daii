@@ -116,7 +116,7 @@ namespace Y0daiiIRC
 
         private void OnCommandSent(object? sender, string command)
         {
-            System.Diagnostics.Debug.WriteLine($"OnCommandSent called: {command}");
+            Console.WriteLine($"OnCommandSent called: {command}");
             Dispatcher.Invoke(() =>
             {
                 // Don't log sensitive commands like PASS
