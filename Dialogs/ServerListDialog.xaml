@@ -6,13 +6,13 @@
         Height="600" 
         Width="800"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource MaterialDesignPaper}"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="#F8F9FA"
+        TextElement.Foreground="#323130"
         TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
+        TextElement.FontSize="14"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="Auto"
-        FontFamily="{DynamicResource MaterialDesignFont}">
+        FontFamily="Segoe UI">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -22,32 +22,51 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <materialDesign:ColorZone Grid.Row="0" Mode="PrimaryMid" Padding="16,8">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                    <materialDesign:PackIcon Kind="ServerNetwork" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Text="Server List" Style="{StaticResource MaterialDesignHeadline6TextBlock}" VerticalAlignment="Center"/>
+        <Border Grid.Row="0" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,0,0,1">
+            <Grid Height="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <materialDesign:PackIcon Kind="ServerNetwork" Width="20" Height="20" VerticalAlignment="Center" Foreground="#0078D4" Margin="0,0,8,0"/>
+                    <TextBlock Text="Server List" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#323130"/>
                 </StackPanel>
                 
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
                     <Button x:Name="AddServerButton" 
                             Content="Add Server" 
-                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Background="#0078D4"
+                            Foreground="White"
+                            BorderThickness="0"
+                            Padding="12,8"
+                            FontWeight="SemiBold"
                             Click="AddServerButton_Click"
                             Margin="0,0,8,0"/>
                     <Button x:Name="EditServerButton" 
                             Content="Edit" 
-                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Background="Transparent"
+                            Foreground="#0078D4"
+                            BorderThickness="1"
+                            BorderBrush="#E1DFDD"
+                            Padding="12,8"
+                            FontWeight="SemiBold"
                             Click="EditServerButton_Click"
                             Margin="0,0,8,0"/>
                     <Button x:Name="RemoveServerButton" 
                             Content="Remove" 
-                            Style="{StaticResource MaterialDesignFlatButton}"
+                            Background="Transparent"
+                            Foreground="#0078D4"
+                            BorderThickness="1"
+                            BorderBrush="#E1DFDD"
+                            Padding="12,8"
+                            FontWeight="SemiBold"
                             Click="RemoveServerButton_Click"
                             Margin="0,0,8,0"/>
                 </StackPanel>
-            </DockPanel>
-        </materialDesign:ColorZone>
+            </Grid>
+        </Border>
 
         <!-- Server List -->
         <DataGrid x:Name="ServerDataGrid" 
@@ -73,18 +92,29 @@
         </DataGrid>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    Margin="16">
-            <Button x:Name="ConnectButton"
-                    Content="Connect"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Click="ConnectButton_Click"
-                    Margin="0,0,8,0"/>
-            <Button x:Name="CancelButton"
-                    Content="Cancel"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Click="CancelButton_Click"/>
-        </StackPanel>
+        <Border Grid.Row="2" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Margin="16,12">
+                <Button x:Name="ConnectButton"
+                        Content="Connect"
+                        Background="#0078D4"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Padding="16,8"
+                        FontWeight="SemiBold"
+                        Click="ConnectButton_Click"
+                        Margin="0,0,8,0"/>
+                <Button x:Name="CancelButton"
+                        Content="Cancel"
+                        Background="Transparent"
+                        Foreground="#0078D4"
+                        BorderThickness="1"
+                        BorderBrush="#E1DFDD"
+                        Padding="16,8"
+                        FontWeight="SemiBold"
+                        Click="CancelButton_Click"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

@@ -8,209 +8,374 @@
         MinHeight="600"
         MinWidth="800"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource MaterialDesignPaper}"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="#F8F9FA"
+        TextElement.Foreground="#323130"
         TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
+        TextElement.FontSize="14"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="Auto"
-        FontFamily="{DynamicResource MaterialDesignFont}">
+        FontFamily="Segoe UI">
     
     <Window.Resources>
-        <Style x:Key="ChannelButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="Padding" Value="16,8"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
-                </Trigger>
-            </Style.Triggers>
+        <!-- Office 365 Color Scheme -->
+        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
+        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
+        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
+        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
+        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
+        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
+        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
+        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
+        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
+        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
+        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
+        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
+        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+        <SolidColorBrush x:Key="OfficeGray950" Color="#201F1E"/>
+        
+        <!-- Modern Button Styles -->
+        <Style x:Key="OfficeButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="2" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         
-        <Style x:Key="UserButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <Style x:Key="NavigationItemStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource OfficeGray700}"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Margin" Value="0,1"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource MaterialDesignSelection}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="250" MinWidth="200"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="200" MinWidth="150"/>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top Bar -->
-        <materialDesign:ColorZone Grid.ColumnSpan="3" Mode="PrimaryMid" Padding="16,8">
-            <DockPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                    <materialDesign:PackIcon Kind="Chat" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Text="Y0daii IRC Client" Style="{StaticResource MaterialDesignHeadline6TextBlock}" VerticalAlignment="Center"/>
+        <!-- Title Bar -->
+        <Border Grid.Row="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+            <Grid Height="32">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0">
+                    <materialDesign:PackIcon Kind="Chat" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Y0daii IRC Client" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
                 </StackPanel>
                 
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="16,0">
+                    <Button x:Name="MinimizeButton" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MinimizeButton_Click">
+                        <materialDesign:PackIcon Kind="WindowMinimize" Width="10" Height="10" Foreground="{StaticResource OfficeGray700}"/>
+                    </Button>
+                    <Button x:Name="MaximizeButton" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MaximizeButton_Click">
+                        <materialDesign:PackIcon Kind="WindowMaximize" Width="10" Height="10" Foreground="{StaticResource OfficeGray700}"/>
+                    </Button>
+                    <Button x:Name="CloseButton" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="CloseButton_Click">
+                        <materialDesign:PackIcon Kind="WindowClose" Width="10" Height="10" Foreground="{StaticResource OfficeGray700}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Ribbon Bar -->
+        <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+            <Grid Height="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Connection Status -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <Ellipse x:Name="StatusIndicator" Width="8" Height="8" Fill="Red" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Disconnected" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray700}"/>
+                </StackPanel>
+                
+                <!-- Ribbon Actions -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
                     <Button x:Name="ConnectButton" 
                             Content="Connect" 
-                            Style="{StaticResource MaterialDesignRaisedButton}"
+                            Style="{StaticResource OfficeButtonStyle}"
                             Click="ConnectButton_Click"
                             Margin="0,0,8,0"/>
+                    <Button x:Name="JoinChannelButton" 
+                            Content="Join Channel" 
+                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Click="JoinChannelButton_Click"
+                            Margin="0,0,8,0"/>
                     <Button x:Name="SettingsButton" 
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            Click="SettingsButton_Click">
-                        <materialDesign:PackIcon Kind="Settings"/>
+                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Click="SettingsButton_Click"
+                            Width="40">
+                        <materialDesign:PackIcon Kind="Settings" Width="16" Height="16"/>
                     </Button>
                 </StackPanel>
-                
-                <TextBlock x:Name="StatusText" 
-                           Text="Disconnected" 
-                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                           VerticalAlignment="Center"
-                           Margin="16,0,0,0"/>
-            </DockPanel>
-        </materialDesign:ColorZone>
-
-        <!-- Server/Channel List -->
-        <materialDesign:Card Grid.Row="1" Margin="8,8,4,8" Padding="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                
-                <materialDesign:ColorZone Grid.Row="0" Mode="PrimaryLight" Padding="16,8">
-                    <TextBlock Text="Channels" Style="{StaticResource MaterialDesignSubtitle2TextBlock}"/>
-                </materialDesign:ColorZone>
-                
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="ChannelList" Margin="8"/>
-                </ScrollViewer>
             </Grid>
-        </materialDesign:Card>
+        </Border>
 
-        <!-- Chat Area with Tabs -->
-        <Grid Grid.Column="1" Grid.Row="1" Margin="4,8">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
+        <!-- Main Content Area -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250" MinWidth="200"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="200" MinWidth="150"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- Tab Header -->
-            <materialDesign:ColorZone Grid.Row="0" Mode="PrimaryLight" Padding="0">
-                <TabControl x:Name="ChatTabs" 
-                            Style="{StaticResource MaterialDesignTabControl}"
-                            SelectionChanged="ChatTabs_SelectionChanged">
-                    <TabItem Header="Console" Tag="console">
-                        <TabItem.HeaderTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Console" Width="16" Height="16" Margin="0,0,4,0"/>
-                                    <TextBlock Text="Console"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </TabItem.HeaderTemplate>
-                    </TabItem>
-                </TabControl>
-            </materialDesign:ColorZone>
-
-            <!-- Tab Content -->
-            <Grid Grid.Row="1">
-                <ScrollViewer x:Name="MessageScrollViewer" 
-                              VerticalScrollBarVisibility="Auto"
-                              Background="{DynamicResource MaterialDesignPaper}"
-                              Padding="16">
-                    <ItemsControl x:Name="MessageList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,2" Padding="8,4">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Timestamp}" 
-                                                   Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                                                   Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                        <TextBlock x:Name="MessageTextBlock" TextWrapping="Wrap">
-                                            <TextBlock.Inlines>
-                                                <Run Text="{Binding Sender}" FontWeight="Bold" Foreground="{Binding SenderColor}"/>
-                                                <Run Text=": "/>
-                                                <Run Text="{Binding Content}"/>
-                                            </TextBlock.Inlines>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
-
-            <!-- Message Input -->
-            <materialDesign:Card Grid.Row="2" Margin="0,8,0,0" Padding="16">
+            <!-- Navigation Pane (Outlook-style) -->
+            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,1,0">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     
-                    <Button x:Name="JoinChannelButton" 
-                            Grid.Column="0"
-                            Style="{StaticResource MaterialDesignIconButton}"
-                            Click="JoinChannelButton_Click"
-                            Margin="0,0,8,0"
-                            ToolTip="Join Channel">
-                        <materialDesign:PackIcon Kind="AccountPlus"/>
-                    </Button>
+                    <!-- Navigation Header -->
+                    <Border Grid.Row="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Navigation" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray700}" Margin="16,12"/>
+                    </Border>
                     
-                    <TextBox x:Name="MessageTextBox" 
-                             Grid.Column="1"
-                             materialDesign:HintAssist.Hint="Type your message or command..."
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                             KeyDown="MessageTextBox_KeyDown"
-                             Margin="0,0,8,0"/>
-                    
-                    <Button x:Name="SendButton" 
-                            Grid.Column="2"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Click="SendButton_Click">
-                        <materialDesign:PackIcon Kind="Send"/>
-                    </Button>
+                    <!-- Navigation Items -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="0,8,0,0">
+                            <!-- Server Section -->
+                            <TextBlock Text="SERVERS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,8,16,4" TextTransform="Uppercase"/>
+                            <Button x:Name="ConnectButtonNav" Content="Connect to Server" Style="{StaticResource NavigationItemStyle}" Click="ConnectButton_Click"/>
+                            
+                            <!-- Channels Section -->
+                            <TextBlock Text="CHANNELS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,16,16,4" TextTransform="Uppercase"/>
+                            <StackPanel x:Name="ChannelList" Margin="0,0,0,8"/>
+                            
+                            <!-- Private Messages Section -->
+                            <TextBlock Text="PRIVATE MESSAGES" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,16,16,4" TextTransform="Uppercase"/>
+                            <StackPanel x:Name="PrivateMessageList" Margin="0,0,0,8"/>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
-            </materialDesign:Card>
+            </Border>
+
+            <!-- Chat Area -->
+            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Chat Header -->
+                    <Border Grid.Row="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+                        <Grid Height="48">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                                <materialDesign:PackIcon x:Name="ChatIcon" Kind="Console" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
+                                <TextBlock x:Name="ChatTitle" Text="Console" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                            </StackPanel>
+                            
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                                <Button x:Name="JoinChannelButtonChat" 
+                                        Content="Join Channel" 
+                                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                                        Click="JoinChannelButton_Click"
+                                        Margin="0,0,8,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Messages Area -->
+                    <ScrollViewer x:Name="MessageScrollViewer" 
+                                  Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Background="White"
+                                  Padding="16">
+                        <ItemsControl x:Name="MessageList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,4" Padding="12,8" Background="{StaticResource OfficeGray50}" CornerRadius="4">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="14"/>
+                                                <TextBlock Text="{Binding Timestamp}" FontSize="12" Foreground="{StaticResource OfficeGray500}" Margin="8,0,0,0"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="14" Foreground="{StaticResource OfficeGray900}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Message Input -->
+                    <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+                        <Grid Margin="16,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <Border Grid.Column="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray300}" BorderThickness="1" CornerRadius="4" Margin="0,0,8,0">
+                                <TextBox x:Name="MessageTextBox" 
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Padding="12,8"
+                                         FontSize="14"
+                                         KeyDown="MessageTextBox_KeyDown"
+                                         VerticalAlignment="Center">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="TextBox">
+                                                        <Border Background="{TemplateBinding Background}" 
+                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                                CornerRadius="4">
+                                                            <ScrollViewer x:Name="PART_ContentHost" 
+                                                                          Margin="{TemplateBinding Padding}"
+                                                                          VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+                            </Border>
+                            
+                            <Button x:Name="SendButton" 
+                                    Grid.Column="1"
+                                    Style="{StaticResource OfficeButtonStyle}"
+                                    Click="SendButton_Click"
+                                    Padding="16,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Send" Width="16" Height="16" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Send"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- User List -->
+            <Border Grid.Column="2" Background="White">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- User List Header -->
+                    <Border Grid.Row="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="Users" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray700}" Margin="16,12"/>
+                    </Border>
+                    
+                    <!-- User List -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="UserList" Margin="8,8,8,0"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
 
-        <!-- User List -->
-        <materialDesign:Card Grid.Column="2" Grid.Row="1" Margin="4,8,8,8" Padding="0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+        <!-- Status Bar -->
+        <Border Grid.Row="3" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+            <Grid Height="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
                 
-                <materialDesign:ColorZone Grid.Row="0" Mode="PrimaryLight" Padding="16,8">
-                    <TextBlock Text="Users" Style="{StaticResource MaterialDesignSubtitle2TextBlock}"/>
-                </materialDesign:ColorZone>
-                
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel x:Name="UserList" Margin="8"/>
-                </ScrollViewer>
+                <TextBlock Grid.Column="0" Text="Ready" FontSize="12" Foreground="{StaticResource OfficeGray600}" VerticalAlignment="Center" Margin="16,0"/>
+                <TextBlock Grid.Column="1" x:Name="ConnectionInfo" Text="" FontSize="12" Foreground="{StaticResource OfficeGray600}" VerticalAlignment="Center" Margin="16,0"/>
             </Grid>
-        </materialDesign:Card>
+        </Border>
     </Grid>
 </Window>

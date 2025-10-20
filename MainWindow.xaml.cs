@@ -71,6 +71,19 @@ namespace Y0daiiIRC
             {
                 StatusText.Text = status;
                 ConnectButton.Content = status == "Connected" ? "Disconnect" : "Connect";
+                
+                // Update status indicator
+                if (status == "Connected")
+                {
+                    StatusIndicator.Fill = new SolidColorBrush(Colors.Green);
+                    ConnectionInfo.Text = $"Connected to {_ircClient.Server}:{_ircClient.Port}";
+                }
+                else
+                {
+                    StatusIndicator.Fill = new SolidColorBrush(Colors.Red);
+                    ConnectionInfo.Text = "";
+                }
+                
                 UpdateUI();
             });
         }
@@ -293,14 +306,11 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = $"{GetChannelIcon(channel)} {channel.Name}",
-                Style = (Style)FindResource("ChannelButtonStyle"),
+                Style = (Style)FindResource("NavigationItemStyle"),
                 Tag = channel
             };
             button.Click += (s, e) => SwitchToChannel(channel);
             ChannelList.Children.Add(button);
-
-            // Add tab for the channel
-            AddChannelTab(channel);
         }
 
         private void AddChannelTab(Channel channel)
@@ -319,7 +329,7 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = user.Nickname,
-                Style = (Style)FindResource("UserButtonStyle"),
+                Style = (Style)FindResource("NavigationItemStyle"),
                 Tag = user
             };
             button.Click += (s, e) => StartPrivateMessage(user);
@@ -369,12 +379,9 @@ namespace Y0daiiIRC
         {
             _currentChannel = channel;
             
-            // Switch to the appropriate tab
-            var tab = ChatTabs.Items.Cast<TabItem>().FirstOrDefault(t => t.Tag?.ToString() == channel.Name);
-            if (tab != null)
-            {
-                ChatTabs.SelectedItem = tab;
-            }
+            // Update chat header
+            ChatTitle.Text = channel.Name;
+            ChatIcon.Kind = channel.Type == ChannelType.Channel ? MaterialDesignThemes.Wpf.PackIconKind.Hash : MaterialDesignThemes.Wpf.PackIconKind.Message;
             
             MessageList.Items.Clear();
             if (_channelMessages.ContainsKey(channel.Name))
@@ -527,6 +534,21 @@ namespace Y0daiiIRC
                     }
                 }
             }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }
