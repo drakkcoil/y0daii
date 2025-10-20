@@ -48,6 +48,7 @@ namespace Y0daiiIRC.IRC
 
         public async Task<bool> ConnectAsync(string server, int port, string nickname, string username, string realName, bool useSSL = false, string? password = null, string? identServer = null, int identPort = 113)
         {
+            Console.WriteLine($"ConnectAsync: Starting connection to {server}:{port}");
             try
             {
                 Server = server;
@@ -60,6 +61,7 @@ namespace Y0daiiIRC.IRC
                 // Create the cancellation token source early so background tasks can observe it.
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = new CancellationTokenSource();
+                Console.WriteLine("ConnectAsync: Cancellation token source created");
 
                 OnConnectionStatusChanged("Connecting");
 
@@ -82,24 +84,29 @@ namespace Y0daiiIRC.IRC
                 }
 
                 // Create TCP client and attempt connection with timeout.
+                Console.WriteLine("ConnectAsync: Creating TCP client");
                 _tcpClient = new TcpClient();
 
                 var connectCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
                 var connectTimeout = TimeSpan.FromSeconds(30);
                 connectCts.CancelAfter(connectTimeout);
 
+                Console.WriteLine($"ConnectAsync: Attempting TCP connection to {server}:{port}");
                 Task connectTask = _tcpClient.ConnectAsync(server, port);
 
                 var completed = await Task.WhenAny(connectTask, Task.Delay(Timeout.Infinite, connectCts.Token)).ConfigureAwait(false);
                 if (completed != connectTask)
                 {
+                    Console.WriteLine($"ConnectAsync: Connection timed out after {connectTimeout.TotalSeconds} seconds");
                     throw new TimeoutException($"Connection to {server}:{port} timed out after {connectTimeout.TotalSeconds} seconds.");
                 }
 
                 // Ensure any exception from ConnectAsync is observed
                 await connectTask.ConfigureAwait(false);
+                Console.WriteLine("ConnectAsync: TCP connection established");
 
                 _stream = _tcpClient.GetStream();
+                Console.WriteLine("ConnectAsync: Network stream obtained");
 
                 if (useSSL)
                 {
@@ -151,38 +158,46 @@ namespace Y0daiiIRC.IRC
 
         public async Task DisconnectAsync()
         {
+            Console.WriteLine("DisconnectAsync: Starting disconnect process");
             try
             {
                 // Cancel background operations first
                 if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
                 {
+                    Console.WriteLine("DisconnectAsync: Cancelling background operations");
                     _cancellationTokenSource.Cancel();
                 }
 
                 // Give a small delay for background tasks to finish
+                Console.WriteLine("DisconnectAsync: Waiting for background tasks to finish");
                 await Task.Delay(100).ConfigureAwait(false);
 
                 // Wait for any pending stream operations to complete
+                Console.WriteLine("DisconnectAsync: Acquiring stream lock");
                 await _streamLock.WaitAsync();
                 try
                 {
+                    Console.WriteLine("DisconnectAsync: Stream lock acquired");
                     // Send QUIT command if connected (while holding the lock)
                     if (_isConnected && _writer != null)
                     {
+                        Console.WriteLine("DisconnectAsync: Sending QUIT command");
                         try
                         {
                             // Use a timeout for the QUIT command to avoid hanging
                             using var quitCts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
                             await _writer.WriteLineAsync("QUIT :Y0daii IRC Client").ConfigureAwait(false);
                             await _writer.FlushAsync(quitCts.Token).ConfigureAwait(false);
+                            Console.WriteLine("DisconnectAsync: QUIT command sent successfully");
                         }
                         catch (Exception ex)
                         {
                             // Ignore errors when sending QUIT during disconnect
-                            Console.WriteLine($"Error sending QUIT command during disconnect: {ex.Message}");
+                            Console.WriteLine($"DisconnectAsync: Error sending QUIT command: {ex.GetType().Name}: {ex.Message}");
                         }
                     }
 
+                    Console.WriteLine("DisconnectAsync: Closing streams and connections");
                     // Close reader/writer/streams in proper order
                     try { _reader?.Dispose(); } catch { }
                     try { _writer?.Dispose(); } catch { }
@@ -197,20 +212,24 @@ namespace Y0daiiIRC.IRC
                     _tcpClient = null;
 
                     SetConnected(false);
+                    Console.WriteLine("DisconnectAsync: Disconnect completed successfully");
                 }
                 finally
                 {
                     _streamLock.Release();
+                    Console.WriteLine("DisconnectAsync: Stream lock released");
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"DisconnectAsync: Error during disconnect: {ex.GetType().Name}: {ex.Message}");
                 OnErrorOccurred(ex);
             }
             finally
             {
                 try { _cancellationTokenSource?.Dispose(); } catch { }
                 _cancellationTokenSource = null;
+                Console.WriteLine("DisconnectAsync: Cleanup completed");
             }
         }
 
@@ -218,31 +237,38 @@ namespace Y0daiiIRC.IRC
         {
             if (_writer == null || !_isConnected)
             {
+                Console.WriteLine($"SendCommandAsync: Not connected or writer null - {command}");
                 OnErrorOccurred(new InvalidOperationException("Not connected or writer not initialized when sending command."));
                 return;
             }
 
+            Console.WriteLine($"SendCommandAsync: Acquiring lock for command: {command}");
             await _streamLock.WaitAsync();
             try
             {
                 // Double-check connection status after acquiring lock
                 if (_writer == null || !_isConnected)
                 {
+                    Console.WriteLine($"SendCommandAsync: Connection lost after acquiring lock - {command}");
                     return;
                 }
 
+                Console.WriteLine($"SendCommandAsync: Sending command: {command}");
                 // Ensure CRLF terminated as per IRC spec
                 await _writer.WriteLineAsync(command).ConfigureAwait(false);
+                Console.WriteLine($"SendCommandAsync: Command sent successfully: {command}");
                 // Raise command sent event (non-blocking)
                 try { CommandSent?.Invoke(this, command); } catch { }
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"SendCommandAsync: Error sending command {command}: {ex.GetType().Name}: {ex.Message}");
                 OnErrorOccurred(ex);
             }
             finally
             {
                 _streamLock.Release();
+                Console.WriteLine($"SendCommandAsync: Released lock for command: {command}");
             }
         }
 
@@ -284,10 +310,35 @@ namespace Y0daiiIRC.IRC
             await SendCommandAsync($"NOTICE {target} :{message}").ConfigureAwait(false);
         }
 
+        private async Task SendPongDirectly(string payload)
+        {
+            if (_writer == null || !_isConnected)
+            {
+                Console.WriteLine($"SendPongDirectly: Not connected or writer null - {payload}");
+                return;
+            }
+
+            try
+            {
+                Console.WriteLine($"SendPongDirectly: Sending PONG directly: {payload}");
+                await _writer.WriteLineAsync($"PONG {payload}").ConfigureAwait(false);
+                Console.WriteLine($"SendPongDirectly: PONG sent successfully: {payload}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SendPongDirectly: Error sending PONG {payload}: {ex.GetType().Name}: {ex.Message}");
+                OnErrorOccurred(ex);
+            }
+        }
+
         private async Task ListenForMessagesAsync()
         {
+            Console.WriteLine("ListenForMessagesAsync: Starting message listening loop");
             if (_reader == null)
+            {
+                Console.WriteLine("ListenForMessagesAsync: Reader is null, exiting");
                 return;
+            }
 
             var token = _cancellationTokenSource?.Token ?? CancellationToken.None;
 
@@ -306,15 +357,18 @@ namespace Y0daiiIRC.IRC
                     string? line = await readTask.ConfigureAwait(false);
                     if (line == null)
                     {
-                        // remote closed
+                        Console.WriteLine("ListenForMessagesAsync: Received null line, remote closed");
                         break;
                     }
+
+                    Console.WriteLine($"ListenForMessagesAsync: Received line: {line}");
 
                     // Handle PING promptly
                     if (line.StartsWith("PING ", StringComparison.OrdinalIgnoreCase))
                     {
                         var pongPayload = line.Substring(5);
-                        await SendCommandAsync($"PONG {pongPayload}").ConfigureAwait(false);
+                        Console.WriteLine($"ListenForMessagesAsync: Received PING, sending PONG: {pongPayload}");
+                        await SendPongDirectly(pongPayload).ConfigureAwait(false);
                         continue;
                     }
 
