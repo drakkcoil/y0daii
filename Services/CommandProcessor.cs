@@ -148,6 +148,14 @@ namespace Y0daiiIRC.Services
                         await HandleCTCPCommand(args, currentChannel);
                         break;
 
+                    // DCC commands
+                    case "dcc":
+                        await HandleDCCCommand(args, currentChannel);
+                        break;
+                    case "send":
+                        await HandleSendCommand(args, currentChannel);
+                        break;
+
                     // Utility commands
                     case "clear":
                         HandleClearCommand();
@@ -631,6 +639,55 @@ namespace Y0daiiIRC.Services
 
             await _ircClient.SendCTCPAsync(target, command, parameter);
             CommandExecuted?.Invoke(this, $"Sent CTCP {command} to {target}");
+        }
+
+        // DCC Command Handlers
+        private async Task HandleDCCCommand(string[] args, Channel? currentChannel)
+        {
+            if (args.Length < 2)
+            {
+                CommandError?.Invoke(this, "Usage: /dcc <send|chat> <target> [file]");
+                return;
+            }
+
+            var dccType = args[0].ToLower();
+            var target = args[1];
+
+            switch (dccType)
+            {
+                case "send":
+                    if (args.Length < 3)
+                    {
+                        CommandError?.Invoke(this, "Usage: /dcc send <target> <file>");
+                        return;
+                    }
+                    var filePath = args[2];
+                    // TODO: Implement file sending through DCC service
+                    CommandExecuted?.Invoke(this, $"DCC send to {target} not yet implemented");
+                    break;
+                case "chat":
+                    // TODO: Implement DCC chat
+                    CommandExecuted?.Invoke(this, $"DCC chat with {target} not yet implemented");
+                    break;
+                default:
+                    CommandError?.Invoke(this, "Usage: /dcc <send|chat> <target> [file]");
+                    break;
+            }
+        }
+
+        private async Task HandleSendCommand(string[] args, Channel? currentChannel)
+        {
+            if (args.Length < 2)
+            {
+                CommandError?.Invoke(this, "Usage: /send <target> <file>");
+                return;
+            }
+
+            var target = args[0];
+            var filePath = args[1];
+
+            // TODO: Implement file sending through DCC service
+            CommandExecuted?.Invoke(this, $"Send file to {target} not yet implemented");
         }
 
     }

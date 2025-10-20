@@ -14,6 +14,84 @@
         TextOptions.TextRenderingMode="Auto"
         FontFamily="Segoe UI">
 
+    <Window.Resources>
+        <!-- Office 365 Color Scheme -->
+        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
+        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
+        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
+        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
+        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
+        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
+        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
+        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
+        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
+        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
+        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
+        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
+        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+
+        <!-- Button Styles -->
+        <Style x:Key="OfficeButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,7 +100,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
             <Grid Height="48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -30,90 +108,100 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <materialDesign:PackIcon Kind="ServerNetwork" Width="20" Height="20" VerticalAlignment="Center" Foreground="#0078D4" Margin="0,0,8,0"/>
-                    <TextBlock Text="Server List" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#323130"/>
+                    <materialDesign:PackIcon Kind="ServerNetwork" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Server List" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
                 </StackPanel>
                 
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <Button x:Name="AddServerButton" 
-                            Content="Add Server" 
-                            Background="#0078D4"
-                            Foreground="White"
-                            BorderThickness="0"
-                            Padding="12,8"
-                            FontWeight="SemiBold"
-                            Click="AddServerButton_Click"
-                            Margin="0,0,8,0"/>
-                    <Button x:Name="EditServerButton" 
-                            Content="Edit" 
-                            Background="Transparent"
-                            Foreground="#0078D4"
-                            BorderThickness="1"
-                            BorderBrush="#E1DFDD"
-                            Padding="12,8"
-                            FontWeight="SemiBold"
-                            Click="EditServerButton_Click"
-                            Margin="0,0,8,0"/>
-                    <Button x:Name="RemoveServerButton" 
-                            Content="Remove" 
-                            Background="Transparent"
-                            Foreground="#0078D4"
-                            BorderThickness="1"
-                            BorderBrush="#E1DFDD"
-                            Padding="12,8"
-                            FontWeight="SemiBold"
-                            Click="RemoveServerButton_Click"
-                            Margin="0,0,8,0"/>
-                </StackPanel>
+                <Button Grid.Column="1" 
+                        Width="32" 
+                        Height="32" 
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Click="CloseButton_Click"
+                        Margin="16,0">
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource OfficeGray700}"/>
+                </Button>
             </Grid>
         </Border>
 
-        <!-- Server List -->
-        <DataGrid x:Name="ServerDataGrid" 
-                  Grid.Row="1" 
-                  Margin="16"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  SelectionMode="Single"
-                  GridLinesVisibility="Horizontal"
-                  HeadersVisibility="Column"
-                  Style="{StaticResource MaterialDesignDataGrid}">
-            <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="Favorite" Binding="{Binding IsFavorite}" Width="80"/>
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="150"/>
-                <DataGridTextColumn Header="Host" Binding="{Binding Host}" Width="200"/>
-                <DataGridTextColumn Header="Port" Binding="{Binding Port}" Width="80"/>
-                <DataGridCheckBoxColumn Header="SSL" Binding="{Binding UseSSL}" Width="60"/>
-                <DataGridTextColumn Header="Nickname" Binding="{Binding Nickname}" Width="120"/>
-                <DataGridTextColumn Header="Last Connected" Binding="{Binding LastConnected, StringFormat=yyyy-MM-dd HH:mm}" Width="150"/>
-                <DataGridTextColumn Header="Connections" Binding="{Binding ConnectionCount}" Width="100"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- Content -->
+        <Grid Grid.Row="1" Margin="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Server List -->
+            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="1" CornerRadius="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- List Header -->
+                    <Border Grid.Row="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+                        <Grid Height="40">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="60"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0" Text="Server Name" FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0"/>
+                            <TextBlock Grid.Column="1" Text="Host" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="Port" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="SSL" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Server Items -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="ServerListPanel"/>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Action Buttons -->
+            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Top">
+                <Button x:Name="AddButton" 
+                        Content="Add Server" 
+                        Style="{StaticResource OfficeButtonStyle}"
+                        Click="AddButton_Click"
+                        Margin="0,0,0,8"/>
+                <Button x:Name="EditButton" 
+                        Content="Edit Server" 
+                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Click="EditButton_Click"
+                        Margin="0,0,0,8"/>
+                <Button x:Name="RemoveButton" 
+                        Content="Remove Server" 
+                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Click="RemoveButton_Click"
+                        Margin="0,0,0,8"/>
+                <Button x:Name="ConnectButton" 
+                        Content="Connect" 
+                        Style="{StaticResource OfficeButtonStyle}"
+                        Click="ConnectButton_Click"
+                        Margin="0,0,0,8"/>
+            </StackPanel>
+        </Grid>
 
         <!-- Buttons -->
-        <Border Grid.Row="2" Background="White" BorderBrush="#E1DFDD" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" 
                         HorizontalAlignment="Right" 
                         Margin="16,12">
-                <Button x:Name="ConnectButton"
-                        Content="Connect"
-                        Background="#0078D4"
-                        Foreground="White"
-                        BorderThickness="0"
-                        Padding="16,8"
-                        FontWeight="SemiBold"
-                        Click="ConnectButton_Click"
-                        Margin="0,0,8,0"/>
                 <Button x:Name="CancelButton"
                         Content="Cancel"
-                        Background="Transparent"
-                        Foreground="#0078D4"
-                        BorderThickness="1"
-                        BorderBrush="#E1DFDD"
-                        Padding="16,8"
-                        FontWeight="SemiBold"
-                        Click="CancelButton_Click"/>
+                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Click="CancelButton_Click"
+                        Margin="0,0,8,0"/>
+                <Button x:Name="OkButton"
+                        Content="OK"
+                        Style="{StaticResource OfficeButtonStyle}"
+                        Click="OkButton_Click"/>
             </StackPanel>
         </Border>
     </Grid>

@@ -23,6 +23,7 @@ namespace Y0daiiIRC.IRC
         public event EventHandler<string>? ConnectionStatusChanged;
         public event EventHandler<Exception>? ErrorOccurred;
         public event EventHandler<CTCPRequest>? CTCPRequestReceived;
+        public event EventHandler<DCCRequest>? DCCRequestReceived;
 
         public bool IsConnected => _isConnected;
         public string? Server { get; private set; }
@@ -149,6 +150,12 @@ namespace Y0daiiIRC.IRC
                             {
                                 var sender = ExtractNicknameFromPrefix(message.Prefix);
                                 HandleCTCPMessage(sender, target, msgText);
+                            }
+                            // Check if this is a DCC message
+                            else if (msgText.StartsWith("DCC "))
+                            {
+                                var sender = ExtractNicknameFromPrefix(message.Prefix);
+                                HandleDCCMessage(sender, target, msgText);
                             }
                         }
                         else if (message.Command == "NOTICE" && message.Parameters.Count >= 2)
@@ -321,6 +328,54 @@ namespace Y0daiiIRC.IRC
             OnMessageReceived(ctcpResponse);
         }
 
+        private void HandleDCCMessage(string sender, string target, string message)
+        {
+            if (!message.StartsWith("DCC "))
+                return;
+
+            var dccContent = message.Substring(4); // Remove "DCC "
+            var parts = dccContent.Split(' ');
+            
+            if (parts.Length < 4)
+                return;
+
+            var type = parts[0].ToUpper();
+            var fileName = parts[1];
+            
+            if (!long.TryParse(parts[2], out long fileSize))
+                return;
+                
+            if (!int.TryParse(parts[3], out int port))
+                return;
+
+            // Parse IP address (can be in different formats)
+            string ipAddress = "";
+            if (parts.Length > 4)
+            {
+                // IP address might be in dotted decimal or as a single number
+                if (int.TryParse(parts[4], out int ipNumber))
+                {
+                    // Convert integer IP to dotted decimal
+                    ipAddress = $"{ipNumber >> 24 & 0xFF}.{ipNumber >> 16 & 0xFF}.{ipNumber >> 8 & 0xFF}.{ipNumber & 0xFF}";
+                }
+                else
+                {
+                    ipAddress = parts[4];
+                }
+            }
+
+            var dccType = type switch
+            {
+                "SEND" => DCCRequestType.Send,
+                "CHAT" => DCCRequestType.Chat,
+                "RESUME" => DCCRequestType.Resume,
+                _ => DCCRequestType.Send
+            };
+
+            var dccRequest = new DCCRequest(sender, target, dccType, fileName, fileSize, ipAddress, port);
+            DCCRequestReceived?.Invoke(this, dccRequest);
+        }
+
         // CTCP Methods
         public async Task SendCTCPAsync(string target, string command, string? parameter = null)
         {
@@ -339,6 +394,25 @@ namespace Y0daiiIRC.IRC
             var ctcpResponse = $"\u0001{command} {response}\u0001";
             await _writer.WriteLineAsync($"NOTICE {target} :{ctcpResponse}");
             await _writer.FlushAsync();
+        }
+
+        public async Task SendDCCOfferAsync(string target, string fileName, long fileSize, string ipAddress, int port)
+        {
+            if (!_isConnected || _writer == null) return;
+
+            // Convert IP address to integer format for DCC
+            var ipParts = ipAddress.Split('.');
+            if (ipParts.Length == 4 && 
+                int.TryParse(ipParts[0], out int a) && 
+                int.TryParse(ipParts[1], out int b) && 
+                int.TryParse(ipParts[2], out int c) && 
+                int.TryParse(ipParts[3], out int d))
+            {
+                var ipNumber = (a << 24) | (b << 16) | (c << 8) | d;
+                var dccMessage = $"DCC SEND {fileName} {fileSize} {port} {ipNumber}";
+                await _writer.WriteLineAsync($"PRIVMSG {target} :{dccMessage}");
+                await _writer.FlushAsync();
+            }
         }
 
         private void HandleCTCPMessage(string sender, string target, string message)

@@ -261,6 +261,19 @@
                             Click="JoinChannelButton_Click"
                             Margin="0,0,8,0"/>
                     
+                    <!-- DCC Transfer Manager -->
+                    <Button x:Name="DCCTransferButton" 
+                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Click="DCCTransferButton_Click"
+                            Margin="0,0,8,0">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FileTransfer" Width="16" Height="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="File Transfer"/>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+
                     <!-- Help Menu -->
                     <Button x:Name="HelpButton" 
                             Content="Help" 

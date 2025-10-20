@@ -23,6 +23,7 @@ namespace Y0daiiIRC
         private Dictionary<string, List<ChatMessage>> _channelMessages;
         private ServerListService _serverListService;
         private CommandProcessor _commandProcessor;
+        private DCCService _dccService;
         // private TabItem? _consoleTab; // Removed - using Office 365-style navigation
 
         public MainWindow()
@@ -33,6 +34,7 @@ namespace Y0daiiIRC
             _users = new List<User>();
             _channelMessages = new Dictionary<string, List<ChatMessage>>();
             _serverListService = new ServerListService();
+            _dccService = new DCCService();
             _commandProcessor = new CommandProcessor(_ircClient, _serverListService);
 
             SetupEventHandlers();
@@ -45,6 +47,7 @@ namespace Y0daiiIRC
             _ircClient.MessageReceived += OnIRCMessageReceived;
             _ircClient.ConnectionStatusChanged += OnConnectionStatusChanged;
             _ircClient.ErrorOccurred += OnErrorOccurred;
+            _ircClient.DCCRequestReceived += OnDCCRequestReceived;
             _commandProcessor.CommandExecuted += OnCommandExecuted;
             _commandProcessor.CommandError += OnCommandError;
         }
@@ -92,6 +95,45 @@ namespace Y0daiiIRC
             {
                 AddSystemMessage($"Error: {ex.Message}");
             });
+        }
+
+        private async void OnDCCRequestReceived(object? sender, DCCRequest request)
+        {
+            if (request.Type == DCCRequestType.Send)
+            {
+                var result = MessageBox.Show(
+                    $"User {request.Sender} wants to send you a file:\n\n" +
+                    $"File: {request.FileName}\n" +
+                    $"Size: {FormatFileSize(request.FileSize)}\n\n" +
+                    $"Do you want to accept this file transfer?",
+                    "DCC File Transfer Request",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    try
+                    {
+                        await _dccService.InitiateReceiveAsync(
+                            request.Sender, 
+                            request.FileName, 
+                            request.FileSize, 
+                            request.IPAddress, 
+                            request.Port, 
+                            request.Token);
+                        
+                        AddSystemMessage($"Accepting file transfer: {request.FileName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        AddSystemMessage($"Failed to accept file transfer: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    AddSystemMessage($"Declined file transfer: {request.FileName}");
+                }
+            }
         }
 
         private void OnCommandExecuted(object? sender, string command)
@@ -652,6 +694,13 @@ namespace Y0daiiIRC
             }
         }
 
+        private void DCCTransferButton_Click(object sender, RoutedEventArgs e)
+        {
+            var dccDialog = new DCCTransferDialog(_dccService);
+            dccDialog.Owner = this;
+            dccDialog.ShowDialog();
+        }
+
         // Context Menu Handlers
         private string? _selectedUser;
         private string? _selectedChannel;
@@ -751,6 +800,19 @@ namespace Y0daiiIRC
             // TODO: Implement whois from message context
             MessageBox.Show("Whois from message context not yet implemented.", "Information", 
                 MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+            return $"{len:0.##} {sizes[order]}";
         }
     }
 }
