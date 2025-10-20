@@ -48,6 +48,7 @@ namespace Y0daiiIRC
             _ircClient.ConnectionStatusChanged += OnConnectionStatusChanged;
             _ircClient.ErrorOccurred += OnErrorOccurred;
             _ircClient.DCCRequestReceived += OnDCCRequestReceived;
+            _ircClient.CommandSent += OnCommandSent;
             _commandProcessor.CommandExecuted += OnCommandExecuted;
             _commandProcessor.CommandError += OnCommandError;
         }
@@ -62,6 +63,10 @@ namespace Y0daiiIRC
         {
             Dispatcher.Invoke(() =>
             {
+                // Log incoming IRC messages for debugging (optional)
+                // Uncomment the line below to see raw IRC messages
+                // AddSystemMessage($"← {message.Command} {string.Join(" ", message.Parameters)}");
+                
                 HandleIRCMessage(message);
             });
         }
@@ -73,16 +78,29 @@ namespace Y0daiiIRC
                 StatusText.Text = status;
                 ConnectButton.Content = status == "Connected" ? "Disconnect" : "Connect";
                 
-                // Update status indicator
+                // Log connection status changes to console
                 if (status == "Connected")
                 {
                     StatusIndicator.Fill = new SolidColorBrush(Colors.Green);
                     ConnectionInfo.Text = $"Connected to {_ircClient.Server}:{_ircClient.Port}";
+                    AddSystemMessage($"✓ Connected to {_ircClient.Server}:{_ircClient.Port} {(status.Contains("SSL") ? "(SSL)" : "")}");
+                }
+                else if (status == "Disconnected")
+                {
+                    StatusIndicator.Fill = new SolidColorBrush(Colors.Red);
+                    ConnectionInfo.Text = "";
+                    AddSystemMessage("✗ Disconnected from server");
+                }
+                else if (status == "Connecting")
+                {
+                    StatusIndicator.Fill = new SolidColorBrush(Colors.Orange);
+                    AddSystemMessage($"🔄 Connecting to {_ircClient.Server}:{_ircClient.Port}...");
                 }
                 else
                 {
                     StatusIndicator.Fill = new SolidColorBrush(Colors.Red);
                     ConnectionInfo.Text = "";
+                    AddSystemMessage($"⚠ {status}");
                 }
                 
                 UpdateUI();
@@ -94,6 +112,22 @@ namespace Y0daiiIRC
             Dispatcher.Invoke(() =>
             {
                 AddSystemMessage($"Error: {ex.Message}");
+            });
+        }
+
+        private void OnCommandSent(object? sender, string command)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                // Don't log sensitive commands like PASS
+                if (!command.StartsWith("PASS"))
+                {
+                    AddSystemMessage($"→ {command}");
+                }
+                else
+                {
+                    AddSystemMessage("→ PASS ***");
+                }
             });
         }
 
@@ -140,7 +174,7 @@ namespace Y0daiiIRC
         {
             Dispatcher.Invoke(() =>
             {
-                AddSystemMessage(command);
+                AddSystemMessage($"✅ {command}");
             });
         }
 
@@ -156,7 +190,9 @@ namespace Y0daiiIRC
         {
             if (message.IsPing)
             {
-                _ = Task.Run(async () => await _ircClient.SendCommandAsync($"PONG {message.Parameters.FirstOrDefault()}"));
+                var pingData = message.Parameters.FirstOrDefault();
+                AddSystemMessage($"🏓 Received PING from server, sending PONG");
+                _ = Task.Run(async () => await _ircClient.SendCommandAsync($"PONG {pingData}"));
                 return;
             }
 
@@ -181,7 +217,14 @@ namespace Y0daiiIRC
             {
                 var channel = message.Target;
                 var user = message.Sender;
-                AddSystemMessage($"{user} joined {channel}");
+                if (user == _ircClient.Nickname)
+                {
+                    AddSystemMessage($"✅ Successfully joined {channel}");
+                }
+                else
+                {
+                    AddSystemMessage($"👤 {user} joined {channel}");
+                }
                 if (channel == _currentChannel?.Name)
                 {
                     AddUser(new User { Nickname = user });
@@ -234,6 +277,7 @@ namespace Y0daiiIRC
                     break;
                 case "005": // RPL_ISUPPORT
                     // Server capabilities - could be used for feature detection
+                    AddSystemMessage($"🔧 Server capabilities: {message.Content}");
                     break;
                 case "250": // RPL_STATSCONN
                     AddSystemMessage($"Highest connection count: {message.Content}");
@@ -533,6 +577,7 @@ namespace Y0daiiIRC
         {
             if (_ircClient.IsConnected)
             {
+                AddSystemMessage("🔄 Disconnecting from server...");
                 await _ircClient.DisconnectAsync();
             }
             else
@@ -541,6 +586,9 @@ namespace Y0daiiIRC
                 if (dialog.ShowDialog() == true && dialog.SelectedServer != null)
                 {
                     var server = dialog.SelectedServer;
+                    AddSystemMessage($"🔄 Attempting to connect to {server.Host}:{server.Port} {(server.UseSSL ? "(SSL)" : "")}...");
+                    AddSystemMessage($"📝 Using nickname: {server.Nickname ?? "Y0daiiUser"}");
+                    
                     var success = await _ircClient.ConnectAsync(
                         server.Host, server.Port, server.Nickname ?? "Y0daiiUser", 
                         server.Username ?? "y0daii", server.RealName ?? "Y0daii IRC User",
@@ -548,6 +596,7 @@ namespace Y0daiiIRC
                     
                     if (!success)
                     {
+                        AddSystemMessage("❌ Failed to connect to IRC server.");
                         MessageBox.Show("Failed to connect to IRC server.", "Connection Error", 
                             MessageBoxButton.OK, MessageBoxImage.Error);
                     }
@@ -566,6 +615,7 @@ namespace Y0daiiIRC
             var dialog = new JoinChannelDialog();
             if (dialog.ShowDialog() == true)
             {
+                AddSystemMessage($"🔄 Joining channel {dialog.ChannelName}...");
                 await _ircClient.JoinChannelAsync(dialog.ChannelName);
                 
                 var channel = new Channel { Name = dialog.ChannelName, Type = ChannelType.Channel };

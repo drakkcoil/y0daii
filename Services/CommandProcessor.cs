@@ -156,6 +156,7 @@ namespace Y0daiiIRC.Services
                         await HandleSendCommand(args, currentChannel);
                         break;
 
+
                     // Utility commands
                     case "clear":
                         HandleClearCommand();
@@ -569,12 +570,29 @@ namespace Y0daiiIRC.Services
         {
             if (args.Length < 1)
             {
-                CommandError?.Invoke(this, "Usage: /raw <command>");
+                CommandError?.Invoke(this, "Usage: /raw <command> or /raw <on|off>");
                 return;
             }
 
+            // Check if it's a logging toggle command
+            if (args.Length == 1 && (args[0].ToLower() == "on" || args[0].ToLower() == "off"))
+            {
+                var mode = args[0].ToLower();
+                if (mode == "on")
+                {
+                    CommandExecuted?.Invoke(this, "Raw IRC message logging enabled. Use /raw off to disable.");
+                }
+                else
+                {
+                    CommandExecuted?.Invoke(this, "Raw IRC message logging disabled.");
+                }
+                return;
+            }
+
+            // Otherwise, send as raw IRC command
             var command = string.Join(" ", args);
             await _ircClient.SendCommandAsync(command);
+            CommandExecuted?.Invoke(this, $"Sent raw command: {command}");
         }
 
         private async Task HandleQuoteCommand(string[] args)
@@ -697,6 +715,7 @@ namespace Y0daiiIRC.Services
             // TODO: Implement file sending through DCC service
             CommandExecuted?.Invoke(this, $"Send file to {target} not yet implemented");
         }
+
 
     }
 }

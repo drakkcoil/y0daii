@@ -28,6 +28,7 @@ namespace Y0daiiIRC.IRC
         public event EventHandler<Exception>? ErrorOccurred;
         public event EventHandler<CTCPRequest>? CTCPRequestReceived;
         public event EventHandler<DCCRequest>? DCCRequestReceived;
+        public event EventHandler<string>? CommandSent;
 
         public bool IsConnected => _isConnected;
         public string? Server { get; private set; }
@@ -122,6 +123,7 @@ namespace Y0daiiIRC.IRC
             if (_writer != null && _isConnected)
             {
                 await _writer.WriteLineAsync(command);
+                CommandSent?.Invoke(this, command);
             }
         }
 
