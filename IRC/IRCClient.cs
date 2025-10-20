@@ -61,10 +61,10 @@ namespace Y0daiiIRC.IRC
                 _cancellationTokenSource = new CancellationTokenSource();
                 Console.WriteLine($"Starting connection to {server}:{port}...");
 
-                // Start ident server if specified
+                // Start ident server if specified (optional)
                 if (!string.IsNullOrEmpty(identServer))
                 {
-                    Console.WriteLine($"Starting ident server on {identServer}:{identPort}...");
+                    Console.WriteLine($"Attempting to start ident server on {identServer}:{identPort}...");
                     _ = Task.Run(async () => 
                     {
                         try
@@ -73,10 +73,14 @@ namespace Y0daiiIRC.IRC
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Failed to start ident server: {ex.Message}");
-                            Console.WriteLine("Continuing without ident server...");
+                            Console.WriteLine($"Ident server failed: {ex.Message}");
+                            Console.WriteLine("Continuing without ident (server will use ~username)...");
                         }
                     });
+                }
+                else
+                {
+                    Console.WriteLine("No ident server configured - server will use ~username");
                 }
 
                 _tcpClient = new TcpClient();

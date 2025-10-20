@@ -253,6 +253,41 @@ namespace Y0daiiIRC
                 AddSystemMessage($"{oldNick} is now known as {newNick}");
                 UpdateUserNick(oldNick, newNick);
             }
+            else if (message.IsNotice)
+            {
+                var content = message.Content;
+                var sender = message.Sender;
+                
+                // Handle server notices (like ident responses)
+                if (sender == "*" || string.IsNullOrEmpty(sender))
+                {
+                    if (content?.Contains("No Ident response") == true)
+                    {
+                        AddSystemMessage("ℹ️ No ident response - server will use ~username");
+                    }
+                    else if (content?.Contains("Checking Ident") == true)
+                    {
+                        AddSystemMessage("🔍 Server is checking ident...");
+                    }
+                    else if (content?.Contains("Looking up your hostname") == true)
+                    {
+                        AddSystemMessage("🌐 Server is looking up your hostname...");
+                    }
+                    else if (content?.Contains("Found your hostname") == true)
+                    {
+                        AddSystemMessage($"🌐 Hostname resolved: {content}");
+                    }
+                    else
+                    {
+                        AddSystemMessage($"📢 Server notice: {content}");
+                    }
+                }
+                else
+                {
+                    // Regular notice from a user
+                    AddSystemMessage($"📢 Notice from {sender}: {content}");
+                }
+            }
             else if (message.IsNumeric)
             {
                 HandleNumericMessage(message);
