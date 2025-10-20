@@ -113,6 +113,7 @@ namespace Y0daiiIRC.IRC
 
                 if (useSSL)
                 {
+                    Console.WriteLine("ConnectAsync: Starting SSL handshake");
                     _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
                     // authenticate with a timeout
                     var authTask = _sslStream.AuthenticateAsClientAsync(server);
@@ -123,14 +124,18 @@ namespace Y0daiiIRC.IRC
                         throw new TimeoutException("SSL authentication timed out.");
                     }
                     await authTask.ConfigureAwait(false);
+                    Console.WriteLine("ConnectAsync: SSL handshake completed");
 
                     _reader = new StreamReader(_sslStream, Encoding.UTF8);
                     _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
+                    Console.WriteLine("ConnectAsync: SSL StreamReader and StreamWriter created");
                 }
                 else
                 {
+                    Console.WriteLine("ConnectAsync: Creating StreamReader and StreamWriter");
                     _reader = new StreamReader(_stream, Encoding.UTF8);
                     _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
+                    Console.WriteLine("ConnectAsync: StreamReader and StreamWriter created successfully");
                 }
 
                 // Send initial commands BEFORE starting message listening
@@ -154,9 +159,8 @@ namespace Y0daiiIRC.IRC
                 Console.WriteLine("ConnectAsync: Starting message listening loop");
                 _ = Task.Run(() => ListenForMessagesAsync(), _cancellationTokenSource.Token);
 
-                // mark connected; you might want to wait for RPL_WELCOME (001) instead
-                Console.WriteLine("ConnectAsync: Setting connected state to true");
-                SetConnected(true);
+                // Don't set connected yet - wait for welcome message (001) instead
+                Console.WriteLine("ConnectAsync: Connection setup completed, waiting for server welcome");
 
                 return true;
             }
@@ -248,10 +252,10 @@ namespace Y0daiiIRC.IRC
 
         public async Task SendCommandAsync(string command)
         {
-            if (_writer == null || !_isConnected)
+            if (_writer == null)
             {
-                Console.WriteLine($"SendCommandAsync: Not connected or writer null - {command}");
-                OnErrorOccurred(new InvalidOperationException("Not connected or writer not initialized when sending command."));
+                Console.WriteLine($"SendCommandAsync: Writer is null - {command}");
+                OnErrorOccurred(new InvalidOperationException("Writer not initialized when sending command."));
                 return;
             }
 
@@ -259,10 +263,10 @@ namespace Y0daiiIRC.IRC
             await _streamLock.WaitAsync();
             try
             {
-                // Double-check connection status after acquiring lock
-                if (_writer == null || !_isConnected)
+                // Double-check writer status after acquiring lock
+                if (_writer == null)
                 {
-                    Console.WriteLine($"SendCommandAsync: Connection lost after acquiring lock - {command}");
+                    Console.WriteLine($"SendCommandAsync: Writer became null after acquiring lock - {command}");
                     return;
                 }
 
@@ -359,15 +363,17 @@ namespace Y0daiiIRC.IRC
             {
                 while (!token.IsCancellationRequested)
                 {
-                    Task<string?> readTask = _reader.ReadLineAsync();
-                    var completed = await Task.WhenAny(readTask, Task.Delay(1000, token)).ConfigureAwait(false);
-                    if (completed != readTask)
+                    string? line;
+                    try
                     {
-                        // check cancellation and loop
-                        continue;
+                        // Use cancellation token directly with ReadLineAsync to avoid stream contention
+                        line = await _reader.ReadLineAsync(token).ConfigureAwait(false);
                     }
-
-                    string? line = await readTask.ConfigureAwait(false);
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine("ListenForMessagesAsync: Operation cancelled, exiting");
+                        break;
+                    }
                     if (line == null)
                     {
                         Console.WriteLine("ListenForMessagesAsync: Received null line, remote closed");
