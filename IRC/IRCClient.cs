@@ -88,13 +88,13 @@ namespace Y0daiiIRC.IRC
                 // Add connection timeout
                 Console.WriteLine($"Attempting TCP connection to {server}:{port}...");
                 var connectTask = _tcpClient.ConnectAsync(server, port);
-                var timeoutTask = Task.Delay(10000, _cancellationTokenSource.Token); // 10 second timeout
+                var timeoutTask = Task.Delay(30000, _cancellationTokenSource.Token); // 30 second timeout for initial connection
                 
                 var completedTask = await Task.WhenAny(connectTask, timeoutTask);
                 if (completedTask == timeoutTask)
                 {
-                    Console.WriteLine($"Connection to {server}:{port} timed out after 10 seconds");
-                    throw new TimeoutException($"Connection to {server}:{port} timed out after 10 seconds");
+                    Console.WriteLine($"Connection to {server}:{port} timed out after 30 seconds");
+                    throw new TimeoutException($"Connection to {server}:{port} timed out after 30 seconds");
                 }
                 
                 await connectTask; // Ensure any exceptions from connect are propagated
@@ -204,10 +204,15 @@ namespace Y0daiiIRC.IRC
         {
             try
             {
+                Console.WriteLine("Message listening loop started");
                 while (!_cancellationTokenSource!.Token.IsCancellationRequested)
                 {
                     var line = await _reader!.ReadLineAsync();
-                    if (line == null) break;
+                    if (line == null) 
+                    {
+                        Console.WriteLine("Received null line from server - connection closed");
+                        break;
+                    }
 
                     // Debug: Log raw IRC messages to console
                     Console.WriteLine($"IRC Raw: {line}");
@@ -260,6 +265,7 @@ namespace Y0daiiIRC.IRC
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Message listening error: {ex.GetType().Name}: {ex.Message}");
                 if (!_cancellationTokenSource!.Token.IsCancellationRequested)
                 {
                     OnErrorOccurred(ex);

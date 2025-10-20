@@ -295,7 +295,9 @@ namespace Y0daiiIRC
             else if (message.Command == "ERROR")
             {
                 AddSystemMessage($"❌ Server Error: {message.Content}");
-                _ircClient.SetConnected(false);
+                // Don't automatically disconnect on ERROR - let the server handle it
+                // Some servers send ERROR messages that don't require disconnection
+                Console.WriteLine($"Server sent ERROR message: {message.Content}");
             }
         }
 
