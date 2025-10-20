@@ -63,5 +63,29 @@ namespace Y0daiiIRC
                 LoadSettings();
             }
         }
+
+        private void CheckForUpdatesNowButton_Click(object sender, RoutedEventArgs e)
+        {
+            var updateDialog = new UpdateDialog();
+            updateDialog.Owner = this;
+            updateDialog.ShowDialog();
+        }
+
+        private void ViewUpdateHistoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "https://github.com/drakkcoil/y0daii/releases",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unable to open update history: {ex.Message}", "Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }

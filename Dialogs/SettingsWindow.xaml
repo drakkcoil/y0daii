@@ -159,6 +159,61 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+
+            <TabItem Header="Updates">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16" Spacing="16">
+                        <materialDesign:Card Padding="16">
+                            <StackPanel Spacing="16">
+                                <TextBlock Text="Update Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                                
+                                <CheckBox x:Name="CheckForUpdatesOnStartupCheckBox"
+                                          Content="Check for updates on startup"
+                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                                <CheckBox x:Name="AutoDownloadUpdatesCheckBox"
+                                          Content="Automatically download updates"
+                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                                <CheckBox x:Name="AutoInstallUpdatesCheckBox"
+                                          Content="Automatically install updates"
+                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                                <CheckBox x:Name="IncludePrereleasesCheckBox"
+                                          Content="Include pre-release versions"
+                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                                <CheckBox x:Name="NotifyOnUpdateAvailableCheckBox"
+                                          Content="Notify when updates are available"
+                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <TextBlock Text="Check for updates every:" VerticalAlignment="Center" Width="150"/>
+                                    <ComboBox x:Name="UpdateCheckIntervalComboBox"
+                                              Width="120"
+                                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                                        <ComboBoxItem Content="Daily" Tag="1"/>
+                                        <ComboBoxItem Content="Weekly" Tag="7" IsSelected="True"/>
+                                        <ComboBoxItem Content="Monthly" Tag="30"/>
+                                        <ComboBoxItem Content="Never" Tag="0"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
+                                    <Button x:Name="CheckForUpdatesNowButton"
+                                            Content="Check for Updates Now"
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+                                            Click="CheckForUpdatesNowButton_Click"/>
+                                    <Button x:Name="ViewUpdateHistoryButton"
+                                            Content="View Update History"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Click="ViewUpdateHistoryButton_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
 
         <!-- Buttons -->

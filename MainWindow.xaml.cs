@@ -643,6 +643,13 @@ namespace Y0daiiIRC
             MessageBox.Show(commands, "IRC Commands Help", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
+        private void CheckForUpdatesMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            var updateDialog = new UpdateDialog();
+            updateDialog.Owner = this;
+            updateDialog.ShowDialog();
+        }
+
         private void GitHubMenuItem_Click(object sender, RoutedEventArgs e)
         {
             try

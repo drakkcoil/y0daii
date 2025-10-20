@@ -10,6 +10,7 @@ namespace Y0daiiIRC.Configuration
         public ConnectionSettings Connection { get; set; } = new();
         public NotificationSettings Notifications { get; set; } = new();
         public BehaviorSettings Behavior { get; set; } = new();
+        public UpdateSettings Updates { get; set; } = new();
 
         private static readonly string SettingsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -89,5 +90,17 @@ namespace Y0daiiIRC.Configuration
         public bool ShowSystemMessages { get; set; } = true;
         public bool LogMessages { get; set; } = false;
         public string LogPath { get; set; } = "";
+    }
+
+    public class UpdateSettings
+    {
+        public bool CheckForUpdatesOnStartup { get; set; } = true;
+        public bool AutoDownloadUpdates { get; set; } = false;
+        public bool AutoInstallUpdates { get; set; } = false;
+        public bool IncludePrereleases { get; set; } = false;
+        public DateTime LastUpdateCheck { get; set; } = DateTime.MinValue;
+        public string LastCheckedVersion { get; set; } = "";
+        public bool NotifyOnUpdateAvailable { get; set; } = true;
+        public int UpdateCheckIntervalDays { get; set; } = 7;
     }
 }

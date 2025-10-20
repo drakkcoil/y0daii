@@ -207,6 +207,11 @@
                                 </MenuItem.Icon>
                             </MenuItem>
                             <Separator/>
+                            <MenuItem Header="Check for Updates" Click="CheckForUpdatesMenuItem_Click">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="Update" Width="16" Height="16"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
                             <MenuItem Header="View on GitHub" Click="GitHubMenuItem_Click">
                                 <MenuItem.Icon>
                                     <materialDesign:PackIcon Kind="Github" Width="16" Height="16"/>
