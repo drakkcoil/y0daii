@@ -57,20 +57,41 @@ namespace Y0daiiIRC.IRC
                 RealName = realName;
                 _useSSL = useSSL;
 
+                // Create cancellation token source early
+                _cancellationTokenSource = new CancellationTokenSource();
+                Console.WriteLine($"Starting connection to {server}:{port}...");
+
                 // Start ident server if specified
                 if (!string.IsNullOrEmpty(identServer))
                 {
+                    Console.WriteLine($"Starting ident server on {identServer}:{identPort}...");
                     _ = Task.Run(() => StartIdentServer(identServer, identPort, username));
                 }
 
                 _tcpClient = new TcpClient();
-                await _tcpClient.ConnectAsync(server, port);
+                
+                // Add connection timeout
+                Console.WriteLine($"Attempting TCP connection to {server}:{port}...");
+                var connectTask = _tcpClient.ConnectAsync(server, port);
+                var timeoutTask = Task.Delay(10000, _cancellationTokenSource.Token); // 10 second timeout
+                
+                var completedTask = await Task.WhenAny(connectTask, timeoutTask);
+                if (completedTask == timeoutTask)
+                {
+                    Console.WriteLine($"Connection to {server}:{port} timed out after 10 seconds");
+                    throw new TimeoutException($"Connection to {server}:{port} timed out after 10 seconds");
+                }
+                
+                await connectTask; // Ensure any exceptions from connect are propagated
+                Console.WriteLine($"TCP connection established to {server}:{port}");
                 _stream = _tcpClient.GetStream();
 
                 if (useSSL)
                 {
+                    Console.WriteLine($"Starting SSL handshake with {server}...");
                     _sslStream = new SslStream(_stream, false, ValidateServerCertificate);
                     await _sslStream.AuthenticateAsClientAsync(server);
+                    Console.WriteLine($"SSL handshake completed with {server}");
                     _reader = new StreamReader(_sslStream, Encoding.UTF8);
                     _writer = new StreamWriter(_sslStream, Encoding.UTF8) { AutoFlush = true };
                 }
@@ -80,15 +101,15 @@ namespace Y0daiiIRC.IRC
                     _writer = new StreamWriter(_stream, Encoding.UTF8) { AutoFlush = true };
                 }
 
-                _cancellationTokenSource = new CancellationTokenSource();
-
                 // Send initial IRC commands
+                Console.WriteLine($"Sending initial IRC commands...");
                 if (!string.IsNullOrEmpty(password))
                 {
                     await SendCommandAsync($"PASS {password}");
                 }
                 await SendCommandAsync($"NICK {nickname}");
                 await SendCommandAsync($"USER {username} 0 * :{realName}");
+                Console.WriteLine($"Initial IRC commands sent, waiting for server response...");
 
                 // Don't set connected yet - wait for welcome message (001)
                 OnConnectionStatusChanged("Connecting");
