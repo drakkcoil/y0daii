@@ -1,0 +1,134 @@
+<Window x:Class="Y0daiiIRC.ServerEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Edit Server" 
+        Height="500" 
+        Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{DynamicResource MaterialDesignPaper}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.FontWeight="Regular"
+        TextElement.FontSize="13"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        FontFamily="{DynamicResource MaterialDesignFont}">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,24">
+            <materialDesign:PackIcon Kind="ServerNetwork" Width="48" Height="48" 
+                                     HorizontalAlignment="Center" 
+                                     Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            <TextBlock Text="Server Configuration" 
+                       Style="{StaticResource MaterialDesignHeadline5TextBlock}"
+                       HorizontalAlignment="Center"
+                       Margin="0,8,0,0"/>
+        </StackPanel>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+                <materialDesign:Card Padding="16">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Basic Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                        
+                        <TextBox x:Name="NameTextBox"
+                                 materialDesign:HintAssist.Hint="Server Name"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox x:Name="HostTextBox"
+                                 materialDesign:HintAssist.Hint="Host Address"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox x:Name="PortTextBox"
+                                 materialDesign:HintAssist.Hint="Port"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="6667"/>
+
+                        <CheckBox x:Name="UseSSLCheckBox"
+                                  Content="Use SSL/TLS"
+                                  Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                        <TextBox x:Name="PasswordTextBox"
+                                 materialDesign:HintAssist.Hint="Server Password (optional)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="16">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="User Information" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                        
+                        <TextBox x:Name="NicknameTextBox"
+                                 materialDesign:HintAssist.Hint="Nickname"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox x:Name="UsernameTextBox"
+                                 materialDesign:HintAssist.Hint="Username"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox x:Name="RealNameTextBox"
+                                 materialDesign:HintAssist.Hint="Real Name"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="16">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Ident Server" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                        
+                        <TextBox x:Name="IdentServerTextBox"
+                                 materialDesign:HintAssist.Hint="Ident Server (optional)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox x:Name="IdentPortTextBox"
+                                 materialDesign:HintAssist.Hint="Ident Port"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                 Text="113"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Padding="16">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="Advanced Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                        
+                        <CheckBox x:Name="AutoConnectCheckBox"
+                                  Content="Auto-connect on startup"
+                                  Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                        <CheckBox x:Name="IsFavoriteCheckBox"
+                                  Content="Mark as favorite"
+                                  Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                        <TextBox x:Name="AutoJoinChannelsTextBox"
+                                 materialDesign:HintAssist.Hint="Auto-join channels (comma-separated)"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,24,0,0">
+            <Button x:Name="CancelButton"
+                    Content="Cancel"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    Click="CancelButton_Click"
+                    Margin="0,0,8,0"/>
+            <Button x:Name="SaveButton"
+                    Content="Save"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
