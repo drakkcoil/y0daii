@@ -264,6 +264,7 @@ namespace Y0daiiIRC
             switch (message.Command)
             {
                 case "001": // RPL_WELCOME
+                    _ircClient.SetConnected(true);
                     AddSystemMessage($"Connected to {_ircClient.Server}");
                     break;
                 case "002": // RPL_YOURHOST
@@ -328,19 +329,24 @@ namespace Y0daiiIRC
                     AddSystemMessage("--- End of Message of the Day ---");
                     break;
                 case "433": // ERR_NICKNAMEINUSE
-                    AddSystemMessage($"Nickname {message.Parameters[1]} is already in use");
+                    AddSystemMessage($"❌ Nickname {message.Parameters[1]} is already in use");
+                    _ircClient.SetConnected(false);
                     break;
                 case "436": // ERR_NICKCOLLISION
-                    AddSystemMessage($"Nickname collision: {message.Content}");
+                    AddSystemMessage($"❌ Nickname collision: {message.Content}");
+                    _ircClient.SetConnected(false);
                     break;
                 case "451": // ERR_NOTREGISTERED
-                    AddSystemMessage("You have not registered");
+                    AddSystemMessage("❌ You have not registered");
+                    _ircClient.SetConnected(false);
                     break;
                 case "464": // ERR_PASSWDMISMATCH
-                    AddSystemMessage("Password incorrect");
+                    AddSystemMessage("❌ Password incorrect");
+                    _ircClient.SetConnected(false);
                     break;
                 case "465": // ERR_YOUREBANNEDCREEP
-                    AddSystemMessage("You are banned from this server");
+                    AddSystemMessage("❌ You are banned from this server");
+                    _ircClient.SetConnected(false);
                     break;
                 default:
                     // Log unknown numeric responses for debugging

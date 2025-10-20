@@ -31,6 +31,15 @@ namespace Y0daiiIRC.IRC
         public event EventHandler<string>? CommandSent;
 
         public bool IsConnected => _isConnected;
+
+        public void SetConnected(bool connected)
+        {
+            _isConnected = connected;
+            if (connected)
+            {
+                OnConnectionStatusChanged("Connected");
+            }
+        }
         public string? Server { get; private set; }
         public int Port { get; private set; }
         public string? Nickname { get; private set; }
@@ -81,8 +90,8 @@ namespace Y0daiiIRC.IRC
                 await SendCommandAsync($"NICK {nickname}");
                 await SendCommandAsync($"USER {username} 0 * :{realName}");
 
-                _isConnected = true;
-                OnConnectionStatusChanged("Connected");
+                // Don't set connected yet - wait for welcome message (001)
+                OnConnectionStatusChanged("Connecting");
 
                 // Start listening for messages
                 _ = Task.Run(ListenForMessagesAsync, _cancellationTokenSource.Token);
