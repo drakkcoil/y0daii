@@ -49,18 +49,18 @@
 
         <!-- Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
-            <StackPanel Margin="32" Spacing="24">
+            <StackPanel Margin="32" >
                 
                 <!-- Current Version Info -->
-                <StackPanel Spacing="12">
+                <StackPanel >
                     <TextBlock Text="Current Version" FontSize="16" FontWeight="SemiBold" Foreground="#323130"/>
                     <Border Background="#F8F9FA" Padding="16" CornerRadius="8">
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <TextBlock Text="Version:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="80"/>
                                 <TextBlock x:Name="CurrentVersionText" Text="1.0.0" FontSize="14" Foreground="#323130"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" >
                                 <TextBlock Text="Build Date:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="80"/>
                                 <TextBlock x:Name="BuildDateText" Text="2025-01-01" FontSize="14" Foreground="#323130"/>
                             </StackPanel>
@@ -69,12 +69,12 @@
                 </StackPanel>
 
                 <!-- Update Status -->
-                <StackPanel x:Name="UpdateStatusPanel" Spacing="12">
+                <StackPanel x:Name="UpdateStatusPanel" >
                     <TextBlock Text="Update Status" FontSize="16" FontWeight="SemiBold" Foreground="#323130"/>
                     
                     <!-- Checking Status -->
                     <Border x:Name="CheckingPanel" Background="#F8F9FA" Padding="16" CornerRadius="8" Visibility="Collapsed">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Loading" Width="20" Height="20" Foreground="#0078D4">
                                 <materialDesign:PackIcon.RenderTransform>
                                     <RotateTransform x:Name="LoadingRotation"/>
@@ -86,8 +86,8 @@
 
                     <!-- No Update Available -->
                     <Border x:Name="NoUpdatePanel" Background="#F0F8FF" Padding="16" CornerRadius="8" Visibility="Collapsed">
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <materialDesign:PackIcon Kind="CheckCircle" Width="20" Height="20" Foreground="#107C10"/>
                                 <TextBlock Text="You're up to date!" FontSize="14" FontWeight="SemiBold" Foreground="#107C10"/>
                             </StackPanel>
@@ -97,29 +97,29 @@
 
                     <!-- Update Available -->
                     <Border x:Name="UpdateAvailablePanel" Background="#FFF4CE" Padding="16" CornerRadius="8" Visibility="Collapsed">
-                        <StackPanel Spacing="12">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <materialDesign:PackIcon Kind="AlertCircle" Width="20" Height="20" Foreground="#D83B01"/>
                                 <TextBlock Text="Update Available!" FontSize="14" FontWeight="SemiBold" Foreground="#D83B01"/>
                             </StackPanel>
                             
-                            <StackPanel Spacing="8">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel >
+                                <StackPanel Orientation="Horizontal" >
                                     <TextBlock Text="Latest Version:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
                                     <TextBlock x:Name="LatestVersionText" Text="1.1.0" FontSize="14" Foreground="#323130"/>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" >
                                     <TextBlock Text="Release Date:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
                                     <TextBlock x:Name="ReleaseDateText" Text="2025-01-15" FontSize="14" Foreground="#323130"/>
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" >
                                     <TextBlock Text="File Size:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
                                     <TextBlock x:Name="FileSizeText" Text="15.2 MB" FontSize="14" Foreground="#323130"/>
                                 </StackPanel>
                             </StackPanel>
 
                             <!-- Release Notes -->
-                            <StackPanel Spacing="8">
+                            <StackPanel >
                                 <TextBlock Text="What's New:" FontWeight="SemiBold" FontSize="14" Foreground="#323130"/>
                                 <Border Background="White" Padding="12" CornerRadius="4" MaxHeight="120">
                                     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -132,14 +132,14 @@
 
                     <!-- Download Progress -->
                     <Border x:Name="DownloadProgressPanel" Background="#F8F9FA" Padding="16" CornerRadius="8" Visibility="Collapsed">
-                        <StackPanel Spacing="12">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <materialDesign:PackIcon Kind="Download" Width="20" Height="20" Foreground="#0078D4"/>
                                 <TextBlock Text="Downloading Update..." FontSize="14" FontWeight="SemiBold" Foreground="#323130"/>
                             </StackPanel>
                             
                             <ProgressBar x:Name="DownloadProgressBar" Height="8" Background="#E1DFDD" Foreground="#0078D4"/>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" >
                                 <TextBlock x:Name="DownloadStatusText" Text="Downloading..." FontSize="12" Foreground="#605E5C"/>
                                 <TextBlock x:Name="DownloadSpeedText" Text="" FontSize="12" Foreground="#605E5C"/>
                             </StackPanel>
@@ -148,8 +148,8 @@
 
                     <!-- Installation Progress -->
                     <Border x:Name="InstallProgressPanel" Background="#F8F9FA" Padding="16" CornerRadius="8" Visibility="Collapsed">
-                        <StackPanel Spacing="12">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <materialDesign:PackIcon Kind="Install" Width="20" Height="20" Foreground="#0078D4"/>
                                 <TextBlock Text="Installing Update..." FontSize="14" FontWeight="SemiBold" Foreground="#323130"/>
                             </StackPanel>
@@ -159,8 +159,8 @@
 
                     <!-- Error Status -->
                     <Border x:Name="ErrorPanel" Background="#FEF2F2" Padding="16" CornerRadius="8" Visibility="Collapsed">
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <materialDesign:PackIcon Kind="AlertCircle" Width="20" Height="20" Foreground="#DC2626"/>
                                 <TextBlock Text="Update Failed" FontSize="14" FontWeight="SemiBold" Foreground="#DC2626"/>
                             </StackPanel>
@@ -186,7 +186,7 @@
                         Click="CheckForUpdatesButton_Click"
                         Margin="0,0,8,0"/>
                 <Button x:Name="DownloadButton"
-                        Content="Download & Install"
+                        Content="Download &amp; Install"
                         Background="#107C10"
                         Foreground="White"
                         BorderThickness="0"

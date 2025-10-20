@@ -34,7 +34,7 @@
         </StackPanel>
 
         <!-- Form -->
-        <StackPanel Grid.Row="1" Spacing="16">
+        <StackPanel Grid.Row="1" >
             <TextBox x:Name="ChannelTextBox"
                      materialDesign:HintAssist.Hint="Channel Name (e.g., #general)"
                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
@@ -48,7 +48,7 @@
                        Style="{StaticResource MaterialDesignCaptionTextBlock}"
                        Margin="0,8,0,0"/>
             
-            <StackPanel Orientation="Horizontal" Spacing="8">
+            <StackPanel Orientation="Horizontal" >
                 <Button Content="#general" 
                         Style="{StaticResource MaterialDesignFlatButton}"
                         Click="ChannelSuggestion_Click"/>
@@ -76,5 +76,4 @@
                     Click="JoinButton_Click"/>
         </StackPanel>
     </Grid>
-</Window>
 </Window>

@@ -35,9 +35,9 @@
 
         <!-- Form -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="16">
+            <StackPanel >
                 <materialDesign:Card Padding="16">
-                    <StackPanel Spacing="16">
+                    <StackPanel >
                         <TextBlock Text="Basic Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                         
                         <TextBox x:Name="NameTextBox"
@@ -64,7 +64,7 @@
                 </materialDesign:Card>
 
                 <materialDesign:Card Padding="16">
-                    <StackPanel Spacing="16">
+                    <StackPanel >
                         <TextBlock Text="User Information" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                         
                         <TextBox x:Name="NicknameTextBox"
@@ -82,7 +82,7 @@
                 </materialDesign:Card>
 
                 <materialDesign:Card Padding="16">
-                    <StackPanel Spacing="16">
+                    <StackPanel >
                         <TextBlock Text="Ident Server" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                         
                         <TextBox x:Name="IdentServerTextBox"
@@ -97,7 +97,7 @@
                 </materialDesign:Card>
 
                 <materialDesign:Card Padding="16">
-                    <StackPanel Spacing="16">
+                    <StackPanel >
                         <TextBlock Text="Advanced Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                         
                         <CheckBox x:Name="AutoConnectCheckBox"

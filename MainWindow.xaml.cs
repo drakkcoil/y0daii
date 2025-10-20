@@ -22,7 +22,7 @@ namespace Y0daiiIRC
         private Dictionary<string, List<ChatMessage>> _channelMessages;
         private ServerListService _serverListService;
         private CommandProcessor _commandProcessor;
-        private TabItem? _consoleTab;
+        // private TabItem? _consoleTab; // Removed - using Office 365-style navigation
 
         public MainWindow()
         {
@@ -50,11 +50,8 @@ namespace Y0daiiIRC
 
         private void InitializeConsole()
         {
-            _consoleTab = ChatTabs.Items.Cast<TabItem>().FirstOrDefault(t => t.Tag?.ToString() == "console");
-            if (_consoleTab != null)
-            {
-                AddSystemMessage("Welcome to Y0daii IRC Client! Type /help for available commands.");
-            }
+            // Console is now the default view, no need for tab management
+            AddSystemMessage("Welcome to Y0daii IRC Client! Type /help for available commands.");
         }
 
         private void OnIRCMessageReceived(object? sender, IRCMessage message)
@@ -321,7 +318,7 @@ namespace Y0daiiIRC
                 Tag = channel.Name
             };
 
-            ChatTabs.Items.Add(tab);
+            // Tab management removed - using Office 365-style navigation instead
         }
 
         private void AddUserButton(User user)
@@ -381,7 +378,7 @@ namespace Y0daiiIRC
             
             // Update chat header
             ChatTitle.Text = channel.Name;
-            ChatIcon.Kind = channel.Type == ChannelType.Channel ? MaterialDesignThemes.Wpf.PackIconKind.Hash : MaterialDesignThemes.Wpf.PackIconKind.Message;
+            ChatIcon.Kind = channel.Type == ChannelType.Channel ? MaterialDesignThemes.Wpf.PackIconKind.Pound : MaterialDesignThemes.Wpf.PackIconKind.Message;
             
             MessageList.Items.Clear();
             if (_channelMessages.ContainsKey(channel.Name))
@@ -509,31 +506,8 @@ namespace Y0daiiIRC
 
         private void ChatTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ChatTabs.SelectedItem is TabItem selectedTab)
-            {
-                var tag = selectedTab.Tag?.ToString();
-                if (tag == "console")
-                {
-                    _currentChannel = null;
-                    MessageList.Items.Clear();
-                    // Show console messages
-                    if (_channelMessages.ContainsKey("console"))
-                    {
-                        foreach (var message in _channelMessages["console"])
-                        {
-                            MessageList.Items.Add(message);
-                        }
-                    }
-                }
-                else if (tag != null)
-                {
-                    var channel = _channels.FirstOrDefault(c => c.Name == tag);
-                    if (channel != null)
-                    {
-                        SwitchToChannel(channel);
-                    }
-                }
-            }
+            // Tab selection handling removed - using Office 365-style navigation instead
+            // This method is kept for compatibility but functionality moved to navigation pane
         }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)

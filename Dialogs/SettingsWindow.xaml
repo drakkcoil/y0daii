@@ -33,9 +33,9 @@
         <TabControl Grid.Row="1" Margin="16" Style="{StaticResource MaterialDesignTabControl}">
             <TabItem Header="General">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
+                    <StackPanel Margin="16" >
                         <materialDesign:Card Padding="16">
-                            <StackPanel Spacing="16">
+                            <StackPanel >
                                 <TextBlock Text="Appearance" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                                 
                                 <ComboBox x:Name="ThemeComboBox"
@@ -67,7 +67,7 @@
                         </materialDesign:Card>
 
                         <materialDesign:Card Padding="16">
-                            <StackPanel Spacing="16">
+                            <StackPanel >
                                 <TextBlock Text="Behavior" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                                 
                                 <CheckBox x:Name="AutoConnectCheckBox"
@@ -93,9 +93,9 @@
 
             <TabItem Header="Connection">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
+                    <StackPanel Margin="16" >
                         <materialDesign:Card Padding="16">
-                            <StackPanel Spacing="16">
+                            <StackPanel >
                                 <TextBlock Text="Default Connection Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                                 
                                 <TextBox x:Name="DefaultServerTextBox"
@@ -128,9 +128,9 @@
 
             <TabItem Header="Notifications">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
+                    <StackPanel Margin="16" >
                         <materialDesign:Card Padding="16">
-                            <StackPanel Spacing="16">
+                            <StackPanel >
                                 <TextBlock Text="Notification Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                                 
                                 <CheckBox x:Name="EnableNotificationsCheckBox"
@@ -162,9 +162,9 @@
 
             <TabItem Header="Updates">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" Spacing="16">
+                    <StackPanel Margin="16" >
                         <materialDesign:Card Padding="16">
-                            <StackPanel Spacing="16">
+                            <StackPanel >
                                 <TextBlock Text="Update Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
                                 
                                 <CheckBox x:Name="CheckForUpdatesOnStartupCheckBox"
@@ -187,7 +187,7 @@
                                           Content="Notify when updates are available"
                                           Style="{StaticResource MaterialDesignCheckBox}"/>
 
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" >
                                     <TextBlock Text="Check for updates every:" VerticalAlignment="Center" Width="150"/>
                                     <ComboBox x:Name="UpdateCheckIntervalComboBox"
                                               Width="120"
@@ -199,7 +199,7 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
+                                <StackPanel Orientation="Horizontal"  Margin="0,16,0,0">
                                     <Button x:Name="CheckForUpdatesNowButton"
                                             Content="Check for Updates Now"
                                             Style="{StaticResource MaterialDesignRaisedButton}"

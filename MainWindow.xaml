@@ -256,15 +256,15 @@
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="0,8,0,0">
                             <!-- Server Section -->
-                            <TextBlock Text="SERVERS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,8,16,4" TextTransform="Uppercase"/>
+                            <TextBlock Text="SERVERS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,8,16,4"/>
                             <Button x:Name="ConnectButtonNav" Content="Connect to Server" Style="{StaticResource NavigationItemStyle}" Click="ConnectButton_Click"/>
                             
                             <!-- Channels Section -->
-                            <TextBlock Text="CHANNELS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,16,16,4" TextTransform="Uppercase"/>
+                            <TextBlock Text="CHANNELS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,16,16,4"/>
                             <StackPanel x:Name="ChannelList" Margin="0,0,0,8"/>
                             
                             <!-- Private Messages Section -->
-                            <TextBlock Text="PRIVATE MESSAGES" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,16,16,4" TextTransform="Uppercase"/>
+                            <TextBlock Text="PRIVATE MESSAGES" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray500}" Margin="16,16,16,4"/>
                             <StackPanel x:Name="PrivateMessageList" Margin="0,0,0,8"/>
                         </StackPanel>
                     </ScrollViewer>

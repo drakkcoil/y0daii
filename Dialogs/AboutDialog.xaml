@@ -49,14 +49,14 @@
 
         <!-- Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
-            <StackPanel Margin="32" Spacing="24">
+            <StackPanel Margin="32">
                 <!-- App Icon and Title -->
-                <StackPanel HorizontalAlignment="Center" Spacing="16">
+                <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
                     <Border Background="#0078D4" Width="80" Height="80" CornerRadius="16">
                         <materialDesign:PackIcon Kind="Chat" Width="48" Height="48" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     
-                    <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <StackPanel HorizontalAlignment="Center" >
                         <TextBlock x:Name="AppTitleText" Text="Y0daii IRC Client" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="#323130"/>
                         <TextBlock x:Name="VersionText" Text="Version 1.0.0" FontSize="16" HorizontalAlignment="Center" Foreground="#605E5C"/>
                         <TextBlock x:Name="BuildText" Text="Build 1.0.0.0 (2025-01-01)" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
@@ -72,30 +72,30 @@
                 </Border>
 
                 <!-- Features -->
-                <StackPanel Spacing="12">
+                <StackPanel >
                     <TextBlock Text="Key Features" FontSize="16" FontWeight="SemiBold" Foreground="#323130"/>
-                    <StackPanel Spacing="8">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                    <StackPanel >
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
                             <TextBlock Text="Modern Office 365-style interface" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
                             <TextBlock Text="Full IRC protocol support with SSL/TLS" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
                             <TextBlock Text="mIRC-style slash commands" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
                             <TextBlock Text="ANSI color support and rich formatting" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
                             <TextBlock Text="Server list management and auto-connect" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
                             <TextBlock Text="Ident server support and notifications" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
@@ -103,19 +103,19 @@
                 </StackPanel>
 
                 <!-- Technical Info -->
-                <StackPanel Spacing="12">
+                <StackPanel >
                     <TextBlock Text="Technical Information" FontSize="16" FontWeight="SemiBold" Foreground="#323130"/>
                     <Border Background="#F8F9FA" Padding="16" CornerRadius="8">
-                        <StackPanel Spacing="8">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal" >
                                 <TextBlock Text="Framework:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
                                 <TextBlock x:Name="FrameworkText" Text=".NET 8.0" FontSize="14" Foreground="#323130"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" >
                                 <TextBlock Text="UI Framework:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
                                 <TextBlock Text="WPF with Material Design" FontSize="14" Foreground="#323130"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="8">
+                            <StackPanel Orientation="Horizontal" >
                                 <TextBlock Text="Build Date:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
                                 <TextBlock x:Name="BuildDateText" Text="2025-01-01" FontSize="14" Foreground="#323130"/>
                             </StackPanel>
@@ -124,7 +124,7 @@
                 </StackPanel>
 
                 <!-- Copyright -->
-                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                <StackPanel HorizontalAlignment="Center" >
                     <TextBlock x:Name="CopyrightText" Text="Copyright © 2025 Y0daii. All rights reserved." FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
                     <TextBlock Text="Built with ❤️ using C# and WPF" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
                 </StackPanel>
