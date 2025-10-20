@@ -56,9 +56,10 @@ namespace Y0daiiIRC.Configuration
 
     public class AppearanceSettings
     {
-        public string Theme { get; set; } = "Dark";
-        public string PrimaryColor { get; set; } = "DeepPurple";
-        public string SecondaryColor { get; set; } = "Lime";
+        public string Theme { get; set; } = "Light";
+        public string PrimaryColor { get; set; } = "Blue";
+        public string SecondaryColor { get; set; } = "Blue";
+        public string FontSize { get; set; } = "Medium";
         public bool ShowTimestamps { get; set; } = true;
         public bool ShowJoinPart { get; set; } = true;
     }

@@ -1,4 +1,7 @@
+using System;
 using System.Windows;
+using System.Windows.Controls;
+using Y0daiiIRC.Configuration;
 
 namespace Y0daiiIRC
 {
@@ -8,43 +11,169 @@ namespace Y0daiiIRC
         {
             InitializeComponent();
             LoadSettings();
+            SetupEventHandlers();
+        }
+
+        private void SetupEventHandlers()
+        {
+            NotificationVolumeSlider.ValueChanged += (s, e) => UpdateVolumeText();
         }
 
         private void LoadSettings()
         {
-            // Load current settings from configuration
-            // This would typically load from a settings file or registry
-            ThemeComboBox.SelectedIndex = 0; // Dark theme
-            PrimaryColorComboBox.SelectedIndex = 0; // Deep Purple
-            SecondaryColorComboBox.SelectedIndex = 0; // Lime
+            var settings = AppSettings.Load();
             
-            AutoConnectCheckBox.IsChecked = false;
-            ShowTimestampsCheckBox.IsChecked = true;
-            ShowJoinPartCheckBox.IsChecked = true;
-            PlaySoundCheckBox.IsChecked = true;
+            // Load appearance settings
+            ThemeComboBox.SelectedIndex = settings.Appearance.Theme == "Dark" ? 0 : 1;
+            PrimaryColorComboBox.SelectedIndex = GetColorIndex(settings.Appearance.PrimaryColor);
+            FontSizeComboBox.SelectedIndex = GetFontSizeIndex(settings.Appearance.FontSize);
             
-            DefaultServerTextBox.Text = "irc.libera.chat";
-            DefaultPortTextBox.Text = "6667";
-            UseSSLByDefaultCheckBox.IsChecked = false;
-            PingIntervalTextBox.Text = "60";
+            // Load connection settings
+            AutoReconnectCheckBox.IsChecked = settings.Behavior.AutoReconnect;
+            ReconnectDelayTextBox.Text = settings.Behavior.ReconnectDelay.ToString();
+            ShowSystemMessagesCheckBox.IsChecked = settings.Behavior.ShowSystemMessages;
+            LogMessagesCheckBox.IsChecked = settings.Behavior.LogMessages;
+            LogPathTextBox.Text = settings.Behavior.LogPath;
             
-            EnableNotificationsCheckBox.IsChecked = true;
-            NotifyOnMentionCheckBox.IsChecked = true;
-            NotifyOnPrivateMessageCheckBox.IsChecked = true;
-            NotifyOnChannelMessageCheckBox.IsChecked = false;
-            NotificationVolumeSlider.Value = 50;
+            // Load notification settings
+            EnableNotificationsCheckBox.IsChecked = settings.Notifications.EnableNotifications;
+            NotifyOnMentionCheckBox.IsChecked = settings.Notifications.NotifyOnMention;
+            NotifyOnPrivateMessageCheckBox.IsChecked = settings.Notifications.NotifyOnPrivateMessage;
+            NotifyOnChannelMessageCheckBox.IsChecked = settings.Notifications.NotifyOnChannelMessage;
+            NotificationVolumeSlider.Value = settings.Notifications.Volume;
+            UpdateVolumeText();
+            
+            // Load update settings
+            CheckForUpdatesOnStartupCheckBox.IsChecked = settings.Updates.CheckForUpdatesOnStartup;
+            AutoDownloadUpdatesCheckBox.IsChecked = settings.Updates.AutoDownloadUpdates;
+            AutoInstallUpdatesCheckBox.IsChecked = settings.Updates.AutoInstallUpdates;
+            IncludePrereleasesCheckBox.IsChecked = settings.Updates.IncludePrereleases;
+            NotifyOnUpdateAvailableCheckBox.IsChecked = settings.Updates.NotifyOnUpdateAvailable;
+            UpdateCheckIntervalComboBox.SelectedIndex = GetUpdateIntervalIndex(settings.Updates.UpdateCheckIntervalDays);
+        }
+
+        private void SaveSettings()
+        {
+            var settings = AppSettings.Load();
+            
+            // Save appearance settings
+            settings.Appearance.Theme = ThemeComboBox.SelectedIndex == 0 ? "Dark" : "Light";
+            settings.Appearance.PrimaryColor = GetSelectedColor();
+            settings.Appearance.FontSize = GetSelectedFontSize();
+            
+            // Save connection settings
+            settings.Behavior.AutoReconnect = AutoReconnectCheckBox.IsChecked ?? false;
+            if (int.TryParse(ReconnectDelayTextBox.Text, out int delay))
+                settings.Behavior.ReconnectDelay = delay;
+            settings.Behavior.ShowSystemMessages = ShowSystemMessagesCheckBox.IsChecked ?? false;
+            settings.Behavior.LogMessages = LogMessagesCheckBox.IsChecked ?? false;
+            settings.Behavior.LogPath = LogPathTextBox.Text;
+            
+            // Save notification settings
+            settings.Notifications.EnableNotifications = EnableNotificationsCheckBox.IsChecked ?? false;
+            settings.Notifications.NotifyOnMention = NotifyOnMentionCheckBox.IsChecked ?? false;
+            settings.Notifications.NotifyOnPrivateMessage = NotifyOnPrivateMessageCheckBox.IsChecked ?? false;
+            settings.Notifications.NotifyOnChannelMessage = NotifyOnChannelMessageCheckBox.IsChecked ?? false;
+            settings.Notifications.Volume = (int)NotificationVolumeSlider.Value;
+            
+            // Save update settings
+            settings.Updates.CheckForUpdatesOnStartup = CheckForUpdatesOnStartupCheckBox.IsChecked ?? false;
+            settings.Updates.AutoDownloadUpdates = AutoDownloadUpdatesCheckBox.IsChecked ?? false;
+            settings.Updates.AutoInstallUpdates = AutoInstallUpdatesCheckBox.IsChecked ?? false;
+            settings.Updates.IncludePrereleases = IncludePrereleasesCheckBox.IsChecked ?? false;
+            settings.Updates.NotifyOnUpdateAvailable = NotifyOnUpdateAvailableCheckBox.IsChecked ?? false;
+            settings.Updates.UpdateCheckIntervalDays = GetSelectedUpdateInterval();
+            
+            settings.Save();
+        }
+
+        private void UpdateVolumeText()
+        {
+            VolumeText.Text = $"{(int)NotificationVolumeSlider.Value}%";
+        }
+
+        private int GetColorIndex(string color)
+        {
+            return color switch
+            {
+                "Blue" => 0,
+                "Green" => 1,
+                "Purple" => 2,
+                "Orange" => 3,
+                _ => 0
+            };
+        }
+
+        private string GetSelectedColor()
+        {
+            return PrimaryColorComboBox.SelectedIndex switch
+            {
+                0 => "Blue",
+                1 => "Green",
+                2 => "Purple",
+                3 => "Orange",
+                _ => "Blue"
+            };
+        }
+
+        private int GetFontSizeIndex(string fontSize)
+        {
+            return fontSize switch
+            {
+                "Small" => 0,
+                "Medium" => 1,
+                "Large" => 2,
+                _ => 1
+            };
+        }
+
+        private string GetSelectedFontSize()
+        {
+            return FontSizeComboBox.SelectedIndex switch
+            {
+                0 => "Small",
+                1 => "Medium",
+                2 => "Large",
+                _ => "Medium"
+            };
+        }
+
+        private int GetUpdateIntervalIndex(int days)
+        {
+            return days switch
+            {
+                1 => 0,
+                7 => 1,
+                30 => 2,
+                0 => 3,
+                _ => 1
+            };
+        }
+
+        private int GetSelectedUpdateInterval()
+        {
+            if (UpdateCheckIntervalComboBox.SelectedItem is ComboBoxItem item && item.Tag is string tag)
+            {
+                return int.TryParse(tag, out int days) ? days : 7;
+            }
+            return 7;
         }
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            // Save settings to configuration
-            // This would typically save to a settings file or registry
-            
-            MessageBox.Show("Settings saved successfully!", "Settings", 
-                MessageBoxButton.OK, MessageBoxImage.Information);
-            
-            DialogResult = true;
-            Close();
+            try
+            {
+                SaveSettings();
+                MessageBox.Show("Settings saved successfully!", "Settings", 
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                DialogResult = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save settings: {ex.Message}", "Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void CancelButton_Click(object sender, RoutedEventArgs e)
@@ -86,6 +215,12 @@ namespace Y0daiiIRC
                 MessageBox.Show($"Unable to open update history: {ex.Message}", "Error", 
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
         }
     }
 }

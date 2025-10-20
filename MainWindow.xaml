@@ -189,36 +189,42 @@
                             Margin="0,0,8,0"/>
                     
                     <!-- Help Menu -->
-                    <Menu Style="{StaticResource {x:Type Menu}}" Background="Transparent" BorderThickness="0">
-                        <MenuItem Header="Help" Style="{StaticResource {x:Type MenuItem}}" Background="Transparent" BorderThickness="0">
-                            <MenuItem Header="About Y0daii IRC Client" Click="AboutMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="Information" Width="16" Height="16"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Keyboard Shortcuts" Click="ShortcutsMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="Keyboard" Width="16" Height="16"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="IRC Commands Help" Click="CommandsHelpMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="Help" Width="16" Height="16"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <Separator/>
-                            <MenuItem Header="Check for Updates" Click="CheckForUpdatesMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="Update" Width="16" Height="16"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="View on GitHub" Click="GitHubMenuItem_Click">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="Github" Width="16" Height="16"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </MenuItem>
-                    </Menu>
+                    <Button x:Name="HelpButton" 
+                            Content="Help" 
+                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Click="HelpButton_Click"
+                            Margin="0,0,8,0">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="About Y0daii IRC Client" Click="AboutMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialDesign:PackIcon Kind="Information" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Keyboard Shortcuts" Click="ShortcutsMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialDesign:PackIcon Kind="Keyboard" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="IRC Commands Help" Click="CommandsHelpMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialDesign:PackIcon Kind="Help" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
+                                <MenuItem Header="Check for Updates" Click="CheckForUpdatesMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialDesign:PackIcon Kind="Update" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="View on GitHub" Click="GitHubMenuItem_Click">
+                                    <MenuItem.Icon>
+                                        <materialDesign:PackIcon Kind="Github" Width="16" Height="16"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                     
                     <Button x:Name="SettingsButton" 
                             Style="{StaticResource OfficeSecondaryButtonStyle}"

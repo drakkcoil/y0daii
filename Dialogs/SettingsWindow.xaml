@@ -6,13 +6,91 @@
         Height="600" 
         Width="800"
         WindowStartupLocation="CenterOwner"
-        Background="{DynamicResource MaterialDesignPaper}"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="#F8F9FA"
+        TextElement.Foreground="#323130"
         TextElement.FontWeight="Regular"
-        TextElement.FontSize="13"
+        TextElement.FontSize="14"
         TextOptions.TextFormattingMode="Ideal"
         TextOptions.TextRenderingMode="Auto"
-        FontFamily="{DynamicResource MaterialDesignFont}">
+        FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <!-- Office 365 Color Scheme -->
+        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
+        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
+        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
+        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
+        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
+        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
+        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
+        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
+        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
+        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
+        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
+        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
+        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+
+        <!-- Button Styles -->
+        <Style x:Key="OfficeButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -22,176 +100,208 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <materialDesign:ColorZone Grid.Row="0" Mode="PrimaryMid" Padding="16,8">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Settings" Width="24" Height="24" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <TextBlock Text="Settings" Style="{StaticResource MaterialDesignHeadline6TextBlock}" VerticalAlignment="Center"/>
-            </StackPanel>
-        </materialDesign:ColorZone>
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+            <Grid Height="48">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                    <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Settings" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                </StackPanel>
+                
+                <Button Grid.Column="1" 
+                        Width="32" 
+                        Height="32" 
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Click="CloseButton_Click"
+                        Margin="16,0">
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource OfficeGray700}"/>
+                </Button>
+            </Grid>
+        </Border>
 
         <!-- Content -->
-        <TabControl Grid.Row="1" Margin="16" Style="{StaticResource MaterialDesignTabControl}">
+        <TabControl Grid.Row="1" Margin="16" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="1">
+            <TabControl.Resources>
+                <Style TargetType="TabItem">
+                    <Setter Property="Padding" Value="16,8"/>
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                    <Setter Property="Background" Value="{StaticResource OfficeGray50}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
+                    <Setter Property="BorderThickness" Value="1,1,1,0"/>
+                    <Setter Property="Margin" Value="0,0,2,0"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TabControl.Resources>
+
             <TabItem Header="General">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" >
-                        <materialDesign:Card Padding="16">
-                            <StackPanel >
-                                <TextBlock Text="Appearance" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                    <StackPanel Margin="16">
+                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                                 
-                                <ComboBox x:Name="ThemeComboBox"
-                                          materialDesign:HintAssist.Hint="Theme"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}">
-                                    <ComboBoxItem Content="Dark"/>
-                                    <ComboBoxItem Content="Light"/>
-                                </ComboBox>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Theme:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <ComboBox x:Name="ThemeComboBox" Width="150">
+                                        <ComboBoxItem Content="Dark"/>
+                                        <ComboBoxItem Content="Light" IsSelected="True"/>
+                                    </ComboBox>
+                                </StackPanel>
 
-                                <ComboBox x:Name="PrimaryColorComboBox"
-                                          materialDesign:HintAssist.Hint="Primary Color"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}">
-                                    <ComboBoxItem Content="Deep Purple"/>
-                                    <ComboBoxItem Content="Blue"/>
-                                    <ComboBoxItem Content="Green"/>
-                                    <ComboBoxItem Content="Orange"/>
-                                    <ComboBoxItem Content="Red"/>
-                                </ComboBox>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Primary Color:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <ComboBox x:Name="PrimaryColorComboBox" Width="150">
+                                        <ComboBoxItem Content="Blue" IsSelected="True"/>
+                                        <ComboBoxItem Content="Green"/>
+                                        <ComboBoxItem Content="Purple"/>
+                                        <ComboBoxItem Content="Orange"/>
+                                    </ComboBox>
+                                </StackPanel>
 
-                                <ComboBox x:Name="SecondaryColorComboBox"
-                                          materialDesign:HintAssist.Hint="Secondary Color"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}">
-                                    <ComboBoxItem Content="Lime"/>
-                                    <ComboBoxItem Content="Cyan"/>
-                                    <ComboBoxItem Content="Pink"/>
-                                    <ComboBoxItem Content="Yellow"/>
-                                </ComboBox>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Font Size:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <ComboBox x:Name="FontSizeComboBox" Width="150">
+                                        <ComboBoxItem Content="Small"/>
+                                        <ComboBoxItem Content="Medium" IsSelected="True"/>
+                                        <ComboBoxItem Content="Large"/>
+                                    </ComboBox>
+                                </StackPanel>
                             </StackPanel>
-                        </materialDesign:Card>
-
-                        <materialDesign:Card Padding="16">
-                            <StackPanel >
-                                <TextBlock Text="Behavior" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
-                                
-                                <CheckBox x:Name="AutoConnectCheckBox"
-                                          Content="Auto-connect on startup"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
-
-                                <CheckBox x:Name="ShowTimestampsCheckBox"
-                                          Content="Show message timestamps"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
-
-                                <CheckBox x:Name="ShowJoinPartCheckBox"
-                                          Content="Show join/part messages"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
-
-                                <CheckBox x:Name="PlaySoundCheckBox"
-                                          Content="Play sound for new messages"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
-                            </StackPanel>
-                        </materialDesign:Card>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Connection">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" >
-                        <materialDesign:Card Padding="16">
-                            <StackPanel >
-                                <TextBlock Text="Default Connection Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                    <StackPanel Margin="16">
+                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Connection Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                                 
-                                <TextBox x:Name="DefaultServerTextBox"
-                                         materialDesign:HintAssist.Hint="Default Server"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Text="irc.libera.chat"/>
+                                <CheckBox x:Name="AutoReconnectCheckBox"
+                                          Content="Automatically reconnect on disconnect"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
-                                <TextBox x:Name="DefaultPortTextBox"
-                                         materialDesign:HintAssist.Hint="Default Port"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Text="6667"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Reconnect Delay:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="ReconnectDelayTextBox" Width="100" Text="5"/>
+                                    <TextBlock Text="seconds" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
 
-                                <TextBox x:Name="DefaultNicknameTextBox"
-                                         materialDesign:HintAssist.Hint="Default Nickname"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                <CheckBox x:Name="ShowSystemMessagesCheckBox"
+                                          Content="Show system messages"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
-                                <CheckBox x:Name="UseSSLByDefaultCheckBox"
-                                          Content="Use SSL/TLS by default"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                <CheckBox x:Name="LogMessagesCheckBox"
+                                          Content="Log messages to file"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
-                                <TextBox x:Name="PingIntervalTextBox"
-                                         materialDesign:HintAssist.Hint="Ping Interval (seconds)"
-                                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                         Text="60"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Log Path:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="LogPathTextBox" Width="300"/>
+                                    <Button Content="Browse" Style="{StaticResource OfficeSecondaryButtonStyle}" Margin="8,0,0,0"/>
+                                </StackPanel>
                             </StackPanel>
-                        </materialDesign:Card>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Notifications">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" >
-                        <materialDesign:Card Padding="16">
-                            <StackPanel >
-                                <TextBlock Text="Notification Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                    <StackPanel Margin="16">
+                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Notification Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                                 
                                 <CheckBox x:Name="EnableNotificationsCheckBox"
                                           Content="Enable desktop notifications"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="NotifyOnMentionCheckBox"
                                           Content="Notify when mentioned"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="NotifyOnPrivateMessageCheckBox"
                                           Content="Notify on private messages"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="NotifyOnChannelMessageCheckBox"
                                           Content="Notify on channel messages"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
-                                <Slider x:Name="NotificationVolumeSlider"
-                                        Minimum="0"
-                                        Maximum="100"
-                                        Value="50"
-                                        materialDesign:HintAssist.Hint="Notification Volume"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Notification Volume:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <Slider x:Name="NotificationVolumeSlider"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            Value="50"
+                                            Width="200"
+                                            VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="VolumeText" Text="50%" VerticalAlignment="Center" Margin="8,0,0,0" FontWeight="SemiBold"/>
+                                </StackPanel>
                             </StackPanel>
-                        </materialDesign:Card>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
 
             <TabItem Header="Updates">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="16" >
-                        <materialDesign:Card Padding="16">
-                            <StackPanel >
-                                <TextBlock Text="Update Settings" Style="{StaticResource MaterialDesignSubtitle1TextBlock}"/>
+                    <StackPanel Margin="16">
+                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
                                 
                                 <CheckBox x:Name="CheckForUpdatesOnStartupCheckBox"
                                           Content="Check for updates on startup"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="AutoDownloadUpdatesCheckBox"
                                           Content="Automatically download updates"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="AutoInstallUpdatesCheckBox"
                                           Content="Automatically install updates"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="IncludePrereleasesCheckBox"
                                           Content="Include pre-release versions"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
                                 <CheckBox x:Name="NotifyOnUpdateAvailableCheckBox"
                                           Content="Notify when updates are available"
-                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
 
-                                <StackPanel Orientation="Horizontal" >
-                                    <TextBlock Text="Check for updates every:" VerticalAlignment="Center" Width="150"/>
-                                    <ComboBox x:Name="UpdateCheckIntervalComboBox"
-                                              Width="120"
-                                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <TextBlock Text="Check for updates every:" Width="150" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <ComboBox x:Name="UpdateCheckIntervalComboBox" Width="120">
                                         <ComboBoxItem Content="Daily" Tag="1"/>
                                         <ComboBoxItem Content="Weekly" Tag="7" IsSelected="True"/>
                                         <ComboBoxItem Content="Monthly" Tag="30"/>
@@ -199,41 +309,44 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <StackPanel Orientation="Horizontal"  Margin="0,16,0,0">
+                                <StackPanel Orientation="Horizontal">
                                     <Button x:Name="CheckForUpdatesNowButton"
                                             Content="Check for Updates Now"
-                                            Style="{StaticResource MaterialDesignRaisedButton}"
-                                            Click="CheckForUpdatesNowButton_Click"/>
+                                            Style="{StaticResource OfficeButtonStyle}"
+                                            Click="CheckForUpdatesNowButton_Click"
+                                            Margin="0,0,8,0"/>
                                     <Button x:Name="ViewUpdateHistoryButton"
                                             Content="View Update History"
-                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Style="{StaticResource OfficeSecondaryButtonStyle}"
                                             Click="ViewUpdateHistoryButton_Click"/>
                                 </StackPanel>
                             </StackPanel>
-                        </materialDesign:Card>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
         </TabControl>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    Margin="16">
-            <Button x:Name="ResetButton"
-                    Content="Reset to Defaults"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Click="ResetButton_Click"
-                    Margin="0,0,8,0"/>
-            <Button x:Name="CancelButton"
-                    Content="Cancel"
-                    Style="{StaticResource MaterialDesignFlatButton}"
-                    Click="CancelButton_Click"
-                    Margin="0,0,8,0"/>
-            <Button x:Name="SaveButton"
-                    Content="Save"
-                    Style="{StaticResource MaterialDesignRaisedButton}"
-                    Click="SaveButton_Click"/>
-        </StackPanel>
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Right" 
+                        Margin="16,12">
+                <Button x:Name="ResetButton"
+                        Content="Reset to Defaults"
+                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Click="ResetButton_Click"
+                        Margin="0,0,8,0"/>
+                <Button x:Name="CancelButton"
+                        Content="Cancel"
+                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Click="CancelButton_Click"
+                        Margin="0,0,8,0"/>
+                <Button x:Name="SaveButton"
+                        Content="Save"
+                        Style="{StaticResource OfficeButtonStyle}"
+                        Click="SaveButton_Click"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
