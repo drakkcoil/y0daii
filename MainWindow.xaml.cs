@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using Y0daiiIRC.Configuration;
 using Y0daiiIRC.IRC;
 using Y0daiiIRC.Models;
 using Y0daiiIRC.Services;
@@ -21,10 +22,15 @@ namespace Y0daiiIRC
         private List<User> _users;
         private Channel? _currentChannel;
         private Dictionary<string, List<ChatMessage>> _channelMessages;
+        private List<string> _channelsToRejoin; // Track channels to auto-rejoin on reconnect
         private ServerListService _serverListService;
         private CommandProcessor _commandProcessor;
         private DCCService _dccService;
         // private TabItem? _consoleTab; // Removed - using Office 365-style navigation
+        
+        // Command history support
+        private List<string> _commandHistory = new List<string>();
+        private int _historyIndex = -1;
 
         public MainWindow()
         {
@@ -33,11 +39,13 @@ namespace Y0daiiIRC
             _channels = new List<Channel>();
             _users = new List<User>();
             _channelMessages = new Dictionary<string, List<ChatMessage>>();
+            _channelsToRejoin = new List<string>();
             _serverListService = new ServerListService();
             _dccService = new DCCService();
             _commandProcessor = new CommandProcessor(_ircClient, _serverListService);
 
             SetupEventHandlers();
+            SetupUIContextMenus();
             InitializeConsole();
             UpdateUI();
         }
@@ -53,6 +61,50 @@ namespace Y0daiiIRC
             _commandProcessor.CommandError += OnCommandError;
         }
 
+        private void SetupUIContextMenus()
+        {
+            // Add context menu to Connect button
+            var connectContextMenu = new ContextMenu();
+            var connectItem = new MenuItem { Header = "🔌 Connect to Server" };
+            connectItem.Click += (s, e) => ConnectButton_Click(s, e);
+            connectContextMenu.Items.Add(connectItem);
+            
+            var disconnectItem = new MenuItem { Header = "🔌 Disconnect" };
+            disconnectItem.Click += (s, e) => ConnectButton_Click(s, e);
+            connectContextMenu.Items.Add(disconnectItem);
+            
+            ConnectButtonNav.ContextMenu = connectContextMenu;
+        }
+
+        private void ClearChannelsAndUsers()
+        {
+            // Clear channels (except console)
+            var channelsToRemove = _channels.Where(c => c.Name != "console").ToList();
+            foreach (var channel in channelsToRemove)
+            {
+                _channels.Remove(channel);
+                
+                // Remove channel button from UI
+                var buttonToRemove = ChannelList.Children.OfType<Button>()
+                    .FirstOrDefault(b => b.Tag == channel);
+                if (buttonToRemove != null)
+                {
+                    ChannelList.Children.Remove(buttonToRemove);
+                }
+            }
+            
+            // Clear users
+            _users.Clear();
+            UserList.Children.Clear();
+            
+            // Switch to console if not already there
+            var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
+            if (consoleChannel != null && _currentChannel != consoleChannel)
+            {
+                SwitchToChannel(consoleChannel);
+            }
+        }
+
         private void InitializeConsole()
         {
             // Console is now the default view, no need for tab management
@@ -61,11 +113,29 @@ namespace Y0daiiIRC
 
         private void OnIRCMessageReceived(object? sender, IRCMessage message)
         {
-            Console.WriteLine($"MainWindow.OnIRCMessageReceived: Received message: {message.Command}");
+            var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+            Console.WriteLine($"[{timestamp}] [IRC] Received: {message.Command} {string.Join(" ", message.Parameters)}");
+            
             Dispatcher.Invoke(() =>
             {
-                // Log incoming IRC messages for debugging
-                AddSystemMessage($"← {message.Command} {string.Join(" ", message.Parameters)}");
+                // Only show important system messages, not protocol commands
+                var displayMessage = message.Command switch
+                {
+                    "001" => $"✅ Welcome: {message.Content}",
+                    "002" => $"ℹ️ Host: {message.Content}",
+                    "003" => $"ℹ️ Created: {message.Content}",
+                    "004" => $"ℹ️ Server: {message.Content}",
+                    "005" => $"🔧 Features: {message.Content}",
+                    "NOTICE" => $"📢 Notice: {message.Content}",
+                    "ERROR" => $"❌ Error: {message.Content}",
+                    _ => null // Don't show protocol commands like PING, PONG, etc.
+                };
+                
+                // Only add system message if it's something important to show
+                if (displayMessage != null)
+                {
+                    AddSystemMessage(displayMessage);
+                }
                 
                 HandleIRCMessage(message);
             });
@@ -84,12 +154,33 @@ namespace Y0daiiIRC
                     StatusIndicator.Fill = new SolidColorBrush(Colors.Green);
                     ConnectionInfo.Text = $"Connected to {_ircClient.Server}:{_ircClient.Port}";
                     AddSystemMessage($"✓ Connected to {_ircClient.Server}:{_ircClient.Port} {(status.Contains("SSL") ? "(SSL)" : "")}");
+                    
+                    // Auto-rejoin channels after successful connection
+                    _ = Task.Run(async () =>
+                    {
+                        await Task.Delay(2000); // Wait 2 seconds for server to be ready
+                        foreach (var channel in _channelsToRejoin.ToList())
+                        {
+                            try
+                            {
+                                await _ircClient.SendCommandAsync($"JOIN {channel}");
+                                AddSystemMessage($"🔄 Auto-rejoining {channel}...");
+                            }
+                            catch (Exception ex)
+                            {
+                                AddSystemMessage($"❌ Failed to rejoin {channel}: {ex.Message}");
+                            }
+                        }
+                    });
                 }
                 else if (status == "Disconnected")
                 {
                     StatusIndicator.Fill = new SolidColorBrush(Colors.Red);
                     ConnectionInfo.Text = "";
                     AddSystemMessage("✗ Disconnected from server");
+                    
+                    // Clear channels and users on disconnect (but keep auto-rejoin list)
+                    ClearChannelsAndUsers();
                 }
                 else if (status == "Connecting")
                 {
@@ -122,15 +213,28 @@ namespace Y0daiiIRC
             Console.WriteLine($"OnCommandSent called: {command}");
             Dispatcher.Invoke(() =>
             {
-                // Don't log sensitive commands like PASS
-                if (!command.StartsWith("PASS"))
-                {
-                    AddSystemMessage($"→ {command}");
-                }
-                else
+                // Only show important commands, not user messages or protocol commands
+                if (command.StartsWith("PASS"))
                 {
                     AddSystemMessage("→ PASS ***");
                 }
+                else if (command.StartsWith("JOIN"))
+                {
+                    AddSystemMessage($"→ {command}");
+                }
+                else if (command.StartsWith("PART"))
+                {
+                    AddSystemMessage($"→ {command}");
+                }
+                else if (command.StartsWith("NICK"))
+                {
+                    AddSystemMessage($"→ {command}");
+                }
+                else if (command.StartsWith("QUIT"))
+                {
+                    AddSystemMessage($"→ {command}");
+                }
+                // Don't show PRIVMSG, PING, PONG, etc. as they clutter the chat
             });
         }
 
@@ -205,15 +309,33 @@ namespace Y0daiiIRC
                 var content = message.Content;
                 var sender = message.Sender;
 
-                if (target?.StartsWith("#") == true)
+                if (message.IsCTCPAction)
                 {
-                    // Channel message
-                    AddChannelMessage(target, sender, content);
+                    // CTCP ACTION (/me command)
+                    var action = message.CTCPAction;
+                    if (target?.StartsWith("#") == true)
+                    {
+                        // Channel action
+                        AddChannelAction(target, sender, action);
+                    }
+                    else
+                    {
+                        // Private action
+                        AddPrivateAction(sender, action);
+                    }
                 }
                 else
                 {
-                    // Private message
-                    AddPrivateMessage(sender, content);
+                    if (target?.StartsWith("#") == true)
+                    {
+                        // Channel message
+                        AddChannelMessage(target, sender, content);
+                    }
+                    else
+                    {
+                        // Private message
+                        AddPrivateMessage(sender, content);
+                    }
                 }
             }
             else if (message.IsJoin)
@@ -223,6 +345,27 @@ namespace Y0daiiIRC
                 if (user == _ircClient.Nickname)
                 {
                     AddSystemMessage($"✅ Successfully joined {channel}");
+                    
+                    // Create the channel in the UI if it doesn't exist
+                    if (!_channels.Any(c => c.Name == channel))
+                    {
+                        var newChannel = new Channel { Name = channel, Type = ChannelType.Channel };
+                        _channels.Add(newChannel);
+                        AddChannelButton(newChannel);
+                    }
+                    
+                    // Add to auto-rejoin list (only for regular channels, not private messages)
+                    if (channel.StartsWith("#") && !_channelsToRejoin.Contains(channel))
+                    {
+                        _channelsToRejoin.Add(channel);
+                    }
+                    
+                    // Switch to the newly joined channel
+                    var joinedChannel = _channels.FirstOrDefault(c => c.Name == channel);
+                    if (joinedChannel != null)
+                    {
+                        SwitchToChannel(joinedChannel);
+                    }
                 }
                 else
                 {
@@ -238,7 +381,38 @@ namespace Y0daiiIRC
                 var channel = message.Target;
                 var user = message.Sender;
                 AddSystemMessage($"{user} left {channel}");
-                if (channel == _currentChannel?.Name)
+                
+                if (user == _ircClient.Nickname)
+                {
+                    // User left the channel - remove it from UI and auto-rejoin list
+                    var channelToRemove = _channels.FirstOrDefault(c => c.Name == channel);
+                    if (channelToRemove != null)
+                    {
+                        _channels.Remove(channelToRemove);
+                        
+                        // Remove from auto-rejoin list (user manually left)
+                        _channelsToRejoin.Remove(channel);
+                        
+                        // Remove the channel button from UI
+                        var buttonToRemove = ChannelList.Children.OfType<Button>()
+                            .FirstOrDefault(b => b.Tag == channelToRemove);
+                        if (buttonToRemove != null)
+                        {
+                            ChannelList.Children.Remove(buttonToRemove);
+                        }
+                        
+                        // If this was the current channel, switch to console
+                        if (channel == _currentChannel?.Name)
+                        {
+                            var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
+                            if (consoleChannel != null)
+                            {
+                                SwitchToChannel(consoleChannel);
+                            }
+                        }
+                    }
+                }
+                else if (channel == _currentChannel?.Name)
                 {
                     RemoveUser(user);
                 }
@@ -255,6 +429,10 @@ namespace Y0daiiIRC
                 var newNick = message.Parameters.FirstOrDefault();
                 AddSystemMessage($"{oldNick} is now known as {newNick}");
                 UpdateUserNick(oldNick, newNick);
+            }
+            else if (message.IsMode)
+            {
+                HandleModeChange(message);
             }
             else if (message.IsNotice)
             {
@@ -298,9 +476,28 @@ namespace Y0daiiIRC
             else if (message.Command == "ERROR")
             {
                 AddSystemMessage($"❌ Server Error: {message.Content}");
-                // Don't automatically disconnect on ERROR - let the server handle it
-                // Some servers send ERROR messages that don't require disconnection
-                Console.WriteLine($"Server sent ERROR message: {message.Content}");
+                
+                // Handle specific error cases
+                if (message.Content?.Contains("Connection timed out") == true)
+                {
+                    AddSystemMessage("💡 Connection timed out. This is often due to ident server issues.");
+                    AddSystemMessage("💡 The app will automatically retry with different settings.");
+                    _ircClient.SetConnected(false);
+                }
+                else if (message.Content?.Contains("No Ident response") == true)
+                {
+                    AddSystemMessage("💡 Server couldn't get ident response. This is usually not critical.");
+                }
+                else if (message.Content?.Contains("Ident required") == true || message.Content?.Contains("identd") == true)
+                {
+                    AddSystemMessage("💡 This server requires ident. Try enabling ident server in Settings → Connection.");
+                    _ircClient.SetConnected(false);
+                }
+                else
+                {
+                    // For other errors, don't automatically disconnect - let the server handle it
+                    Console.WriteLine($"Server sent ERROR message: {message.Content}");
+                }
             }
         }
 
@@ -356,8 +553,8 @@ namespace Y0daiiIRC
                         var users = message.Parameters[3].Split(' ', StringSplitOptions.RemoveEmptyEntries);
                         foreach (var user in users)
                         {
-                            var cleanUser = user.TrimStart('@', '+', '%', '&', '~');
-                            AddUser(new User { Nickname = cleanUser });
+                            var (cleanUser, mode) = ParseUserWithMode(user);
+                            AddUser(new User { Nickname = cleanUser, Mode = mode });
                         }
                     }
                     break;
@@ -414,12 +611,30 @@ namespace Y0daiiIRC
             var formattedContent = ANSIColorParser.ParseANSIText(content);
             var displayContent = string.Join("", formattedContent.Select(f => f.Text));
 
+            // Determine message type and styling
+            var messageType = MessageType.Normal;
+            var senderColor = GetUserColor(sender);
+            
+            // Special styling for different types of messages
+            if (sender == _ircClient.Nickname)
+            {
+                // User's own messages - make them stand out
+                messageType = MessageType.Normal;
+                senderColor = Colors.DarkBlue; // Make user's own messages blue
+            }
+            else if (sender == "System")
+            {
+                messageType = MessageType.System;
+                senderColor = Colors.Gray;
+            }
+
             var message = new ChatMessage
             {
                 Sender = sender,
                 Content = displayContent,
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
-                SenderColor = GetUserColor(sender)
+                SenderColor = senderColor,
+                Type = messageType
             };
 
             _channelMessages[channel].Add(message);
@@ -445,6 +660,74 @@ namespace Y0daiiIRC
             AddChannelMessage(pmChannel, sender, content);
         }
 
+        private void AddChannelAction(string channel, string sender, string action)
+        {
+            if (!_channelMessages.ContainsKey(channel))
+            {
+                _channelMessages[channel] = new List<ChatMessage>();
+            }
+
+            // Parse ANSI colors
+            var formattedAction = ANSIColorParser.ParseANSIText(action);
+            var displayAction = string.Join("", formattedAction.Select(f => f.Text));
+
+            // Create action message with special formatting
+            var message = new ChatMessage
+            {
+                Sender = sender,
+                Content = $"* {sender} {displayAction}",
+                Timestamp = DateTime.Now.ToString("HH:mm:ss"),
+                SenderColor = GetUserColor(sender),
+                Type = MessageType.Action // We'll need to add this to the enum
+            };
+
+            _channelMessages[channel].Add(message);
+
+            if (channel == _currentChannel?.Name)
+            {
+                MessageList.Items.Add(message);
+                ScrollToBottom();
+            }
+        }
+
+        private void AddPrivateAction(string sender, string action)
+        {
+            // Create or switch to private message channel
+            var pmChannel = $"PM:{sender}";
+            if (!_channels.Any(c => c.Name == pmChannel))
+            {
+                var channel = new Channel { Name = pmChannel, Type = ChannelType.Private };
+                _channels.Add(channel);
+                AddChannelButton(channel);
+            }
+
+            AddChannelAction(pmChannel, sender, action);
+        }
+
+        private void ClosePrivateMessage(Channel channel)
+        {
+            // Remove the private message channel
+            _channels.Remove(channel);
+            
+            // Remove the channel button from UI
+            var buttonToRemove = ChannelList.Children.OfType<Button>()
+                .FirstOrDefault(b => b.Tag == channel);
+            if (buttonToRemove != null)
+            {
+                ChannelList.Children.Remove(buttonToRemove);
+            }
+            
+            // If this was the current channel, switch to console
+            if (channel == _currentChannel)
+            {
+                var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
+                if (consoleChannel != null)
+                {
+                    SwitchToChannel(consoleChannel);
+                }
+            }
+        }
+
         private void AddSystemMessage(string content)
         {
             var message = new ChatMessage
@@ -452,7 +735,8 @@ namespace Y0daiiIRC
                 Sender = "System",
                 Content = content,
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
-                SenderColor = Colors.Gray
+                SenderColor = Colors.Gray,
+                Type = MessageType.System
             };
 
             // Always add to console
@@ -510,11 +794,37 @@ namespace Y0daiiIRC
         {
             var button = new Button
             {
-                Content = $"{GetChannelIcon(channel)} {channel.Name}",
+                Content = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
                 Style = (Style)FindResource("NavigationItemStyle"),
                 Tag = channel
             };
             button.Click += (s, e) => SwitchToChannel(channel);
+            
+            // Add context menu for channel
+            var contextMenu = new ContextMenu();
+            
+            if (channel.Type == ChannelType.Channel)
+            {
+                var leaveItem = new MenuItem { Header = "🚪 Leave Channel" };
+                leaveItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"PART {channel.Name}");
+                contextMenu.Items.Add(leaveItem);
+                
+                var whoItem = new MenuItem { Header = "👥 Who's Here" };
+                whoItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"NAMES {channel.Name}");
+                contextMenu.Items.Add(whoItem);
+                
+                var topicItem = new MenuItem { Header = "📋 View Topic" };
+                topicItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"TOPIC {channel.Name}");
+                contextMenu.Items.Add(topicItem);
+            }
+            else if (channel.Type == ChannelType.Private)
+            {
+                var closeItem = new MenuItem { Header = "❌ Close Chat" };
+                closeItem.Click += (s, e) => ClosePrivateMessage(channel);
+                contextMenu.Items.Add(closeItem);
+            }
+            
+            button.ContextMenu = contextMenu;
             ChannelList.Children.Add(button);
         }
 
@@ -522,7 +832,7 @@ namespace Y0daiiIRC
         {
             var tab = new TabItem
             {
-                Header = $"{GetChannelIcon(channel)} {channel.Name}",
+                Header = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
                 Tag = channel.Name
             };
 
@@ -531,13 +841,28 @@ namespace Y0daiiIRC
 
         private void AddUserButton(User user)
         {
+            var modePrefix = GetModePrefix(user.Mode);
+            var displayName = $"{modePrefix}{user.Nickname}";
+            
             var button = new Button
             {
-                Content = user.Nickname,
+                Content = displayName,
                 Style = (Style)FindResource("NavigationItemStyle"),
                 Tag = user
             };
-            button.Click += (s, e) => StartPrivateMessage(user);
+            button.MouseDoubleClick += (s, e) => StartPrivateMessage(user);
+            
+            // Add context menu for user
+            var contextMenu = new ContextMenu();
+            var openChatItem = new MenuItem { Header = "💬 Open Chat" };
+            openChatItem.Click += (s, e) => StartPrivateMessage(user);
+            contextMenu.Items.Add(openChatItem);
+            
+            var whoisItem = new MenuItem { Header = "ℹ️ Who Is" };
+            whoisItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"WHOIS {user.Nickname}");
+            contextMenu.Items.Add(whoisItem);
+            
+            button.ContextMenu = contextMenu;
             UserList.Children.Add(button);
         }
 
@@ -555,7 +880,9 @@ namespace Y0daiiIRC
             var button = UserList.Children.OfType<Button>().FirstOrDefault(b => b.Tag == user);
             if (button != null)
             {
-                button.Content = user.Nickname;
+                var modePrefix = GetModePrefix(user.Mode);
+                var displayName = $"{modePrefix}{user.Nickname}";
+                button.Content = displayName;
             }
         }
 
@@ -563,10 +890,21 @@ namespace Y0daiiIRC
         {
             return channel.Type switch
             {
-                ChannelType.Channel => "#",
-                ChannelType.Private => "💬",
-                _ => "#"
+                ChannelType.Channel => "💬", // Use a nice chat icon instead of #
+                ChannelType.Private => "👤", // Use a person icon for private messages
+                _ => "💬"
             };
+        }
+
+        private string GetDisplayChannelName(Channel channel)
+        {
+            // Remove the # prefix for display since we're using an icon
+            var name = channel.Name;
+            if (name.StartsWith("#"))
+            {
+                name = name.Substring(1);
+            }
+            return name;
         }
 
         private Color GetUserColor(string nickname)
@@ -585,8 +923,11 @@ namespace Y0daiiIRC
             _currentChannel = channel;
             
             // Update chat header
-            ChatTitle.Text = channel.Name;
-            ChatIcon.Kind = channel.Type == ChannelType.Channel ? MaterialDesignThemes.Wpf.PackIconKind.Pound : MaterialDesignThemes.Wpf.PackIconKind.Message;
+            ChatTitle.Text = GetDisplayChannelName(channel);
+            ChatIcon.Text = GetChannelIcon(channel);
+            
+            // Update button highlighting
+            UpdateChannelButtonHighlighting();
             
             MessageList.Items.Clear();
             if (_channelMessages.ContainsKey(channel.Name))
@@ -597,6 +938,148 @@ namespace Y0daiiIRC
                 }
             }
             ScrollToBottom();
+        }
+
+        private void UpdateChannelButtonHighlighting()
+        {
+            // Reset all channel buttons to normal style
+            foreach (Button button in ChannelList.Children.OfType<Button>())
+            {
+                button.Style = (Style)FindResource("NavigationItemStyle");
+            }
+            
+            // Reset all user buttons to normal style
+            foreach (Button button in UserList.Children.OfType<Button>())
+            {
+                button.Style = (Style)FindResource("NavigationItemStyle");
+            }
+            
+            // Highlight the current channel button
+            if (_currentChannel != null)
+            {
+                var currentButton = ChannelList.Children.OfType<Button>()
+                    .FirstOrDefault(b => b.Tag == _currentChannel);
+                if (currentButton != null)
+                {
+                    // Create a highlighted style
+                    var highlightedStyle = new Style(typeof(Button), (Style)FindResource("NavigationItemStyle"));
+                    var backgroundSetter = new Setter(Button.BackgroundProperty, new SolidColorBrush(Colors.LightBlue));
+                    var foregroundSetter = new Setter(Button.ForegroundProperty, new SolidColorBrush(Colors.DarkBlue));
+                    highlightedStyle.Setters.Add(backgroundSetter);
+                    highlightedStyle.Setters.Add(foregroundSetter);
+                    currentButton.Style = highlightedStyle;
+                }
+                
+                // If it's a private message, also highlight the corresponding user button
+                if (_currentChannel.Type == ChannelType.Private && _currentChannel.Name.StartsWith("PM:"))
+                {
+                    var userNickname = _currentChannel.Name.Substring(3); // Remove "PM:" prefix
+                    var userButton = UserList.Children.OfType<Button>()
+                        .FirstOrDefault(b => b.Tag is User user && user.Nickname == userNickname);
+                    if (userButton != null)
+                    {
+                        var highlightedStyle = new Style(typeof(Button), (Style)FindResource("NavigationItemStyle"));
+                        var backgroundSetter = new Setter(Button.BackgroundProperty, new SolidColorBrush(Colors.LightGreen));
+                        var foregroundSetter = new Setter(Button.ForegroundProperty, new SolidColorBrush(Colors.DarkGreen));
+                        highlightedStyle.Setters.Add(backgroundSetter);
+                        highlightedStyle.Setters.Add(foregroundSetter);
+                        userButton.Style = highlightedStyle;
+                    }
+                }
+            }
+        }
+
+        private (string nickname, UserMode mode) ParseUserWithMode(string userWithMode)
+        {
+            var mode = UserMode.None;
+            var nickname = userWithMode;
+            
+            // Parse IRC user modes from the beginning of the nickname
+            while (nickname.Length > 0 && IsModePrefix(nickname[0]))
+            {
+                var prefix = nickname[0];
+                mode |= GetUserModeFromPrefix(prefix);
+                nickname = nickname.Substring(1);
+            }
+            
+            return (nickname, mode);
+        }
+
+        private bool IsModePrefix(char c)
+        {
+            return c == '@' || c == '+' || c == '%' || c == '&' || c == '~';
+        }
+
+        private UserMode GetUserModeFromPrefix(char prefix)
+        {
+            return prefix switch
+            {
+                '+' => UserMode.Voice,
+                '%' => UserMode.HalfOp,
+                '@' => UserMode.Op,
+                '&' => UserMode.Admin,
+                '~' => UserMode.Owner,
+                _ => UserMode.None
+            };
+        }
+
+        private string GetModePrefix(UserMode mode)
+        {
+            // Return the highest priority mode prefix
+            if (mode.HasFlag(UserMode.Owner)) return "~";
+            if (mode.HasFlag(UserMode.Admin)) return "&";
+            if (mode.HasFlag(UserMode.Op)) return "@";
+            if (mode.HasFlag(UserMode.HalfOp)) return "%";
+            if (mode.HasFlag(UserMode.Voice)) return "+";
+            return "";
+        }
+
+        private void HandleModeChange(IRCMessage message)
+        {
+            if (message.Parameters.Count < 3) return;
+            
+            var channel = message.Parameters[0];
+            var modeString = message.Parameters[1];
+            var target = message.Parameters[2];
+            
+            // Only handle user mode changes in the current channel
+            if (channel != _currentChannel?.Name) return;
+            
+            var user = _users.FirstOrDefault(u => u.Nickname == target);
+            if (user == null) return;
+            
+            var isAdding = modeString.StartsWith('+');
+            var modeChar = modeString.Length > 1 ? modeString[1] : '\0';
+            
+            var modeChange = GetUserModeFromPrefix(modeChar);
+            if (modeChange == UserMode.None) return;
+            
+            if (isAdding)
+            {
+                user.Mode |= modeChange;
+                AddSystemMessage($"🔧 {target} was given {GetModeDescription(modeChange)} by {message.Sender}");
+            }
+            else
+            {
+                user.Mode &= ~modeChange;
+                AddSystemMessage($"🔧 {target} lost {GetModeDescription(modeChange)} by {message.Sender}");
+            }
+            
+            // Update the user button display
+            UpdateUserButton(user);
+        }
+
+        private string GetModeDescription(UserMode mode)
+        {
+            return mode switch
+            {
+                UserMode.Voice => "voice (+)",
+                UserMode.HalfOp => "half-op (%)",
+                UserMode.Op => "operator (@)",
+                UserMode.Admin => "admin (&)",
+                UserMode.Owner => "owner (~)",
+                _ => "unknown mode"
+            };
         }
 
         private void StartPrivateMessage(User user)
@@ -640,15 +1123,59 @@ namespace Y0daiiIRC
                     AddSystemMessage($"🔄 Attempting to connect to {server.Host}:{server.Port} {(server.UseSSL ? "(SSL)" : "")}...");
                     AddSystemMessage($"📝 Using nickname: {server.Nickname ?? "Y0daiiUser"}");
                     
-                    var success = await _ircClient.ConnectAsync(
+                    // Test connectivity first
+                    AddSystemMessage("🔍 Testing connectivity...");
+            var canConnect = await IRCClient.TestConnectivityAsync(server.Host, server.Port, 10);
+            if (!canConnect)
+            {
+                AddSystemMessage("❌ Cannot reach server. Please check your internet connection and server details.");
+                MessageBox.Show($"Cannot reach server {server.Host}:{server.Port}. Please check your internet connection and server details.", "Connection Error", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            
+            AddSystemMessage("✅ Server is reachable, establishing IRC connection...");
+            
+            // Test ident server connectivity if ident is enabled
+            var settings = AppSettings.Load();
+            if (settings.Connection.EnableIdentServer)
+            {
+                // First test if we can use the standard ident port 113
+                AddSystemMessage("🔍 Testing standard ident port 113...");
+                var standardIdentAvailable = await IRCClient.TestStandardIdentPortAsync();
+                
+                if (!standardIdentAvailable)
+                {
+                    AddSystemMessage("⚠️ Standard ident port 113 not available, testing port 1130...");
+                    var identPortAvailable = await IRCClient.TestIdentServerConnectivityAsync(1130);
+                    if (!identPortAvailable)
+                    {
+                        AddSystemMessage("❌ No ident server ports available. Consider disabling ident server in Settings.");
+                        AddSystemMessage("💡 Tip: Run as Administrator to use standard ident port 113");
+                    }
+                    else
+                    {
+                        AddSystemMessage("✅ Ident server port 1130 is available (non-standard)");
+                    }
+                }
+                else
+                {
+                    AddSystemMessage("✅ Standard ident port 113 is available");
+                }
+            }
+            else
+            {
+                AddSystemMessage("🔧 Ident server disabled in Settings (modern approach)");
+            }
+                    var success = await _ircClient.ConnectWithFallbackAsync(
                         server.Host, server.Port, server.Nickname ?? "Y0daiiUser", 
                         server.Username ?? "y0daii", server.RealName ?? "Y0daii IRC User",
                         server.UseSSL, null, server.IdentServer, server.IdentPort);
                     
                     if (!success)
                     {
-                        AddSystemMessage("❌ Failed to connect to IRC server.");
-                        MessageBox.Show("Failed to connect to IRC server.", "Connection Error", 
+                        AddSystemMessage("❌ Failed to establish IRC connection. Check server settings and try again.");
+                        MessageBox.Show("Failed to establish IRC connection. This could be due to:\n\n• Incorrect server address or port\n• Server is down or unreachable\n• Network firewall blocking the connection\n• SSL/TLS configuration issues\n\nPlease check your server settings and try again.", "Connection Error", 
                             MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
@@ -688,6 +1215,45 @@ namespace Y0daiiIRC
                 e.Handled = true;
                 await SendMessage();
             }
+            else if (e.Key == Key.Up)
+            {
+                e.Handled = true;
+                NavigateHistory(-1);
+            }
+            else if (e.Key == Key.Down)
+            {
+                e.Handled = true;
+                NavigateHistory(1);
+            }
+        }
+
+        private void NavigateHistory(int direction)
+        {
+            if (_commandHistory.Count == 0) return;
+
+            if (direction == -1) // Up arrow
+            {
+                if (_historyIndex < _commandHistory.Count - 1)
+                {
+                    _historyIndex++;
+                    MessageTextBox.Text = _commandHistory[_commandHistory.Count - 1 - _historyIndex];
+                    MessageTextBox.CaretIndex = MessageTextBox.Text.Length;
+                }
+            }
+            else if (direction == 1) // Down arrow
+            {
+                if (_historyIndex > 0)
+                {
+                    _historyIndex--;
+                    MessageTextBox.Text = _commandHistory[_commandHistory.Count - 1 - _historyIndex];
+                    MessageTextBox.CaretIndex = MessageTextBox.Text.Length;
+                }
+                else if (_historyIndex == 0)
+                {
+                    _historyIndex = -1;
+                    MessageTextBox.Clear();
+                }
+            }
         }
 
         private async Task SendMessage()
@@ -695,10 +1261,33 @@ namespace Y0daiiIRC
             var message = MessageTextBox.Text.Trim();
             if (string.IsNullOrEmpty(message)) return;
 
+            // Add to command history
+            if (!_commandHistory.Contains(message))
+            {
+                _commandHistory.Add(message);
+                // Keep only last 100 commands
+                if (_commandHistory.Count > 100)
+                {
+                    _commandHistory.RemoveAt(0);
+                }
+            }
+            _historyIndex = -1; // Reset history index
+
             MessageTextBox.Clear();
 
             if (message.StartsWith("/"))
             {
+                // Special handling for /me command to show immediately
+                if (message.StartsWith("/me "))
+                {
+                    var action = message.Substring(4); // Remove "/me "
+                    if (_currentChannel != null)
+                    {
+                        var userNick = _ircClient.Nickname ?? "You";
+                        AddChannelAction(_currentChannel.Name, userNick, action);
+                    }
+                }
+                
                 var handled = await _commandProcessor.ProcessCommandAsync(message, _currentChannel);
                 if (!handled)
                 {
@@ -709,7 +1298,18 @@ namespace Y0daiiIRC
             {
                 if (_currentChannel != null)
                 {
-                    await _ircClient.SendMessageAsync(_currentChannel.Name, message);
+                    // Immediately show the message as coming from the user
+                    var userNick = _ircClient.Nickname ?? "You";
+                    AddChannelMessage(_currentChannel.Name, userNick, message);
+                    
+                    // Then send it to the server
+                    var target = _currentChannel.Name;
+                    if (_currentChannel.Type == ChannelType.Private && target.StartsWith("PM:"))
+                    {
+                        // For private messages, extract the actual nickname
+                        target = target.Substring(3); // Remove "PM:" prefix
+                    }
+                    await _ircClient.SendMessageAsync(target, message);
                 }
                 else
                 {

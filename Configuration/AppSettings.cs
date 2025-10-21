@@ -73,6 +73,9 @@ namespace Y0daiiIRC.Configuration
         public bool UseSSLByDefault { get; set; } = false;
         public int PingInterval { get; set; } = 60;
         public bool AutoConnect { get; set; } = false;
+        public int ConnectionTimeoutSeconds { get; set; } = 30;
+        public int SSLHandshakeTimeoutSeconds { get; set; } = 30;
+        public bool EnableIdentServer { get; set; } = false;
     }
 
     public class NotificationSettings

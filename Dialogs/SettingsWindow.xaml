@@ -251,6 +251,23 @@
                                     <TextBlock Text="seconds" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                 </StackPanel>
 
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Connection Timeout:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="ConnectionTimeoutTextBox" Width="100" Text="30"/>
+                                    <TextBlock Text="seconds" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="SSL Handshake Timeout:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="SSLTimeoutTextBox" Width="100" Text="30"/>
+                                    <TextBlock Text="seconds" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
+
+                                <CheckBox x:Name="EnableIdentServerCheckBox"
+                                          Content="Enable Ident Server"
+                                          FontWeight="SemiBold"
+                                          Margin="0,0,0,8"/>
+
                                 <CheckBox x:Name="ShowSystemMessagesCheckBox"
                                           Content="Show system messages"
                                           FontWeight="SemiBold"

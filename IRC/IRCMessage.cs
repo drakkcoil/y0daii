@@ -41,5 +41,8 @@ namespace Y0daiiIRC.IRC
         public bool IsPing => Command == "PING";
         public bool IsPong => Command == "PONG";
         public bool IsNumeric => int.TryParse(Command, out _);
+        
+        public bool IsCTCPAction => IsPrivateMessage && Content?.StartsWith("\x01ACTION ") == true && Content.EndsWith("\x01");
+        public string? CTCPAction => IsCTCPAction ? Content?.Substring(8, Content.Length - 9) : null;
     }
 }

@@ -31,6 +31,9 @@ namespace Y0daiiIRC
             // Load connection settings
             AutoReconnectCheckBox.IsChecked = settings.Behavior.AutoReconnect;
             ReconnectDelayTextBox.Text = settings.Behavior.ReconnectDelay.ToString();
+            ConnectionTimeoutTextBox.Text = settings.Connection.ConnectionTimeoutSeconds.ToString();
+            SSLTimeoutTextBox.Text = settings.Connection.SSLHandshakeTimeoutSeconds.ToString();
+            EnableIdentServerCheckBox.IsChecked = settings.Connection.EnableIdentServer;
             ShowSystemMessagesCheckBox.IsChecked = settings.Behavior.ShowSystemMessages;
             LogMessagesCheckBox.IsChecked = settings.Behavior.LogMessages;
             LogPathTextBox.Text = settings.Behavior.LogPath;
@@ -73,6 +76,11 @@ namespace Y0daiiIRC
             settings.Behavior.AutoReconnect = AutoReconnectCheckBox.IsChecked ?? false;
             if (int.TryParse(ReconnectDelayTextBox.Text, out int delay))
                 settings.Behavior.ReconnectDelay = delay;
+            if (int.TryParse(ConnectionTimeoutTextBox.Text, out int connectionTimeout))
+                settings.Connection.ConnectionTimeoutSeconds = connectionTimeout;
+            if (int.TryParse(SSLTimeoutTextBox.Text, out int sslTimeout))
+                settings.Connection.SSLHandshakeTimeoutSeconds = sslTimeout;
+            settings.Connection.EnableIdentServer = EnableIdentServerCheckBox.IsChecked ?? true;
             settings.Behavior.ShowSystemMessages = ShowSystemMessagesCheckBox.IsChecked ?? false;
             settings.Behavior.LogMessages = LogMessagesCheckBox.IsChecked ?? false;
             settings.Behavior.LogPath = LogPathTextBox.Text;

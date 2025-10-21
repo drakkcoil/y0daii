@@ -362,6 +362,13 @@ namespace Y0daiiIRC.Services
 
             var action = string.Join(" ", args);
             var target = currentChannel?.Name ?? "PRIVMSG";
+            
+            // For private messages, extract the actual nickname
+            if (currentChannel?.Type == ChannelType.Private && target.StartsWith("PM:"))
+            {
+                target = target.Substring(3); // Remove "PM:" prefix
+            }
+            
             await _ircClient.SendCommandAsync($"PRIVMSG {target} :\x01ACTION {action}\x01");
         }
 
