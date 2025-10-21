@@ -28,6 +28,12 @@
         <SolidColorBrush x:Key="OfficeGreen50" Color="#E6F7E6"/>
         <SolidColorBrush x:Key="OfficeGreen200" Color="#B3E6B3"/>
         <SolidColorBrush x:Key="OfficeGreen700" Color="#004D00"/>
+        <SolidColorBrush x:Key="OfficePurple25" Color="#F3F2F8"/>
+        <SolidColorBrush x:Key="OfficePurple50" Color="#E6E1F7"/>
+        <SolidColorBrush x:Key="OfficePurple200" Color="#B3A6E6"/>
+        <SolidColorBrush x:Key="OfficePurple300" Color="#8066D9"/>
+        <SolidColorBrush x:Key="OfficePurple700" Color="#4A2C7A"/>
+        <SolidColorBrush x:Key="OfficePurple800" Color="#3D245F"/>
         <SolidColorBrush x:Key="OfficeGray25" Color="#FCFCFC"/>
         <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
         <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
@@ -432,6 +438,11 @@
                                                         <Setter Property="BorderBrush" Value="{StaticResource OfficeGreen200}"/>
                                                         <Setter Property="BorderThickness" Value="1"/>
                                                     </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                        <Setter Property="Background" Value="{StaticResource OfficePurple50}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource OfficePurple300}"/>
+                                                        <Setter Property="BorderThickness" Value="2"/>
+                                                    </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
@@ -440,6 +451,41 @@
                                                 <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="15"/>
                                                 <TextBlock Text="{Binding Timestamp}" FontSize="12" Foreground="{StaticResource OfficeGray500}" Margin="12,0,0,0" VerticalAlignment="Center"/>
                                             </StackPanel>
+                                            <!-- Content area - either simple text or grouped content -->
+                                            <ContentPresenter>
+                                                <ContentPresenter.Style>
+                                                    <Style TargetType="ContentPresenter">
+                                                        <Setter Property="Content" Value="{Binding Content}"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                                <Setter Property="Content">
+                                                                    <Setter.Value>
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="{Binding GroupTitle}" FontWeight="SemiBold" FontSize="16" 
+                                                                                       Foreground="{StaticResource OfficePurple700}" Margin="0,0,0,8"/>
+                                                                            <ItemsControl ItemsSource="{Binding SubMessages}">
+                                                                                <ItemsControl.ItemTemplate>
+                                                                                    <DataTemplate>
+                                                                                        <Border Margin="0,2" Padding="8,4" CornerRadius="6" 
+                                                                                                Background="{StaticResource OfficePurple25}" 
+                                                                                                BorderBrush="{StaticResource OfficePurple200}" 
+                                                                                                BorderThickness="1">
+                                                                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="14" 
+                                                                                                       Foreground="{StaticResource OfficePurple800}"/>
+                                                                                        </Border>
+                                                                                    </DataTemplate>
+                                                                                </ItemsControl.ItemTemplate>
+                                                                            </ItemsControl>
+                                                                        </StackPanel>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ContentPresenter.Style>
+                                            </ContentPresenter>
+                                            
+                                            <!-- Fallback for non-grouped messages -->
                                             <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="15" LineHeight="20">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
@@ -452,6 +498,9 @@
                                                             <DataTrigger Binding="{Binding Type}" Value="Action">
                                                                 <Setter Property="Foreground" Value="{StaticResource OfficeGreen700}"/>
                                                                 <Setter Property="FontStyle" Value="Italic"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>

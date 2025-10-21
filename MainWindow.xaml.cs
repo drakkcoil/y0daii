@@ -26,6 +26,7 @@ namespace Y0daiiIRC
         private ServerListService _serverListService;
         private CommandProcessor _commandProcessor;
         private DCCService _dccService;
+        private MessageGroupingService _messageGroupingService;
         // private TabItem? _consoleTab; // Removed - using Office 365-style navigation
         
         // Command history support
@@ -43,6 +44,7 @@ namespace Y0daiiIRC
             _serverListService = new ServerListService();
             _dccService = new DCCService();
             _commandProcessor = new CommandProcessor(_ircClient, _serverListService);
+            _messageGroupingService = new MessageGroupingService();
 
             SetupEventHandlers();
             SetupUIContextMenus();
@@ -501,6 +503,37 @@ namespace Y0daiiIRC
             }
         }
 
+        private void HandleWhoisResponse(IRCMessage message, string responseType)
+        {
+            // Extract the target user from the whois response
+            var targetUser = message.Parameters.Count > 1 ? message.Parameters[1] : "Unknown";
+            var groupId = $"whois_{targetUser}";
+            var groupTitle = $"ℹ️ Whois: {targetUser}";
+
+            // Create a message for this whois response
+            var whoisMessage = new ChatMessage
+            {
+                Sender = "System",
+                Content = $"{responseType}: {message.Content}",
+                Timestamp = DateTime.Now.ToString("HH:mm:ss"),
+                SenderColor = Colors.Gray,
+                Type = MessageType.System
+            };
+
+            // Add to grouping service
+            _messageGroupingService.TryAddToGroup(groupId, groupTitle, whoisMessage, MessageType.Grouped);
+
+            // Check if this completes the whois group
+            if (message.Command == "318" || _messageGroupingService.IsGroupComplete(groupId))
+            {
+                var groupedMessage = _messageGroupingService.TryCompleteGroup(groupId);
+                if (groupedMessage != null)
+                {
+                    AddSystemMessage(groupedMessage);
+                }
+            }
+        }
+
         private void HandleNumericMessage(IRCMessage message)
         {
             switch (message.Command)
@@ -569,6 +602,27 @@ namespace Y0daiiIRC
                     break;
                 case "376": // RPL_ENDOFMOTD
                     AddSystemMessage("--- End of Message of the Day ---");
+                    break;
+                case "311": // RPL_WHOISUSER
+                    HandleWhoisResponse(message, "User Info");
+                    break;
+                case "312": // RPL_WHOISSERVER
+                    HandleWhoisResponse(message, "Server Info");
+                    break;
+                case "313": // RPL_WHOISOPERATOR
+                    HandleWhoisResponse(message, "Operator Info");
+                    break;
+                case "317": // RPL_WHOISIDLE
+                    HandleWhoisResponse(message, "Idle Time");
+                    break;
+                case "318": // RPL_ENDOFWHOIS
+                    HandleWhoisResponse(message, "End of /WHOIS list");
+                    break;
+                case "319": // RPL_WHOISCHANNELS
+                    HandleWhoisResponse(message, "Channels");
+                    break;
+                case "320": // RPL_WHOISSPECIAL
+                    HandleWhoisResponse(message, "Special Info");
                     break;
                 case "433": // ERR_NICKNAMEINUSE
                     AddSystemMessage($"❌ Nickname {message.Parameters[1]} is already in use");
@@ -739,6 +793,16 @@ namespace Y0daiiIRC
                 Type = MessageType.System
             };
 
+            AddMessageToChannels(message);
+        }
+
+        private void AddSystemMessage(ChatMessage message)
+        {
+            AddMessageToChannels(message);
+        }
+
+        private void AddMessageToChannels(ChatMessage message)
+        {
             // Always add to console
             if (!_channelMessages.ContainsKey("console"))
             {

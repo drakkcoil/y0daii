@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Windows.Media;
 
 namespace Y0daiiIRC.Models
@@ -9,6 +10,8 @@ namespace Y0daiiIRC.Models
         public string Timestamp { get; set; } = string.Empty;
         public Color SenderColor { get; set; } = Colors.Black;
         public MessageType Type { get; set; } = MessageType.Normal;
+        public List<ChatMessage> SubMessages { get; set; } = new List<ChatMessage>();
+        public string GroupTitle { get; set; } = string.Empty;
     }
 
     public enum MessageType
@@ -17,6 +20,7 @@ namespace Y0daiiIRC.Models
         System,
         Action,
         Notice,
-        Error
+        Error,
+        Grouped
     }
 }
