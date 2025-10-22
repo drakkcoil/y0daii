@@ -95,6 +95,15 @@
             <Setter Property="Margin" Value="8,4,50,4"/>
         </Style>
         
+        <!-- Whois Message Style (beautiful formatted bubble) -->
+        <Style x:Key="WhoisMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
+            <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="MaxWidth" Value="600"/>
+            <Setter Property="Margin" Value="8,4,50,4"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+        
         <!-- Console System Message Style (no bubble) -->
         <Style x:Key="ConsoleSystemMessageStyle" TargetType="Border">
             <Setter Property="Background" Value="Transparent"/>
@@ -815,6 +824,26 @@
                                                        Opacity="0.7"
                                                        HorizontalAlignment="Left"
                                                        Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    
+                                    <!-- Whois messages (formatted bubble) -->
+                                    <Border Grid.Column="0" 
+                                            Style="{StaticResource WhoisMessageBubbleStyle}"
+                                            Visibility="{Binding IsWhoisMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Content}" 
+                                                       TextWrapping="Wrap" 
+                                                       FontSize="13" 
+                                                       Foreground="{StaticResource Label}"
+                                                       FontWeight="Normal"
+                                                       HorizontalAlignment="Left"
+                                                       FontFamily="Consolas"/>
+                                            <TextBlock Text="{Binding Timestamp}" 
+                                                       FontSize="10" 
+                                                       Foreground="{StaticResource TertiaryLabel}" 
+                                                       HorizontalAlignment="Left"
+                                                       Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
                                     </Grid>

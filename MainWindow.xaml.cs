@@ -592,9 +592,44 @@ namespace Y0daiiIRC
                 var groupedMessage = _messageGroupingService.TryCompleteGroup(groupId);
                 if (groupedMessage != null)
                 {
-                    AddSystemMessage(groupedMessage);
+                    // Create a beautiful formatted whois message instead of system message
+                    CreateFormattedWhoisMessage(targetUser, groupedMessage.SubMessages);
                 }
             }
+        }
+
+        private void CreateFormattedWhoisMessage(string targetUser, List<ChatMessage> whoisData)
+        {
+            var formattedContent = new System.Text.StringBuilder();
+            formattedContent.AppendLine($"┌─ Whois Information: {targetUser} ─┐");
+            formattedContent.AppendLine("│");
+            
+            foreach (var data in whoisData)
+            {
+                var cleanContent = data.Content.Replace("User Info: ", "").Replace("Server Info: ", "").Replace("Operator Info: ", "").Replace("Idle Time: ", "").Replace("Channels: ", "").Replace("Special Info: ", "").Replace("End of /WHOIS list: ", "");
+                formattedContent.AppendLine($"│ {cleanContent}");
+            }
+            
+            formattedContent.AppendLine("│");
+            formattedContent.AppendLine("└─────────────────────────────────────┘");
+
+            var whoisMessage = new ChatMessage
+            {
+                Sender = "System",
+                Content = formattedContent.ToString(),
+                Timestamp = DateTime.Now.ToString("HH:mm:ss"),
+                SenderColor = Colors.DarkBlue,
+                Type = MessageType.System,
+                IsUserMessage = false,
+                IsOtherMessage = false,
+                IsSystemMessage = false,
+                IsConsoleMessage = false,
+                IsChannelSystemMessage = false,
+                IsWhoisMessage = true,
+                CurrentUserNickname = _ircClient.Nickname
+            };
+
+            AddMessageToChannels(whoisMessage);
         }
 
         private async Task HandleCTCPRequest(IRCMessage message)
