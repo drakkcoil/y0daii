@@ -654,13 +654,6 @@
                                 <TextBlock x:Name="ChatTitle" Text="Console" Style="{StaticResource Title3Style}" VerticalAlignment="Center"/>
                             </StackPanel>
                             
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
-                                <Button x:Name="JoinChannelButtonChat" 
-                                        Content="➕ Join Channel" 
-                                        Style="{StaticResource macOSButtonStyle}"
-                                        Click="JoinChannelButton_Click"
-                                        Margin="0,0,8,0"/>
-                            </StackPanel>
                         </Grid>
                     </Border>
 
