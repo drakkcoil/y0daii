@@ -35,6 +35,8 @@
         
         <!-- Accent Colors -->
         <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+        <SolidColorBrush x:Key="AccentColorHover" Color="#0056CC"/>
+        <SolidColorBrush x:Key="AccentColorPressed" Color="#004499"/>
         <SolidColorBrush x:Key="AccentColorSecondary" Color="#5AC8FA"/>
         <SolidColorBrush x:Key="AccentColorTertiary" Color="#AF52DE"/>
         
@@ -200,6 +202,98 @@
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- macOS Toolbar Button Style -->
+        <Style x:Key="macOSToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- macOS Primary Action Button Style -->
+        <Style x:Key="macOSPrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource AccentColorHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource AccentColorPressed}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- macOS Icon Button Style -->
+        <Style x:Key="macOSIconButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" 
                                               VerticalAlignment="Center"/>
@@ -406,40 +500,40 @@
 
         <!-- macOS Toolbar -->
         <Border Grid.Row="1" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
-            <Grid Height="44">
+            <Grid Height="48">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="250"/>
+                    <ColumnDefinition Width="280"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
                 <!-- Connection Status -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <Ellipse x:Name="StatusIndicator" Width="8" Height="8" Fill="{StaticResource SystemRed}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
+                    <Ellipse x:Name="StatusIndicator" Width="10" Height="10" Fill="{StaticResource SystemRed}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                     <TextBlock x:Name="StatusText" Text="Disconnected" Style="{StaticResource SubheadStyle}" VerticalAlignment="Center"/>
                 </StackPanel>
                 
                 <!-- macOS Toolbar Actions -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,20,0">
                     <Button x:Name="ConnectButton" 
                             Content="Connect" 
-                            Style="{StaticResource macOSButtonStyle}"
+                            Style="{StaticResource macOSPrimaryButtonStyle}"
                             Click="ConnectButton_Click"
-                            Margin="0,0,8,0"/>
+                            Margin="0,0,12,0"/>
                     <Button x:Name="JoinChannelButton" 
                             Content="Join Channel" 
-                            Style="{StaticResource macOSButtonStyle}"
+                            Style="{StaticResource macOSToolbarButtonStyle}"
                             Click="JoinChannelButton_Click"
-                            Margin="0,0,8,0"/>
+                            Margin="0,0,12,0"/>
                     
                     <!-- DCC Transfer Manager -->
                     <Button x:Name="DCCTransferButton" 
-                            Style="{StaticResource macOSButtonStyle}"
+                            Style="{StaticResource macOSToolbarButtonStyle}"
                             Click="DCCTransferButton_Click"
-                            Margin="0,0,8,0">
+                            Margin="0,0,12,0">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📁" FontSize="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="📁" FontSize="14" Margin="0,0,6,0"/>
                                 <TextBlock Text="File Transfer"/>
                             </StackPanel>
                         </Button.Content>
@@ -448,9 +542,9 @@
                     <!-- Help Menu -->
                     <Button x:Name="HelpButton" 
                             Content="Help" 
-                            Style="{StaticResource macOSButtonStyle}"
+                            Style="{StaticResource macOSToolbarButtonStyle}"
                             Click="HelpButton_Click"
-                            Margin="0,0,8,0">
+                            Margin="0,0,12,0">
                         <Button.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="About y0daii IRC Client" Click="AboutMenuItem_Click">
@@ -484,11 +578,10 @@
                     </Button>
                     
                     <Button x:Name="SettingsButton" 
-                            Style="{StaticResource macOSButtonStyle}"
+                            Style="{StaticResource macOSIconButtonStyle}"
                             Click="SettingsButton_Click"
-                            Width="40"
-                            Margin="8,0,0,0">
-                        <materialDesign:PackIcon Kind="Settings" Width="16" Height="16"/>
+                            Margin="12,0,0,0">
+                        <materialDesign:PackIcon Kind="Settings" Width="18" Height="18"/>
                     </Button>
                 </StackPanel>
             </Grid>
