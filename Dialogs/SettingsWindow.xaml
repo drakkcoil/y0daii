@@ -15,43 +15,42 @@
         FontFamily="Segoe UI">
 
     <Window.Resources>
-        <!-- Office 365 Color Scheme -->
-        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
-        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
-        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
-        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
-        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
-        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
-        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
-        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
-        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
-        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
-        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
-        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
-        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+        <!-- macOS Design System Colors -->
+        <SolidColorBrush x:Key="SystemBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SystemSecondaryBackground" Color="#F2F2F7"/>
+        <SolidColorBrush x:Key="SystemTertiaryBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="Label" Color="#000000"/>
+        <SolidColorBrush x:Key="SecondaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="TertiaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="QuaternaryLabel" Color="#2C2C2E"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+        <SolidColorBrush x:Key="SystemRed" Color="#FF3B30"/>
+        <SolidColorBrush x:Key="SystemGreen" Color="#34C759"/>
+        <SolidColorBrush x:Key="SystemBlue" Color="#007AFF"/>
+        <SolidColorBrush x:Key="OpaqueSeparator" Color="#C6C6C8"/>
 
-        <!-- Button Styles -->
-        <Style x:Key="OfficeButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+        <!-- macOS Button Styles -->
+        <Style x:Key="macOSButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                                CornerRadius="2"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemBlue}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemBlue}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -59,13 +58,13 @@
             </Setter>
         </Style>
 
-        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+        <Style x:Key="macOSSecondaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -73,17 +72,17 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="2"
+                                CornerRadius="6"
                                 Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -100,7 +99,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
             <Grid Height="48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -108,8 +107,8 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
-                    <TextBlock Text="Settings" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                    <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource AccentColor}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Settings" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource Label}"/>
                 </StackPanel>
                 
                 <Button Grid.Column="1" 
@@ -119,28 +118,28 @@
                         BorderThickness="0" 
                         Click="CloseButton_Click"
                         Margin="16,0">
-                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource OfficeGray700}"/>
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource SecondaryLabel}"/>
                 </Button>
             </Grid>
         </Border>
 
         <!-- Content -->
-        <TabControl Grid.Row="1" Margin="16" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="1">
+        <TabControl Grid.Row="1" Margin="16" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="1">
             <TabControl.Resources>
                 <Style TargetType="TabItem">
                     <Setter Property="Padding" Value="16,8"/>
                     <Setter Property="FontWeight" Value="SemiBold"/>
-                    <Setter Property="Background" Value="{StaticResource OfficeGray50}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
+                    <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
                     <Setter Property="BorderThickness" Value="1,1,1,0"/>
                     <Setter Property="Margin" Value="0,0,2,0"/>
                     <Style.Triggers>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter Property="Background" Value="White"/>
-                            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
+                            <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
                         </Trigger>
                     </Style.Triggers>
                 </Style>
@@ -149,9 +148,9 @@
             <TabItem Header="General">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16">
-                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                        <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                                 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="Theme:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -198,9 +197,9 @@
             <TabItem Header="User Information">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16">
-                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                        <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="User Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                <TextBlock Text="User Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                                 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="Default Nickname:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -224,9 +223,9 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8">
+                        <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8">
                             <StackPanel>
-                                <TextBlock Text="Ident Server Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Ident Server Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                                 
                                 <CheckBox x:Name="UseIdentCheckBox"
                                           Content="Use Ident Server"
@@ -251,9 +250,9 @@
             <TabItem Header="Connection">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16">
-                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                        <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="Connection Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Connection Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                                 
                                 <CheckBox x:Name="AutoReconnectCheckBox"
                                           Content="Automatically reconnect on disconnect"
@@ -296,7 +295,7 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Log Path:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
                                     <TextBox x:Name="LogPathTextBox" Width="300"/>
-                                    <Button Content="Browse" Style="{StaticResource OfficeSecondaryButtonStyle}" Margin="8,0,0,0"/>
+                                    <Button Content="Browse" Style="{StaticResource macOSSecondaryButtonStyle}" Margin="8,0,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -307,9 +306,9 @@
             <TabItem Header="Notifications">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16">
-                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                        <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="Notification Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Notification Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                                 
                                 <CheckBox x:Name="EnableNotificationsCheckBox"
                                           Content="Enable desktop notifications"
@@ -350,9 +349,9 @@
             <TabItem Header="Updates">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="16">
-                        <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                        <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
                             <StackPanel>
-                                <TextBlock Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Update Settings" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                                 
                                 <CheckBox x:Name="CheckForUpdatesOnStartupCheckBox"
                                           Content="Check for updates on startup"
@@ -392,12 +391,12 @@
                                 <StackPanel Orientation="Horizontal">
                                     <Button x:Name="CheckForUpdatesNowButton"
                                             Content="Check for Updates Now"
-                                            Style="{StaticResource OfficeButtonStyle}"
+                                            Style="{StaticResource macOSButtonStyle}"
                                             Click="CheckForUpdatesNowButton_Click"
                                             Margin="0,0,8,0"/>
                                     <Button x:Name="ViewUpdateHistoryButton"
                                             Content="View Update History"
-                                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                                            Style="{StaticResource macOSSecondaryButtonStyle}"
                                             Click="ViewUpdateHistoryButton_Click"/>
                                 </StackPanel>
                             </StackPanel>
@@ -408,23 +407,23 @@
         </TabControl>
 
         <!-- Buttons -->
-        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" 
                         HorizontalAlignment="Right" 
                         Margin="16,12">
                 <Button x:Name="ResetButton"
                         Content="Reset to Defaults"
-                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Style="{StaticResource macOSSecondaryButtonStyle}"
                         Click="ResetButton_Click"
                         Margin="0,0,8,0"/>
                 <Button x:Name="CancelButton"
                         Content="Cancel"
-                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Style="{StaticResource macOSSecondaryButtonStyle}"
                         Click="CancelButton_Click"
                         Margin="0,0,8,0"/>
                 <Button x:Name="SaveButton"
                         Content="Save"
-                        Style="{StaticResource OfficeButtonStyle}"
+                        Style="{StaticResource macOSButtonStyle}"
                         Click="SaveButton_Click"/>
             </StackPanel>
         </Border>

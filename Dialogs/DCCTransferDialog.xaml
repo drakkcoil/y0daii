@@ -15,24 +15,23 @@
         FontFamily="Segoe UI">
 
     <Window.Resources>
-        <!-- Office 365 Color Scheme -->
-        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
-        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
-        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
-        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
-        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
-        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
-        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
-        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
-        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
-        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
-        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
-        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
-        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+        <!-- macOS Design System Colors -->
+        <SolidColorBrush x:Key="SystemBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SystemSecondaryBackground" Color="#F2F2F7"/>
+        <SolidColorBrush x:Key="SystemTertiaryBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="Label" Color="#000000"/>
+        <SolidColorBrush x:Key="SecondaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="TertiaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="QuaternaryLabel" Color="#2C2C2E"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+        <SolidColorBrush x:Key="SystemRed" Color="#FF3B30"/>
+        <SolidColorBrush x:Key="SystemGreen" Color="#34C759"/>
+        <SolidColorBrush x:Key="SystemBlue" Color="#007AFF"/>
+        <SolidColorBrush x:Key="OpaqueSeparator" Color="#C6C6C8"/>
 
         <!-- Button Styles -->
-        <Style x:Key="OfficeButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+        <Style x:Key="macOSButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,8"/>
@@ -48,10 +47,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                                <Setter Property="Background" Value="{StaticResource AccentColorHover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                                <Setter Property="Background" Value="{StaticResource AccentColorPressed}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -59,11 +58,11 @@
             </Setter>
         </Style>
 
-        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+        <Style x:Key="macOSSecondaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="14"/>
@@ -79,11 +78,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                                <Setter Property="Background" Value="{StaticResource OpaqueSeparator}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -93,7 +92,7 @@
 
         <!-- Data Template for Transfer Items -->
         <DataTemplate x:Key="TransferItemTemplate">
-            <Border Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="1" CornerRadius="4" Margin="0,4">
+            <Border Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="1" CornerRadius="4" Margin="0,4">
                 <Grid Margin="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -111,15 +110,15 @@
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                             <materialDesign:PackIcon Kind="File" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="14"/>
-                            <TextBlock Text="{Binding Type, StringFormat=' ({0})'}" FontSize="12" Foreground="{StaticResource OfficeGray600}" Margin="4,0,0,0"/>
+                            <TextBlock Text="{Binding Type, StringFormat=' ({0})'}" FontSize="12" Foreground="{StaticResource TertiaryLabel}" Margin="4,0,0,0"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding Sender, StringFormat='From: {0}'}" FontSize="12" Foreground="{StaticResource OfficeGray600}"/>
+                        <TextBlock Text="{Binding Sender, StringFormat='From: {0}'}" FontSize="12" Foreground="{StaticResource TertiaryLabel}"/>
                     </StackPanel>
 
                     <!-- Status -->
                     <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right">
                         <TextBlock Text="{Binding Status}" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Right"/>
-                        <TextBlock Text="{Binding ProgressPercentage, StringFormat={}{0:F1}%}" FontSize="12" Foreground="{StaticResource OfficeGray600}" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding ProgressPercentage, StringFormat={}{0:F1}%}" FontSize="12" Foreground="{StaticResource TertiaryLabel}" HorizontalAlignment="Right"/>
                     </StackPanel>
 
                     <!-- Progress Bar -->
@@ -128,15 +127,15 @@
                                  Maximum="100" 
                                  Height="8" 
                                  Margin="0,8,0,8"
-                                 Background="{StaticResource OfficeGray200}"
-                                 Foreground="{StaticResource OfficeBlue}"/>
+                                 Background="{StaticResource OpaqueSeparator}"
+                                 Foreground="{StaticResource AccentColor}"/>
 
                     <!-- Transfer Info -->
                     <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
-                        <TextBlock Text="{Binding BytesTransferred}" FontSize="11" Foreground="{StaticResource OfficeGray600}"/>
-                        <TextBlock Text=" / " FontSize="11" Foreground="{StaticResource OfficeGray600}"/>
-                        <TextBlock Text="{Binding FileSize}" FontSize="11" Foreground="{StaticResource OfficeGray600}"/>
-                        <TextBlock Text="{Binding TransferRate, StringFormat={} ({0}/s)}" FontSize="11" Foreground="{StaticResource OfficeGray600}" Margin="8,0,0,0"/>
+                        <TextBlock Text="{Binding BytesTransferred}" FontSize="11" Foreground="{StaticResource TertiaryLabel}"/>
+                        <TextBlock Text=" / " FontSize="11" Foreground="{StaticResource TertiaryLabel}"/>
+                        <TextBlock Text="{Binding FileSize}" FontSize="11" Foreground="{StaticResource TertiaryLabel}"/>
+                        <TextBlock Text="{Binding TransferRate, StringFormat={} ({0}/s)}" FontSize="11" Foreground="{StaticResource TertiaryLabel}" Margin="8,0,0,0"/>
                     </StackPanel>
 
                     <!-- Error Message -->
@@ -158,7 +157,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
             <Grid Height="48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -166,8 +165,8 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <materialDesign:PackIcon Kind="FileTransfer" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
-                    <TextBlock Text="DCC File Transfer" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                    <materialDesign:PackIcon Kind="FileTransfer" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource AccentColor}" Margin="0,0,8,0"/>
+                    <TextBlock Text="DCC File Transfer" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource Label}"/>
                 </StackPanel>
                 
                 <Button Grid.Column="1" 
@@ -177,7 +176,7 @@
                         BorderThickness="0" 
                         Click="CloseButton_Click"
                         Margin="16,0">
-                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource OfficeGray700}"/>
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource SecondaryLabel}"/>
                 </Button>
             </Grid>
         </Border>
@@ -192,7 +191,7 @@
             <!-- Action Buttons -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
                 <Button x:Name="SendFileButton" 
-                        Style="{StaticResource OfficeButtonStyle}"
+                        Style="{StaticResource macOSButtonStyle}"
                         Click="SendFileButton_Click"
                         Margin="0,0,8,0">
                     <Button.Content>
@@ -203,7 +202,7 @@
                     </Button.Content>
                 </Button>
                 <Button x:Name="CancelTransferButton" 
-                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Style="{StaticResource macOSSecondaryButtonStyle}"
                         Click="CancelTransferButton_Click"
                         Margin="0,0,8,0">
                     <Button.Content>
@@ -214,7 +213,7 @@
                     </Button.Content>
                 </Button>
                 <Button x:Name="ClearCompletedButton" 
-                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Style="{StaticResource macOSSecondaryButtonStyle}"
                         Click="ClearCompletedButton_Click">
                     <Button.Content>
                         <StackPanel Orientation="Horizontal">
@@ -226,7 +225,7 @@
             </StackPanel>
 
             <!-- Transfer List -->
-            <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="1" CornerRadius="8">
+            <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="1" CornerRadius="8">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <ItemsControl x:Name="TransferList" ItemTemplate="{StaticResource TransferItemTemplate}">
                         <ItemsControl.ItemsPanel>
@@ -240,14 +239,14 @@
         </Grid>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
             <Grid Height="32">
                 <TextBlock x:Name="StatusText" 
                            Text="Ready" 
                            VerticalAlignment="Center" 
                            Margin="16,0" 
                            FontSize="12" 
-                           Foreground="{StaticResource OfficeGray700}"/>
+                           Foreground="{StaticResource SecondaryLabel}"/>
             </Grid>
         </Border>
     </Grid>

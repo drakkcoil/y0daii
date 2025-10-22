@@ -1108,7 +1108,7 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
-                Style = (Style)FindResource("macOSNavigationItemStyle"),
+                Style = (Style)FindResource("macOSmacOSNavigationItemStyle"),
                 Tag = channel,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left
@@ -1192,7 +1192,7 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = displayName,
-                Style = (Style)FindResource("NavigationItemStyle"),
+                Style = (Style)FindResource("macOSmacOSNavigationItemStyle"),
                 Tag = user
             };
             button.MouseDoubleClick += (s, e) => StartPrivateMessage(user);
@@ -1319,13 +1319,13 @@ namespace Y0daiiIRC
             
             foreach (Button button in allChannelButtons)
             {
-                button.Style = (Style)FindResource("NavigationItemStyle");
+                button.Style = (Style)FindResource("macOSmacOSNavigationItemStyle");
             }
             
             // Reset all user buttons to normal style
             foreach (Button button in UserList.Children.OfType<Button>())
             {
-                button.Style = (Style)FindResource("NavigationItemStyle");
+                button.Style = (Style)FindResource("macOSmacOSNavigationItemStyle");
             }
             
             // Highlight the current channel button
@@ -1337,7 +1337,7 @@ namespace Y0daiiIRC
                 if (currentButton != null)
                 {
                     // Create a highlighted style
-                    var highlightedStyle = new Style(typeof(Button), (Style)FindResource("NavigationItemStyle"));
+                    var highlightedStyle = new Style(typeof(Button), (Style)FindResource("macOSNavigationItemStyle"));
                     var backgroundSetter = new Setter(Button.BackgroundProperty, new SolidColorBrush(Colors.LightBlue));
                     var foregroundSetter = new Setter(Button.ForegroundProperty, new SolidColorBrush(Colors.DarkBlue));
                     highlightedStyle.Setters.Add(backgroundSetter);
@@ -1353,7 +1353,7 @@ namespace Y0daiiIRC
                         .FirstOrDefault(b => b.Tag is User user && user.Nickname == userNickname);
                     if (userButton != null)
                     {
-                        var highlightedStyle = new Style(typeof(Button), (Style)FindResource("NavigationItemStyle"));
+                        var highlightedStyle = new Style(typeof(Button), (Style)FindResource("macOSNavigationItemStyle"));
                         var backgroundSetter = new Setter(Button.BackgroundProperty, new SolidColorBrush(Colors.LightGreen));
                         var foregroundSetter = new Setter(Button.ForegroundProperty, new SolidColorBrush(Colors.DarkGreen));
                         highlightedStyle.Setters.Add(backgroundSetter);

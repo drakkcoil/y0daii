@@ -16,24 +16,23 @@
         FontFamily="Segoe UI">
 
     <Window.Resources>
-        <!-- Office 365 Color Scheme -->
-        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
-        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
-        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
-        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
-        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
-        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
-        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
-        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
-        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
-        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
-        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
-        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
-        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+        <!-- macOS Design System Colors -->
+        <SolidColorBrush x:Key="SystemBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SystemSecondaryBackground" Color="#F2F2F7"/>
+        <SolidColorBrush x:Key="SystemTertiaryBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="Label" Color="#000000"/>
+        <SolidColorBrush x:Key="SecondaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="TertiaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="QuaternaryLabel" Color="#2C2C2E"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+        <SolidColorBrush x:Key="SystemRed" Color="#FF3B30"/>
+        <SolidColorBrush x:Key="SystemGreen" Color="#34C759"/>
+        <SolidColorBrush x:Key="SystemBlue" Color="#007AFF"/>
+        <SolidColorBrush x:Key="OpaqueSeparator" Color="#C6C6C8"/>
 
         <!-- Button Styles -->
-        <Style x:Key="OfficeButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
+        <Style x:Key="macOSButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,8"/>
@@ -49,10 +48,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
+                                <Setter Property="Background" Value="{StaticResource AccentColorHover}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
+                                <Setter Property="Background" Value="{StaticResource AccentColorPressed}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -60,11 +59,11 @@
             </Setter>
         </Style>
 
-        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
+        <Style x:Key="macOSSecondaryButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="14"/>
@@ -80,11 +79,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                                <Setter Property="Background" Value="{StaticResource OpaqueSeparator}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -94,9 +93,9 @@
 
         <Style x:Key="ChannelSuggestionButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
@@ -112,11 +111,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
+                                <Setter Property="Background" Value="{StaticResource OpaqueSeparator}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -133,7 +132,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
             <Grid Height="48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -141,8 +140,8 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <materialDesign:PackIcon Kind="AccountPlus" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
-                    <TextBlock Text="Join Channel" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                    <materialDesign:PackIcon Kind="AccountPlus" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource AccentColor}" Margin="0,0,8,0"/>
+                    <TextBlock Text="Join Channel" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource Label}"/>
                 </StackPanel>
                 
                 <Button Grid.Column="1" 
@@ -152,7 +151,7 @@
                         BorderThickness="0" 
                         Click="CloseButton_Click"
                         Margin="16,0">
-                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource OfficeGray700}"/>
+                    <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource SecondaryLabel}"/>
                 </Button>
             </Grid>
         </Border>
@@ -161,9 +160,9 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="White">
             <StackPanel Margin="32">
                 <!-- Channel Information -->
-                <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
+                <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8" Margin="0,0,0,16">
                     <StackPanel>
-                        <TextBlock Text="Channel Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Channel Information" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
                         
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="Channel Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -178,10 +177,10 @@
                 </Border>
 
                 <!-- Popular Channels -->
-                <Border Background="{StaticResource OfficeGray50}" Padding="16" CornerRadius="8">
+                <Border Background="{StaticResource SystemSecondaryBackground}" Padding="16" CornerRadius="8">
                     <StackPanel>
-                        <TextBlock Text="Popular Channels" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray900}" Margin="0,0,0,12"/>
-                        <TextBlock Text="Click a channel name to quickly join:" FontSize="12" Foreground="{StaticResource OfficeGray600}" Margin="0,0,0,8"/>
+                        <TextBlock Text="Popular Channels" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Label}" Margin="0,0,0,12"/>
+                        <TextBlock Text="Click a channel name to quickly join:" FontSize="12" Foreground="{StaticResource TertiaryLabel}" Margin="0,0,0,8"/>
                         
                         <StackPanel Orientation="Horizontal">
                             <Button Content="#general" 
@@ -200,18 +199,18 @@
         </ScrollViewer>
 
         <!-- Buttons -->
-        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+        <Border Grid.Row="2" Background="White" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
             <StackPanel Orientation="Horizontal" 
                         HorizontalAlignment="Right" 
                         Margin="16,12">
                 <Button x:Name="CancelButton"
                         Content="Cancel"
-                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                        Style="{StaticResource macOSSecondaryButtonStyle}"
                         Click="CancelButton_Click"
                         Margin="0,0,8,0"/>
                 <Button x:Name="JoinButton"
                         Content="Join"
-                        Style="{StaticResource OfficeButtonStyle}"
+                        Style="{StaticResource macOSButtonStyle}"
                         Click="JoinButton_Click"/>
             </StackPanel>
         </Border>
