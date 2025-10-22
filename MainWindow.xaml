@@ -693,7 +693,7 @@
                             
                             <Button x:Name="SendButton" 
                                     Grid.Column="1"
-                                    Style="{StaticResource OfficeButtonStyle}"
+                                    Style="{StaticResource macOSButtonStyle}"
                                     Click="SendButton_Click"
                                     Padding="20,12"
                                     FontSize="15"
