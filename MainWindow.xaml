@@ -240,10 +240,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#E8E8ED"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="ButtonBorder" Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#D1D1D6"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -302,10 +302,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="IconButtonBorder" Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                                <Setter TargetName="IconButtonBorder" Property="Background" Value="#E8E8ED"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="IconButtonBorder" Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+                                <Setter TargetName="IconButtonBorder" Property="Background" Value="#D1D1D6"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
