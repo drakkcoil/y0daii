@@ -111,7 +111,7 @@ namespace Y0daiiIRC
                 // Remove channel button from UI (button is wrapped in a StackPanel)
                 var containerToRemove = ChannelList.Children.OfType<StackPanel>()
                     .FirstOrDefault(sp => sp.Children.OfType<Button>()
-                        .Any(b => b.Tag == channel));
+                        .Any(b => b.Tag is Channel tagChannel && tagChannel.Name == channel.Name));
                 if (containerToRemove != null)
                 {
                     ChannelList.Children.Remove(containerToRemove);
@@ -211,6 +211,7 @@ namespace Y0daiiIRC
 
         private void OnConnectionStatusChanged(object? sender, string status)
         {
+            Console.WriteLine($"[DEBUG] OnConnectionStatusChanged called with status: {status}");
             Dispatcher.Invoke(() =>
             {
                 // Display "Connecting..." with ellipsis for connecting status
@@ -254,7 +255,17 @@ namespace Y0daiiIRC
                 else if (status == "Connecting")
                 {
                     StatusIndicator.Fill = new SolidColorBrush(Colors.Orange);
+                    Console.WriteLine($"[DEBUG] Connection status changed to Connecting");
                     AddSystemMessage($"🔄 Connecting to {_ircClient.Server}:{_ircClient.Port}...");
+                    
+                    // Switch to console tab to show connection progress
+                    var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
+                    Console.WriteLine($"[DEBUG] Console channel found: {consoleChannel != null}");
+                    if (consoleChannel != null)
+                    {
+                        Console.WriteLine($"[DEBUG] Switching to console channel");
+                        SwitchToChannel(consoleChannel);
+                    }
                 }
                 else
                 {
@@ -451,26 +462,76 @@ namespace Y0daiiIRC
             {
                 var channel = message.Target;
                 var user = message.Sender;
-                AddChannelSystemMessage($"{user} left {channel}");
+                Console.WriteLine($"[DEBUG] PART message: user={user}, channel={channel}, isCurrentUser={user == _ircClient.Nickname}");
                 
                 if (user == _ircClient.Nickname)
                 {
                     // User left the channel - remove it from UI and auto-rejoin list
                     var channelToRemove = _channels.FirstOrDefault(c => c.Name == channel);
+                    Console.WriteLine($"[DEBUG] Channel to remove: {channelToRemove?.Name}, found: {channelToRemove != null}");
+                    
                     if (channelToRemove != null)
                     {
                         _channels.Remove(channelToRemove);
+                        Console.WriteLine($"[DEBUG] Removed channel from _channels list. Remaining channels: {string.Join(", ", _channels.Select(c => c.Name))}");
                         
                         // Remove from auto-rejoin list (user manually left)
                         _channelsToRejoin.Remove(channel);
                         
                         // Remove the channel button from UI (button is wrapped in a StackPanel)
+                        Console.WriteLine($"[DEBUG] ChannelList.Children count before removal: {ChannelList.Children.Count}");
                         var containerToRemove = ChannelList.Children.OfType<StackPanel>()
                             .FirstOrDefault(sp => sp.Children.OfType<Button>()
-                                .Any(b => b.Tag == channelToRemove));
+                                .Any(b => b.Tag is Channel tagChannel && tagChannel.Name == channel));
+                        
+                        // If not found by Tag, try to find by content
+                        if (containerToRemove == null)
+                        {
+                            var channelIcon = GetChannelIcon(new Channel { Name = channel, Type = ChannelType.Channel });
+                            var displayName = GetDisplayChannelName(new Channel { Name = channel, Type = ChannelType.Channel });
+                            var expectedContent = $"{channelIcon} {displayName}";
+                            
+                            Console.WriteLine($"[DEBUG] Trying to find by content: '{expectedContent}'");
+                            
+                            containerToRemove = ChannelList.Children.OfType<StackPanel>()
+                                .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                                    .Any(b => b.Content?.ToString() == expectedContent));
+                        }
+                        
+                        Console.WriteLine($"[DEBUG] Container to remove found: {containerToRemove != null}");
+                        
                         if (containerToRemove != null)
                         {
                             ChannelList.Children.Remove(containerToRemove);
+                            Console.WriteLine($"[DEBUG] Removed container from UI. ChannelList.Children count after removal: {ChannelList.Children.Count}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] No container found to remove. Available containers:");
+                            Console.WriteLine($"[DEBUG] Total ChannelList.Children count: {ChannelList.Children.Count}");
+                            for (int i = 0; i < ChannelList.Children.Count; i++)
+                            {
+                                var child = ChannelList.Children[i];
+                                Console.WriteLine($"[DEBUG]   - Child {i}: {child.GetType().Name}");
+                                if (child is StackPanel sp)
+                                {
+                                    Console.WriteLine($"[DEBUG]     StackPanel with {sp.Children.Count} children");
+                                    for (int j = 0; j < sp.Children.Count; j++)
+                                    {
+                                        var grandChild = sp.Children[j];
+                                        Console.WriteLine($"[DEBUG]       Child {j}: {grandChild.GetType().Name}");
+                                        if (grandChild is Button btn)
+                                        {
+                                            Console.WriteLine($"[DEBUG]         Button Tag: {btn.Tag?.GetType().Name ?? "null"}");
+                                            Console.WriteLine($"[DEBUG]         Button Content: '{btn.Content}'");
+                                            if (btn.Tag is Channel tagChannel)
+                                            {
+                                                Console.WriteLine($"[DEBUG]         Button with channel: {tagChannel.Name}");
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                         
                         // If this was the current channel, switch to console
@@ -484,9 +545,14 @@ namespace Y0daiiIRC
                         }
                     }
                 }
-                else if (channel == _currentChannel?.Name)
+                else
                 {
-                    RemoveUser(user);
+                    // Other user left - show message in current channel if it matches
+                    if (channel == _currentChannel?.Name)
+                    {
+                        AddChannelSystemMessage($"{user} left {channel}");
+                        RemoveUser(user);
+                    }
                 }
             }
             else if (message.IsQuit)
@@ -1256,6 +1322,7 @@ namespace Y0daiiIRC
 
         private void AddSystemMessage(string content)
         {
+            Console.WriteLine($"[DEBUG] AddSystemMessage called: {content}");
             var message = new ChatMessage
             {
                 Sender = "System",
@@ -1271,6 +1338,16 @@ namespace Y0daiiIRC
             };
 
             AddMessageToChannels(message);
+            
+            // Force UI refresh for console messages
+            if (_currentChannel != null && _currentChannel.Name == "console")
+            {
+                Console.WriteLine($"[DEBUG] Forcing UI refresh for console message");
+                var currentItemsSource = MessageList.ItemsSource;
+                MessageList.ItemsSource = null;
+                MessageList.ItemsSource = currentItemsSource;
+                ScrollToBottom();
+            }
         }
 
         private void AddChannelSystemMessage(string content)
@@ -1337,15 +1414,21 @@ namespace Y0daiiIRC
                 // If we're in the console, always show console messages
                 MessageList.ItemsSource = _channelMessages["console"];
             }
-            else if (_currentChannel != null && MessageList.ItemsSource != _channelMessages[_currentChannel.Name])
+            else if (_currentChannel != null && _currentChannel.Name != "console")
             {
                 // If we're in a regular channel, show that channel's messages
-                MessageList.ItemsSource = _channelMessages[_currentChannel.Name];
+                if (MessageList.ItemsSource != _channelMessages[_currentChannel.Name])
+                {
+                    MessageList.ItemsSource = _channelMessages[_currentChannel.Name];
+                }
             }
-            else if (_currentChannel == null && MessageList.ItemsSource != _channelMessages["console"])
+            else
             {
-                // If no current channel, show console messages
-                MessageList.ItemsSource = _channelMessages["console"];
+                // If no current channel or we're in console, show console messages
+                if (MessageList.ItemsSource != _channelMessages["console"])
+                {
+                    MessageList.ItemsSource = _channelMessages["console"];
+                }
             }
             ScrollToBottom();
         }
@@ -1439,6 +1522,11 @@ namespace Y0daiiIRC
 
         private void AddChannelButton(Channel channel)
         {
+            Console.WriteLine($"[DEBUG] AddChannelButton called for channel: {channel.Name}, type: {channel.GetType().Name}");
+            
+            // Store channel in local variable to avoid closure issues
+            var channelForTag = channel;
+            
             // Create a container for the button and unread indicator
             var container = new StackPanel
             {
@@ -1450,10 +1538,12 @@ namespace Y0daiiIRC
             {
                 Content = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
                 Style = (Style)FindResource("macOSNavigationItemStyle"),
-                Tag = channel,
+                Tag = channelForTag,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left
             };
+            
+            Console.WriteLine($"[DEBUG] Button created with Tag: {button.Tag?.GetType().Name ?? "null"}");
             button.Click += (s, e) => SwitchToChannel(channel);
             
             // Add context menu for channel
