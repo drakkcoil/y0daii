@@ -1108,7 +1108,7 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
-                Style = (Style)FindResource("NavigationItemStyle"),
+                Style = (Style)FindResource("macOSNavigationItemStyle"),
                 Tag = channel,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left
