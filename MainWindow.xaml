@@ -348,95 +348,6 @@
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
-        <SolidColorBrush x:Key="OfficeGray950" Color="#201F1E"/>
-        
-        <!-- Modern Button Styles -->
-        <Style x:Key="OfficeButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource OfficeBlue}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                CornerRadius="2" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBlueHover}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeBluePressed}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <Style x:Key="OfficeSecondaryButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource OfficeBlue}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray300}"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="2" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
-                                <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Compact View Styles -->
-        <Style x:Key="CompactMessageBorderStyle" TargetType="Border">
-            <Setter Property="Margin" Value="0,2"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="{StaticResource OfficeGray50}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Type}" Value="System">
-                    <Setter Property="Background" Value="{StaticResource OfficeBlue50}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue300}"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Action">
-                    <Setter Property="Background" Value="{StaticResource OfficeGreen50}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource OfficeGreen200}"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Grouped">
-                    <Setter Property="Background" Value="{StaticResource OfficePurple50}"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource OfficePurple300}"/>
-                    <Setter Property="BorderThickness" Value="1"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
 
 
 
@@ -446,34 +357,6 @@
         <CubicEase x:Key="CubicEaseInOut" EasingMode="EaseInOut"/>
 
         
-        <Style x:Key="NavigationItemStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource OfficeGray700}"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="Padding" Value="16,12"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray100}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="{StaticResource OfficeGray200}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </Window.Resources>
 
     <Grid>
@@ -754,12 +637,12 @@
                                                 <TextBlock Text="{Binding Content}" 
                                                            TextWrapping="Wrap" 
                                                            FontSize="13" 
-                                                           Foreground="{StaticResource OfficeGray700}"
+                                                           Foreground="{StaticResource SecondaryLabel}"
                                                            FontWeight="Normal"
                                                            HorizontalAlignment="Center"/>
                                                 <TextBlock Text="{Binding Timestamp}" 
                                                            FontSize="10" 
-                                                           Foreground="{StaticResource OfficeGray500}" 
+                                                           Foreground="{StaticResource TertiaryLabel}" 
                                                            HorizontalAlignment="Center"
                                                            Margin="0,2,0,0"/>
                                         </StackPanel>
