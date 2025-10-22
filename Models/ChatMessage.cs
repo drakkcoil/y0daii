@@ -15,6 +15,12 @@ namespace Y0daiiIRC.Models
         public MessageType Type { get; set; } = MessageType.Normal;
         public List<ChatMessage> SubMessages { get; set; } = new List<ChatMessage>();
         public string GroupTitle { get; set; } = string.Empty;
+        
+        // iMessage-style properties
+        public bool IsUserMessage { get; set; } = false;
+        public bool IsOtherMessage { get; set; } = false;
+        public bool IsSystemMessage { get; set; } = false;
+        public string CurrentUserNickname { get; set; } = string.Empty;
     }
 
     public enum MessageType

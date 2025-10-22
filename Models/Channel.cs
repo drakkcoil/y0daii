@@ -15,6 +15,7 @@ namespace Y0daiiIRC.Models
     public enum ChannelType
     {
         Channel,
-        Private
+        Private,
+        Console
     }
 }

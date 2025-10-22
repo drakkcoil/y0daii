@@ -9,6 +9,8 @@
         MinHeight="600"
         MinWidth="800"
         WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
         Background="#F8F9FA"
         TextElement.Foreground="#323130"
         TextElement.FontWeight="Regular"
@@ -18,34 +20,234 @@
         FontFamily="Segoe UI">
     
     <Window.Resources>
-        <!-- Office 365 Color Scheme -->
-        <SolidColorBrush x:Key="OfficeBlue" Color="#0078D4"/>
-        <SolidColorBrush x:Key="OfficeBlueHover" Color="#106EBE"/>
-        <SolidColorBrush x:Key="OfficeBluePressed" Color="#005A9E"/>
-        <SolidColorBrush x:Key="OfficeBlue50" Color="#E6F3FF"/>
-        <SolidColorBrush x:Key="OfficeBlue200" Color="#B3D9FF"/>
-        <SolidColorBrush x:Key="OfficeBlue300" Color="#80BFFF"/>
-        <SolidColorBrush x:Key="OfficeBlue700" Color="#004578"/>
-        <SolidColorBrush x:Key="OfficeGreen50" Color="#E6F7E6"/>
-        <SolidColorBrush x:Key="OfficeGreen200" Color="#B3E6B3"/>
-        <SolidColorBrush x:Key="OfficeGreen700" Color="#004D00"/>
-        <SolidColorBrush x:Key="OfficePurple25" Color="#F3F2F8"/>
-        <SolidColorBrush x:Key="OfficePurple50" Color="#E6E1F7"/>
-        <SolidColorBrush x:Key="OfficePurple200" Color="#B3A6E6"/>
-        <SolidColorBrush x:Key="OfficePurple300" Color="#8066D9"/>
-        <SolidColorBrush x:Key="OfficePurple700" Color="#4A2C7A"/>
-        <SolidColorBrush x:Key="OfficePurple800" Color="#3D245F"/>
-        <SolidColorBrush x:Key="OfficeGray25" Color="#FCFCFC"/>
-        <SolidColorBrush x:Key="OfficeGray50" Color="#F8F9FA"/>
-        <SolidColorBrush x:Key="OfficeGray100" Color="#F3F2F1"/>
-        <SolidColorBrush x:Key="OfficeGray200" Color="#EDEBE9"/>
-        <SolidColorBrush x:Key="OfficeGray300" Color="#E1DFDD"/>
-        <SolidColorBrush x:Key="OfficeGray400" Color="#C8C6C4"/>
-        <SolidColorBrush x:Key="OfficeGray500" Color="#A19F9D"/>
-        <SolidColorBrush x:Key="OfficeGray600" Color="#8A8886"/>
-        <SolidColorBrush x:Key="OfficeGray700" Color="#605E5C"/>
-        <SolidColorBrush x:Key="OfficeGray800" Color="#484644"/>
-        <SolidColorBrush x:Key="OfficeGray900" Color="#323130"/>
+        <!-- macOS Design System Colors -->
+        <!-- System Colors -->
+        <SolidColorBrush x:Key="SystemBackground" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SystemSecondaryBackground" Color="#F5F5F7"/>
+        <SolidColorBrush x:Key="SystemTertiaryBackground" Color="#F2F2F7"/>
+        <SolidColorBrush x:Key="SystemQuaternaryBackground" Color="#E5E5EA"/>
+        
+        <!-- Text Colors -->
+        <SolidColorBrush x:Key="Label" Color="#000000"/>
+        <SolidColorBrush x:Key="SecondaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="TertiaryLabel" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="QuaternaryLabel" Color="#2C2C2E"/>
+        
+        <!-- Accent Colors -->
+        <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+        <SolidColorBrush x:Key="AccentColorSecondary" Color="#5AC8FA"/>
+        <SolidColorBrush x:Key="AccentColorTertiary" Color="#AF52DE"/>
+        
+        <!-- Semantic Colors -->
+        <SolidColorBrush x:Key="SystemRed" Color="#FF3B30"/>
+        <SolidColorBrush x:Key="SystemOrange" Color="#FF9500"/>
+        <SolidColorBrush x:Key="SystemYellow" Color="#FFCC00"/>
+        <SolidColorBrush x:Key="SystemGreen" Color="#34C759"/>
+        <SolidColorBrush x:Key="SystemTeal" Color="#5AC8FA"/>
+        <SolidColorBrush x:Key="SystemBlue" Color="#007AFF"/>
+        <SolidColorBrush x:Key="SystemIndigo" Color="#5856D6"/>
+        <SolidColorBrush x:Key="SystemPurple" Color="#AF52DE"/>
+        <SolidColorBrush x:Key="SystemPink" Color="#FF2D92"/>
+        
+        <!-- Separator Colors -->
+        <SolidColorBrush x:Key="Separator" Color="#3C3C43"/>
+        <SolidColorBrush x:Key="OpaqueSeparator" Color="#C6C6C8"/>
+        
+        <!-- Fill Colors -->
+        <SolidColorBrush x:Key="SystemFill" Color="#787880"/>
+        <SolidColorBrush x:Key="SecondarySystemFill" Color="#787880"/>
+        <SolidColorBrush x:Key="TertiarySystemFill" Color="#767680"/>
+        <SolidColorBrush x:Key="QuaternarySystemFill" Color="#747480"/>
+
+        <!-- iMessage-style Chat Bubble Styles -->
+        <Style x:Key="ChatBubbleStyle" TargetType="Border">
+            <Setter Property="Margin" Value="8,4"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CornerRadius" Value="18"/>
+            <Setter Property="MaxWidth" Value="300"/>
+        </Style>
+        
+        <Style x:Key="UserMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
+            <Setter Property="Background" Value="{StaticResource SystemBlue}"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="50,4,8,4"/>
+        </Style>
+        
+        <Style x:Key="OtherMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
+            <Setter Property="Background" Value="{StaticResource SystemGreen}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Margin" Value="8,4,50,4"/>
+        </Style>
+        
+        <Style x:Key="SystemMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
+            <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="MaxWidth" Value="400"/>
+        </Style>
+        
+        <!-- Speech Tail Paths -->
+        <PathGeometry x:Key="UserMessageTail">
+            <PathFigure StartPoint="0,0">
+                <LineSegment Point="0,8"/>
+                <LineSegment Point="8,8"/>
+                <LineSegment Point="0,0"/>
+            </PathFigure>
+        </PathGeometry>
+        
+        <PathGeometry x:Key="OtherMessageTail">
+            <PathFigure StartPoint="8,0">
+                <LineSegment Point="8,8"/>
+                <LineSegment Point="0,8"/>
+                <LineSegment Point="8,0"/>
+            </PathFigure>
+        </PathGeometry>
+        
+        <!-- Converters -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        
+        <!-- macOS Typography Styles -->
+        <Style x:Key="LargeTitleStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Display"/>
+            <Setter Property="FontSize" Value="34"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="Title1Style" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Display"/>
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="Title2Style" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Display"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="Title3Style" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Display"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="HeadlineStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="BodyStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="CalloutStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="SubheadStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+        </Style>
+        
+        <Style x:Key="FootnoteStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryLabel}"/>
+        </Style>
+        
+        <Style x:Key="Caption1Style" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryLabel}"/>
+        </Style>
+        
+        <Style x:Key="Caption2Style" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="Foreground" Value="{StaticResource TertiaryLabel}"/>
+        </Style>
+        
+        <!-- macOS Button Styles -->
+        <Style x:Key="macOSButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource SystemBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OpaqueSeparator}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- macOS Navigation Item Style -->
+        <Style x:Key="macOSNavigationItemStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource Label}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontFamily" Value="SF Pro Text"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Regular"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemSecondaryBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- Context Menus -->
         <ContextMenu x:Key="UserContextMenu">
@@ -54,9 +256,20 @@
                     <materialDesign:PackIcon Kind="Message" Width="16" Height="16"/>
                 </MenuItem.Icon>
             </MenuItem>
+            <MenuItem Header="Send File" Click="UserContextMenu_SendFile_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="FileUpload" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
             <MenuItem Header="Whois" Click="UserContextMenu_Whois_Click">
                 <MenuItem.Icon>
                     <materialDesign:PackIcon Kind="AccountSearch" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Copy Nickname" Click="UserContextMenu_CopyNickname_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="ContentCopy" Width="16" Height="16"/>
                 </MenuItem.Icon>
             </MenuItem>
             <Separator/>
@@ -73,6 +286,22 @@
             <MenuItem Header="CTCP Ping" Click="UserContextMenu_Ping_Click">
                 <MenuItem.Icon>
                     <materialDesign:PackIcon Kind="Network" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Ignore User" Click="UserContextMenu_Ignore_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Block" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Kick User" Click="UserContextMenu_Kick_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="AccountRemove" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Ban User" Click="UserContextMenu_Ban_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="AccountCancel" Width="16" Height="16"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
@@ -255,37 +484,46 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Title Bar -->
-        <Border Grid.Row="0" Background="{StaticResource OfficeGray50}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
-            <Grid Height="32">
+        <!-- macOS Title Bar -->
+        <Border Grid.Row="0" Background="{StaticResource SystemBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid Height="28">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0">
-                    <materialDesign:PackIcon Kind="Chat" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
-                    <TextBlock Text="y0daii IRC Client" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                <!-- macOS Traffic Lights -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
+                    <Ellipse Width="12" Height="12" Fill="{StaticResource SystemRed}" Margin="0,0,8,0"/>
+                    <Ellipse Width="12" Height="12" Fill="{StaticResource SystemYellow}" Margin="0,0,8,0"/>
+                    <Ellipse Width="12" Height="12" Fill="{StaticResource SystemGreen}"/>
                 </StackPanel>
                 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="16,0">
-                    <Button x:Name="MinimizeButton" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MinimizeButton_Click">
-                        <materialDesign:PackIcon Kind="WindowMinimize" Width="10" Height="10" Foreground="{StaticResource OfficeGray700}"/>
-                    </Button>
-                    <Button x:Name="MaximizeButton" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="MaximizeButton_Click">
-                        <materialDesign:PackIcon Kind="WindowMaximize" Width="10" Height="10" Foreground="{StaticResource OfficeGray700}"/>
-                    </Button>
-                    <Button x:Name="CloseButton" Width="46" Height="32" Background="Transparent" BorderThickness="0" Click="CloseButton_Click">
-                        <materialDesign:PackIcon Kind="WindowClose" Width="10" Height="10" Foreground="{StaticResource OfficeGray700}"/>
-                    </Button>
+                <!-- App Title -->
+                <TextBlock Grid.Column="1" x:Name="AppTitle" Text="y0daii IRC Client" 
+                           Style="{StaticResource HeadlineStyle}" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center"/>
+                
+                <!-- Window Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,12,0">
+                    <Button x:Name="MinimizeButton" Content="−" FontSize="14" Width="20" Height="20" Margin="2" 
+                            Background="Transparent" BorderThickness="0" Click="MinimizeButton_Click"
+                            Foreground="{StaticResource Label}"/>
+                    <Button x:Name="MaximizeButton" Content="□" FontSize="12" Width="20" Height="20" Margin="2" 
+                            Background="Transparent" BorderThickness="0" Click="MaximizeButton_Click"
+                            Foreground="{StaticResource Label}"/>
+                    <Button x:Name="CloseButton" Content="×" FontSize="14" Width="20" Height="20" Margin="2" 
+                            Background="Transparent" BorderThickness="0" Click="CloseButton_Click"
+                            Foreground="{StaticResource Label}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Ribbon Bar -->
-        <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,0,1">
-            <Grid Height="48">
+        <!-- macOS Toolbar -->
+        <Border Grid.Row="1" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
+            <Grid Height="44">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="250"/>
                     <ColumnDefinition Width="*"/>
@@ -294,31 +532,31 @@
                 
                 <!-- Connection Status -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
-                    <Ellipse x:Name="StatusIndicator" Width="8" Height="8" Fill="Red" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="StatusText" Text="Disconnected" FontSize="14" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray700}"/>
+                    <Ellipse x:Name="StatusIndicator" Width="8" Height="8" Fill="{StaticResource SystemRed}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Disconnected" Style="{StaticResource SubheadStyle}" VerticalAlignment="Center"/>
                 </StackPanel>
                 
-                <!-- Ribbon Actions -->
+                <!-- macOS Toolbar Actions -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
                     <Button x:Name="ConnectButton" 
                             Content="Connect" 
-                            Style="{StaticResource OfficeButtonStyle}"
+                            Style="{StaticResource macOSButtonStyle}"
                             Click="ConnectButton_Click"
                             Margin="0,0,8,0"/>
                     <Button x:Name="JoinChannelButton" 
                             Content="Join Channel" 
-                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Style="{StaticResource macOSButtonStyle}"
                             Click="JoinChannelButton_Click"
                             Margin="0,0,8,0"/>
                     
                     <!-- DCC Transfer Manager -->
                     <Button x:Name="DCCTransferButton" 
-                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Style="{StaticResource macOSButtonStyle}"
                             Click="DCCTransferButton_Click"
                             Margin="0,0,8,0">
                         <Button.Content>
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileTransfer" Width="16" Height="16" Margin="0,0,8,0"/>
+                                <TextBlock Text="📁" FontSize="16" Margin="0,0,8,0"/>
                                 <TextBlock Text="File Transfer"/>
                             </StackPanel>
                         </Button.Content>
@@ -327,7 +565,7 @@
                     <!-- Help Menu -->
                     <Button x:Name="HelpButton" 
                             Content="Help" 
-                            Style="{StaticResource OfficeSecondaryButtonStyle}"
+                            Style="{StaticResource macOSButtonStyle}"
                             Click="HelpButton_Click"
                             Margin="0,0,8,0">
                         <Button.ContextMenu>
@@ -381,43 +619,43 @@
                 <ColumnDefinition Width="200" MinWidth="150"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Navigation Pane (Outlook-style) -->
-            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,1,0">
+            <!-- macOS Sidebar -->
+            <Border Grid.Column="0" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <!-- Navigation Header -->
-                    <Border Grid.Row="0" Background="{StaticResource OfficeBlue50}" BorderBrush="{StaticResource OfficeBlue200}" BorderThickness="0,0,0,1">
+                    <!-- Sidebar Header -->
+                    <Border Grid.Row="0" Background="{StaticResource SystemTertiaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" Margin="16,12">
                             <TextBlock Text="💬" FontSize="16" Margin="0,0,8,0"/>
-                            <TextBlock Text="Y0daii IRC" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource OfficeBlue700}"/>
+                            <TextBlock Text="y0daii IRC" Style="{StaticResource Title3Style}"/>
                         </StackPanel>
                     </Border>
                     
-                    <!-- Navigation Items -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource OfficeGray25}">
+                    <!-- Sidebar Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource SystemBackground}">
                         <StackPanel Margin="0,12,0,0">
                             <!-- Server Section -->
-                            <TextBlock Text="🌐 SERVERS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray600}" Margin="16,8,16,6"/>
-                            <Button x:Name="ConnectButtonNav" Content="🔌 Connect to Server" Style="{StaticResource NavigationItemStyle}" Click="ConnectButton_Click" Margin="8,0,8,8"/>
+                            <TextBlock Text="SERVERS" Style="{StaticResource Caption1Style}" Margin="16,8,16,6" Foreground="{StaticResource SecondaryLabel}"/>
+                            <Button x:Name="ConnectButtonNav" Content="🔌 Connect to Server" Style="{StaticResource macOSNavigationItemStyle}" Click="ConnectButton_Click" Margin="8,0,8,8"/>
                             
                             <!-- Channels Section -->
-                            <TextBlock Text="💬 CHANNELS" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray600}" Margin="16,16,16,6"/>
+                            <TextBlock Text="CHANNELS" Style="{StaticResource Caption1Style}" Margin="16,16,16,6" Foreground="{StaticResource SecondaryLabel}"/>
                             <StackPanel x:Name="ChannelList" Margin="0,0,0,8"/>
                             
                             <!-- Private Messages Section -->
-                            <TextBlock Text="👤 PRIVATE MESSAGES" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource OfficeGray600}" Margin="16,16,16,6"/>
+                            <TextBlock Text="PRIVATE MESSAGES" Style="{StaticResource Caption1Style}" Margin="16,16,16,6" Foreground="{StaticResource SecondaryLabel}"/>
                             <StackPanel x:Name="PrivateMessageList" Margin="0,0,0,8"/>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
             </Border>
 
-            <!-- Chat Area -->
-            <Border Grid.Column="1" Background="White" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,0,1,0">
+            <!-- macOS Chat Area -->
+            <Border Grid.Column="1" Background="{StaticResource SystemBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,1,0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -425,203 +663,122 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Chat Header -->
-                    <Border Grid.Row="0" Background="{StaticResource OfficeBlue50}" BorderBrush="{StaticResource OfficeBlue200}" BorderThickness="0,0,0,1">
-                        <Grid Height="56">
+                    <!-- macOS Chat Header -->
+                    <Border Grid.Row="0" Background="{StaticResource SystemTertiaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
+                        <Grid Height="48">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
-                                <TextBlock x:Name="ChatIcon" Text="💬" FontSize="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                                <TextBlock x:Name="ChatTitle" Text="Console" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue700}"/>
+                                <TextBlock x:Name="ChatIcon" Text="💬" FontSize="18" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <TextBlock x:Name="ChatTitle" Text="Console" Style="{StaticResource Title3Style}" VerticalAlignment="Center"/>
                             </StackPanel>
                             
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
                                 <Button x:Name="JoinChannelButtonChat" 
                                         Content="➕ Join Channel" 
-                                        Style="{StaticResource OfficeSecondaryButtonStyle}"
+                                        Style="{StaticResource macOSButtonStyle}"
                                         Click="JoinChannelButton_Click"
                                         Margin="0,0,8,0"/>
                             </StackPanel>
                         </Grid>
                     </Border>
 
-                    <!-- Messages Area -->
+                    <!-- macOS Messages Area -->
                     <ScrollViewer x:Name="MessageScrollViewer" 
                                   Grid.Row="1"
                                   VerticalScrollBarVisibility="Auto"
-                                  Background="White"
+                                  Background="{StaticResource SystemBackground}"
                                   Padding="16">
                         <ItemsControl x:Name="MessageList" ContextMenu="{StaticResource MessageContextMenu}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border>
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <!-- Default Normal View Style -->
-                                                <Setter Property="Margin" Value="0,6"/>
-                                                <Setter Property="Padding" Value="16,12"/>
-                                                <Setter Property="CornerRadius" Value="12"/>
-                                                <Setter Property="Background" Value="{StaticResource OfficeGray50}"/>
-                                                <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
-                                                <Setter Property="BorderThickness" Value="1"/>
-                                                <Style.Triggers>
-                                                    <!-- Compact view without animation -->
-                                                    <MultiDataTrigger>
-                                                        <MultiDataTrigger.Conditions>
-                                                            <Condition Binding="{Binding Source={x:Static local:ChatMessage.UseCompactView}}" Value="True"/>
-                                                            <Condition Binding="{Binding Source={x:Static local:ChatMessage.EnableAnimations}}" Value="False"/>
-                                                        </MultiDataTrigger.Conditions>
-                                                        <Setter Property="Margin" Value="0,2"/>
-                                                        <Setter Property="Padding" Value="8,4"/>
-                                                        <Setter Property="CornerRadius" Value="6"/>
-                                                    </MultiDataTrigger>
-                                                    <!-- Message Type Triggers for Normal View -->
-                                                    <DataTrigger Binding="{Binding Type}" Value="System">
-                                                        <Setter Property="Background" Value="{StaticResource OfficeBlue50}"/>
-                                                        <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue300}"/>
-                                                        <Setter Property="BorderThickness" Value="2"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Type}" Value="Action">
-                                                        <Setter Property="Background" Value="{StaticResource OfficeGreen50}"/>
-                                                        <Setter Property="BorderBrush" Value="{StaticResource OfficeGreen200}"/>
-                                                        <Setter Property="BorderThickness" Value="1"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding Type}" Value="Grouped">
-                                                        <Setter Property="Background" Value="{StaticResource OfficePurple50}"/>
-                                                        <Setter Property="BorderBrush" Value="{StaticResource OfficePurple300}"/>
-                                                        <Setter Property="BorderThickness" Value="2"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <StackPanel>
-                                            <!-- Normal View Layout -->
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        
+                                        <!-- User's own messages (right side, blue) -->
+                                        <Border Grid.Column="1" Grid.ColumnSpan="2" 
+                                                Style="{StaticResource UserMessageBubbleStyle}"
+                                                Visibility="{Binding IsUserMessage, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <StackPanel>
-                                                <StackPanel.Style>
-                                                    <Style TargetType="StackPanel">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Source={x:Static local:ChatMessage.UseCompactView}}" Value="True">
-                                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </StackPanel.Style>
-                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                                    <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="15"/>
-                                                    <TextBlock Text="{Binding Timestamp}" FontSize="12" Foreground="{StaticResource OfficeGray500}" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                                                </StackPanel>
-                                                
-                                                <!-- Simple content display for non-grouped messages -->
-                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <!-- Normal View Style -->
-                                                            <Setter Property="FontSize" Value="15"/>
-                                                            <Setter Property="LineHeight" Value="20"/>
-                                                            <Setter Property="Foreground" Value="{StaticResource OfficeGray900}"/>
-                                                            <!-- Message Type Triggers for Normal View -->
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Type}" Value="System">
-                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeBlue700}"/>
-                                                                    <Setter Property="FontStyle" Value="Italic"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Type}" Value="Action">
-                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeGreen700}"/>
-                                                                    <Setter Property="FontStyle" Value="Italic"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Type}" Value="Grouped">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
+                                                <TextBlock Text="{Binding Content}" 
+                                                           TextWrapping="Wrap" 
+                                                           FontSize="14" 
+                                                           Foreground="White"
+                                                           FontWeight="Normal"/>
+                                                <TextBlock Text="{Binding Timestamp}" 
+                                                           FontSize="11" 
+                                                           Foreground="White" 
+                                                           Opacity="0.7"
+                                                           HorizontalAlignment="Right"
+                                                           Margin="0,4,0,0"/>
                                             </StackPanel>
-                                            
-                                            <!-- Compact View Layout - Single Line -->
-                                            <StackPanel Orientation="Horizontal">
-                                                <StackPanel.Style>
-                                                    <Style TargetType="StackPanel">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Source={x:Static local:ChatMessage.UseCompactView}}" Value="True">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </StackPanel.Style>
-                                                <TextBlock Text="{Binding Timestamp}" FontSize="11" Foreground="{StaticResource OfficeGray500}" VerticalAlignment="Center"/>
-                                                <TextBlock Text=" " FontSize="11" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="13" VerticalAlignment="Center"/>
-                                                <TextBlock Text=" - " FontSize="13" Foreground="{StaticResource OfficeGray600}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{StaticResource OfficeGray900}" VerticalAlignment="Center">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Type}" Value="System">
-                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeBlue700}"/>
-                                                                    <Setter Property="FontStyle" Value="Italic"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Type}" Value="Action">
-                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeGreen700}"/>
-                                                                    <Setter Property="FontStyle" Value="Italic"/>
-                                                                </DataTrigger>
-                                                                <DataTrigger Binding="{Binding Type}" Value="Grouped">
-                                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
-                                            </StackPanel>
-                                            
-                                            <!-- Grouped content display -->
+                                        </Border>
+                                        
+                                        <!-- Other users' messages (left side, green) -->
+                                        <Border Grid.Column="0" Grid.ColumnSpan="2" 
+                                                Style="{StaticResource OtherMessageBubbleStyle}"
+                                                Visibility="{Binding IsOtherMessage, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <StackPanel>
-                                                <StackPanel.Style>
-                                                    <Style TargetType="StackPanel">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Grouped">
-                                                                <Setter Property="Visibility" Value="Visible"/>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </StackPanel.Style>
-                                                <TextBlock Text="{Binding GroupTitle}" FontWeight="SemiBold" FontSize="16" 
-                                                           Foreground="{StaticResource OfficePurple700}" Margin="0,0,0,8"/>
-                                                <ItemsControl ItemsSource="{Binding SubMessages}">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate>
-                                                            <Border Margin="0,2" Padding="8,4" CornerRadius="6" 
-                                                                    Background="{StaticResource OfficePurple25}" 
-                                                                    BorderBrush="{StaticResource OfficePurple200}" 
-                                                                    BorderThickness="1">
-                                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="14" 
-                                                                           Foreground="{StaticResource OfficePurple800}"/>
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
+                                                <TextBlock Text="{Binding Sender}" 
+                                                           FontWeight="SemiBold" 
+                                                           FontSize="12" 
+                                                           Foreground="White" 
+                                                           Opacity="0.8"
+                                                           Margin="0,0,0,2"/>
+                                                <TextBlock Text="{Binding Content}" 
+                                                           TextWrapping="Wrap" 
+                                                           FontSize="14" 
+                                                           Foreground="White"
+                                                           FontWeight="Normal"/>
+                                                <TextBlock Text="{Binding Timestamp}" 
+                                                           FontSize="11" 
+                                                           Foreground="White" 
+                                                           Opacity="0.7"
+                                                           HorizontalAlignment="Left"
+                                                           Margin="0,4,0,0"/>
                                             </StackPanel>
+                                        </Border>
+                                            
+                                        <!-- System messages (center, grey) -->
+                                        <Border Grid.Column="1" 
+                                                Style="{StaticResource SystemMessageBubbleStyle}"
+                                                Visibility="{Binding IsSystemMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Content}" 
+                                                           TextWrapping="Wrap" 
+                                                           FontSize="13" 
+                                                           Foreground="{StaticResource OfficeGray700}"
+                                                           FontWeight="Normal"
+                                                           HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Timestamp}" 
+                                                           FontSize="10" 
+                                                           Foreground="{StaticResource OfficeGray500}" 
+                                                           HorizontalAlignment="Center"
+                                                           Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
 
-                    <!-- Message Input -->
-                    <Border Grid.Row="2" Background="{StaticResource OfficeGray25}" BorderBrush="{StaticResource OfficeGray200}" BorderThickness="0,1,0,0">
+                    <!-- macOS Message Input -->
+                    <Border Grid.Row="2" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
                         <Grid Margin="20,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             
-                            <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource OfficeBlue200}" BorderThickness="2" CornerRadius="8" Margin="0,0,12,0">
+                            <Border Grid.Column="0" Background="{StaticResource SystemBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="1" CornerRadius="8" Margin="0,0,12,0">
                                 <TextBox x:Name="MessageTextBox" 
                                          Background="Transparent"
                                          BorderThickness="0"
@@ -668,8 +825,8 @@
                 </Grid>
             </Border>
 
-            <!-- User List -->
-            <Border Grid.Column="2" Background="White">
+            <!-- macOS User List -->
+            <Border Grid.Column="2" Background="{StaticResource SystemBackground}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -677,34 +834,34 @@
                     </Grid.RowDefinitions>
                     
                     <!-- User List Header -->
-                    <Border Grid.Row="0" Background="{StaticResource OfficeGreen50}" BorderBrush="{StaticResource OfficeGreen200}" BorderThickness="0,0,0,1">
+                    <Border Grid.Row="0" Background="{StaticResource SystemTertiaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal" Margin="16,12">
                             <TextBlock Text="👥" FontSize="16" Margin="0,0,8,0"/>
-                            <TextBlock Text="Users" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource OfficeGreen700}"/>
+                            <TextBlock Text="Users" Style="{StaticResource Title3Style}"/>
                         </StackPanel>
                     </Border>
                     
                     <!-- User List -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource OfficeGray25}">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource SystemBackground}">
                         <StackPanel x:Name="UserList" Margin="12,12,12,0" ContextMenu="{StaticResource UserContextMenu}"/>
                     </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- Status Bar -->
-        <Border Grid.Row="3" Background="{StaticResource OfficeGray100}" BorderBrush="{StaticResource OfficeGray300}" BorderThickness="0,1,0,0">
-            <Grid Height="32">
+        <!-- macOS Status Bar -->
+        <Border Grid.Row="3" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
+            <Grid Height="28">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0">
-                    <Ellipse x:Name="StatusBarIndicator" Width="8" Height="8" Fill="Red" Margin="0,0,8,0"/>
-                    <TextBlock x:Name="StatusBarText" Text="Ready" FontSize="13" Foreground="{StaticResource OfficeGray700}" VerticalAlignment="Center"/>
+                    <Ellipse x:Name="StatusBarIndicator" Width="8" Height="8" Fill="{StaticResource SystemRed}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusBarText" Text="Ready" Style="{StaticResource Caption1Style}" VerticalAlignment="Center"/>
                 </StackPanel>
-                <TextBlock Grid.Column="1" x:Name="ConnectionInfo" Text="" FontSize="13" Foreground="{StaticResource OfficeGray700}" VerticalAlignment="Center" Margin="20,0"/>
+                <TextBlock Grid.Column="1" x:Name="ConnectionInfo" Text="" Style="{StaticResource Caption1Style}" VerticalAlignment="Center" Margin="20,0"/>
             </Grid>
         </Border>
     </Grid>

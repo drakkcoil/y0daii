@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Microsoft.VisualBasic;
 using Y0daiiIRC.Configuration;
 using Y0daiiIRC.IRC;
 using Y0daiiIRC.Models;
@@ -49,6 +50,7 @@ namespace Y0daiiIRC
 
             SetupEventHandlers();
             SetupUIContextMenus();
+            SetupWindowDragging();
             InitializeConsole();
             LoadCompactViewSetting();
             UpdateUI();
@@ -78,6 +80,19 @@ namespace Y0daiiIRC
             connectContextMenu.Items.Add(disconnectItem);
             
             ConnectButtonNav.ContextMenu = connectContextMenu;
+        }
+
+        private void SetupWindowDragging()
+        {
+            // Window dragging is now handled by the title bar event handler
+        }
+
+        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
         }
 
         private void ClearChannelsAndUsers()
@@ -146,7 +161,12 @@ namespace Y0daiiIRC
 
         private void InitializeConsole()
         {
-            // Console is now the default view, no need for tab management
+            // Create console channel and add it to navigation
+            var consoleChannel = new Channel { Name = "console", Type = ChannelType.Console };
+            _channels.Add(consoleChannel);
+            AddChannelButton(consoleChannel);
+            SwitchToChannel(consoleChannel);
+            
             AddSystemMessage("Welcome to y0daii IRC Client! Type /help for available commands.");
         }
 
@@ -776,13 +796,22 @@ namespace Y0daiiIRC
                 senderColor = Colors.Gray;
             }
 
+            // iMessage-style message properties
+            var isUserMessage = sender == _ircClient.Nickname;
+            var isSystemMessage = sender == "System";
+            var isOtherMessage = !isUserMessage && !isSystemMessage;
+
             var message = new ChatMessage
             {
                 Sender = sender,
                 Content = displayContent,
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
                 SenderColor = senderColor,
-                Type = messageType
+                Type = messageType,
+                IsUserMessage = isUserMessage,
+                IsOtherMessage = isOtherMessage,
+                IsSystemMessage = isSystemMessage,
+                CurrentUserNickname = _ircClient.Nickname
             };
 
             _channelMessages[channel].Add(message);
@@ -971,7 +1000,11 @@ namespace Y0daiiIRC
                 Content = content,
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
                 SenderColor = Colors.Gray,
-                Type = MessageType.System
+                Type = MessageType.System,
+                IsUserMessage = false,
+                IsOtherMessage = false,
+                IsSystemMessage = true,
+                CurrentUserNickname = _ircClient.Nickname
             };
 
             AddMessageToChannels(message);
@@ -1011,7 +1044,7 @@ namespace Y0daiiIRC
             if (!_users.Any(u => u.Nickname == user.Nickname))
             {
                 _users.Add(user);
-                AddUserButton(user);
+                SortAndRefreshUserList();
             }
         }
 
@@ -1021,7 +1054,7 @@ namespace Y0daiiIRC
             if (user != null)
             {
                 _users.Remove(user);
-                RemoveUserButton(user);
+                SortAndRefreshUserList();
             }
         }
 
@@ -1031,8 +1064,36 @@ namespace Y0daiiIRC
             if (user != null)
             {
                 user.Nickname = newNick;
-                UpdateUserButton(user);
+                SortAndRefreshUserList();
             }
+        }
+
+        private void SortAndRefreshUserList()
+        {
+            // Clear the current user list UI
+            UserList.Children.Clear();
+            
+            // Sort users: mode users first (alphabetically), then regular users (alphabetically)
+            var sortedUsers = _users.OrderBy(u => GetUserSortPriority(u.Mode))
+                                   .ThenBy(u => u.Nickname, StringComparer.OrdinalIgnoreCase)
+                                   .ToList();
+            
+            // Add sorted users to the UI
+            foreach (var user in sortedUsers)
+            {
+                AddUserButton(user);
+            }
+        }
+
+        private int GetUserSortPriority(UserMode mode)
+        {
+            // Lower numbers = higher priority (appear first)
+            if (mode.HasFlag(UserMode.Owner)) return 1;
+            if (mode.HasFlag(UserMode.Admin)) return 2;
+            if (mode.HasFlag(UserMode.Op)) return 3;
+            if (mode.HasFlag(UserMode.HalfOp)) return 4;
+            if (mode.HasFlag(UserMode.Voice)) return 5;
+            return 6; // Regular users (no mode)
         }
 
         private void AddChannelButton(Channel channel)
@@ -1105,6 +1166,11 @@ namespace Y0daiiIRC
             {
                 PrivateMessageList.Children.Add(container);
             }
+            else if (channel.Type == ChannelType.Console)
+            {
+                // Console goes at the top of the channels list
+                ChannelList.Children.Insert(0, container);
+            }
         }
 
         private void AddChannelTab(Channel channel)
@@ -1130,18 +1196,13 @@ namespace Y0daiiIRC
                 Tag = user
             };
             button.MouseDoubleClick += (s, e) => StartPrivateMessage(user);
+            button.Click += (s, e) => 
+            {
+                _selectedUser = user.Nickname;
+            };
             
-            // Add context menu for user
-            var contextMenu = new ContextMenu();
-            var openChatItem = new MenuItem { Header = "💬 Open Chat" };
-            openChatItem.Click += (s, e) => StartPrivateMessage(user);
-            contextMenu.Items.Add(openChatItem);
-            
-            var whoisItem = new MenuItem { Header = "ℹ️ Who Is" };
-            whoisItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"WHOIS {user.Nickname}");
-            contextMenu.Items.Add(whoisItem);
-            
-            button.ContextMenu = contextMenu;
+            // Use the enhanced context menu from XAML
+            button.ContextMenu = (ContextMenu)FindResource("UserContextMenu");
             UserList.Children.Add(button);
         }
 
@@ -1379,8 +1440,8 @@ namespace Y0daiiIRC
                 AddSystemMessage($"🔧 {target} lost {GetModeDescription(modeChange)} by {message.Sender}");
             }
             
-            // Update the user button display
-            UpdateUserButton(user);
+            // Refresh the user list to maintain proper sorting
+            SortAndRefreshUserList();
         }
 
         private string GetModeDescription(UserMode mode)
@@ -1828,6 +1889,93 @@ namespace Y0daiiIRC
             if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected)
             {
                 await _ircClient.SendCTCPAsync(_selectedUser, "PING", DateTime.Now.Ticks.ToString());
+            }
+        }
+
+        private void UserContextMenu_SendFile_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser))
+            {
+                // Open file dialog to select file to send
+                var openFileDialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = $"Send File to {_selectedUser}",
+                    Filter = "All Files (*.*)|*.*",
+                    Multiselect = false
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    var filePath = openFileDialog.FileName;
+                    var fileName = System.IO.Path.GetFileName(filePath);
+                    var fileSize = new System.IO.FileInfo(filePath).Length;
+                    
+                    // Open DCC transfer dialog for file sending
+                    var dccDialog = new DCCTransferDialog(_dccService);
+                    dccDialog.Owner = this;
+                    dccDialog.SetRecipient(_selectedUser);
+                    dccDialog.SetFileToSend(filePath, fileName, fileSize);
+                    dccDialog.ShowDialog();
+                }
+            }
+        }
+
+        private void UserContextMenu_CopyNickname_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser))
+            {
+                try
+                {
+                    System.Windows.Clipboard.SetText(_selectedUser);
+                    AddSystemMessage($"Copied nickname: {_selectedUser}");
+                }
+                catch (Exception ex)
+                {
+                    AddSystemMessage($"Failed to copy nickname: {ex.Message}");
+                }
+            }
+        }
+
+        private void UserContextMenu_Ignore_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser))
+            {
+                // TODO: Implement ignore functionality
+                AddSystemMessage($"Ignore functionality for {_selectedUser} not yet implemented");
+            }
+        }
+
+        private async void UserContextMenu_Kick_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected && _currentChannel != null)
+            {
+                var reason = Microsoft.VisualBasic.Interaction.InputBox(
+                    $"Enter kick reason for {_selectedUser}:", 
+                    "Kick User", 
+                    "Kicked by user");
+                
+                if (!string.IsNullOrEmpty(reason))
+                {
+                    await _ircClient.SendCommandAsync($"KICK {_currentChannel.Name} {_selectedUser} :{reason}");
+                }
+            }
+        }
+
+        private async void UserContextMenu_Ban_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected && _currentChannel != null)
+            {
+                var reason = Microsoft.VisualBasic.Interaction.InputBox(
+                    $"Enter ban reason for {_selectedUser}:", 
+                    "Ban User", 
+                    "Banned by user");
+                
+                if (!string.IsNullOrEmpty(reason))
+                {
+                    // Ban the user and then kick them
+                    await _ircClient.SendCommandAsync($"MODE {_currentChannel.Name} +b {_selectedUser}!*@*");
+                    await _ircClient.SendCommandAsync($"KICK {_currentChannel.Name} {_selectedUser} :{reason}");
+                }
             }
         }
 

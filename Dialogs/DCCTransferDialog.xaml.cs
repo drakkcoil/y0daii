@@ -36,6 +36,34 @@ namespace Y0daiiIRC
             }
         }
 
+        public void SetRecipient(string nickname)
+        {
+            // Store the recipient for file sending
+            _targetUser = nickname;
+        }
+
+        public void SetFileToSend(string filePath, string fileName, long fileSize)
+        {
+            // Automatically initiate the file send
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _dccService.InitiateSendAsync(_targetUser, filePath);
+                }
+                catch (Exception ex)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show($"Failed to initiate file transfer: {ex.Message}", "Error", 
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
+                }
+            });
+        }
+
+        private string _targetUser = "";
+
         private void OnTransferStarted(object? sender, DCCTransfer transfer)
         {
             Dispatcher.Invoke(() =>
