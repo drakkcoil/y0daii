@@ -1102,6 +1102,12 @@ namespace Y0daiiIRC
             {
                 _users.Add(user);
                 SortAndRefreshUserList();
+                
+                // Add channel system message notification for user join
+                if (_currentChannel != null && _currentChannel.Name != "console")
+                {
+                    AddChannelSystemMessage($"👤 {user.Nickname} joined the channel");
+                }
             }
         }
 
@@ -1112,6 +1118,12 @@ namespace Y0daiiIRC
             {
                 _users.Remove(user);
                 SortAndRefreshUserList();
+                
+                // Add channel system message notification for user leave
+                if (_currentChannel != null && _currentChannel.Name != "console")
+                {
+                    AddChannelSystemMessage($"👋 {nickname} left the channel");
+                }
             }
         }
 
@@ -1122,6 +1134,12 @@ namespace Y0daiiIRC
             {
                 user.Nickname = newNick;
                 SortAndRefreshUserList();
+                
+                // Add channel system message notification for nickname change
+                if (_currentChannel != null && _currentChannel.Name != "console")
+                {
+                    AddChannelSystemMessage($"🔄 {oldNick} is now known as {newNick}");
+                }
             }
         }
 
@@ -1490,11 +1508,23 @@ namespace Y0daiiIRC
             {
                 user.Mode |= modeChange;
                 AddSystemMessage($"🔧 {target} was given {GetModeDescription(modeChange)} by {message.Sender}");
+                
+                // Add channel system message notification for mode change
+                if (_currentChannel != null && _currentChannel.Name != "console")
+                {
+                    AddChannelSystemMessage($"🔧 {target} was given {GetModeDescription(modeChange)} by {message.Sender}");
+                }
             }
             else
             {
                 user.Mode &= ~modeChange;
                 AddSystemMessage($"🔧 {target} lost {GetModeDescription(modeChange)} by {message.Sender}");
+                
+                // Add channel system message notification for mode change
+                if (_currentChannel != null && _currentChannel.Name != "console")
+                {
+                    AddChannelSystemMessage($"🔧 {target} lost {GetModeDescription(modeChange)} by {message.Sender}");
+                }
             }
             
             // Refresh the user list to maintain proper sorting
