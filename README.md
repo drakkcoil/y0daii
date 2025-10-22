@@ -4,7 +4,7 @@
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A modern, full-featured IRC client built with C# and WPF, featuring a beautiful Office 365-style user interface.
+A modern, full-featured IRC client built with C# and WPF, featuring a macOS inspired user interface.
 
 ## Features
 
