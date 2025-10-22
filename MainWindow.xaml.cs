@@ -434,11 +434,11 @@ namespace Y0daiiIRC
                 }
                 else
                 {
-                    AddChannelSystemMessage($"👤 {user} joined {channel}");
-                }
-                if (channel == _currentChannel?.Name)
-                {
-                    AddUser(new User { Nickname = user });
+                    // Add user to list and show join notification (handled in AddUser method)
+                    if (channel == _currentChannel?.Name)
+                    {
+                        AddUser(new User { Nickname = user }, isRealJoin: true);
+                    }
                 }
             }
             else if (message.IsPart)
@@ -730,7 +730,7 @@ namespace Y0daiiIRC
                         foreach (var user in users)
                         {
                             var (cleanUser, mode) = ParseUserWithMode(user);
-                            AddUser(new User { Nickname = cleanUser, Mode = mode });
+                            AddUser(new User { Nickname = cleanUser, Mode = mode }, isRealJoin: false);
                         }
                     }
                     break;
@@ -1096,15 +1096,15 @@ namespace Y0daiiIRC
             ScrollToBottom();
         }
 
-        private void AddUser(User user)
+        private void AddUser(User user, bool isRealJoin = false)
         {
             if (!_users.Any(u => u.Nickname == user.Nickname))
             {
                 _users.Add(user);
                 SortAndRefreshUserList();
                 
-                // Add channel system message notification for user join
-                if (_currentChannel != null && _currentChannel.Name != "console")
+                // Only show join notification for real joins, not initial user list population
+                if (isRealJoin && _currentChannel != null && _currentChannel.Name != "console")
                 {
                     AddChannelSystemMessage($"👤 {user.Nickname} joined the channel");
                 }
