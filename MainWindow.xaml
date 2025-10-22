@@ -97,11 +97,13 @@
         
         <!-- Whois Message Style (beautiful formatted bubble) -->
         <Style x:Key="WhoisMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
-            <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+            <Setter Property="Background" Value="#2D3748"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="MaxWidth" Value="600"/>
+            <Setter Property="MaxWidth" Value="700"/>
             <Setter Property="Margin" Value="8,4,50,4"/>
             <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="BorderBrush" Value="#4A5568"/>
+            <Setter Property="BorderThickness" Value="1"/>
         </Style>
         
         <!-- Console System Message Style (no bubble) -->
@@ -115,7 +117,7 @@
         <!-- Action Message Style (italic, different color) -->
         <Style x:Key="ActionMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
             <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="MaxWidth" Value="400"/>
         </Style>
         
@@ -788,7 +790,7 @@
                                     </Border>
                                     
                                     <!-- Action messages (italic, different color) -->
-                                    <Border Grid.Column="1" 
+                                    <Border Grid.Column="0" 
                                             Style="{StaticResource ActionMessageBubbleStyle}"
                                             Visibility="{Binding IsActionMessage, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <StackPanel>
@@ -798,7 +800,7 @@
                                                        Foreground="{StaticResource Label}"
                                                        FontStyle="Italic"
                                                        FontWeight="Medium"
-                                                       HorizontalAlignment="Center"/>
+                                                       HorizontalAlignment="Left"/>
                                             <TextBlock Text="{Binding Timestamp}" 
                                                        FontSize="10" 
                                                        Foreground="{StaticResource TertiaryLabel}" 
@@ -827,25 +829,26 @@
                                         </StackPanel>
                                     </Border>
                                     
-                                    <!-- Whois messages (formatted bubble) -->
-                                    <Border Grid.Column="0" 
-                                            Style="{StaticResource WhoisMessageBubbleStyle}"
-                                            Visibility="{Binding IsWhoisMessage, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Content}" 
-                                                       TextWrapping="Wrap" 
-                                                       FontSize="13" 
-                                                       Foreground="{StaticResource Label}"
-                                                       FontWeight="Normal"
-                                                       HorizontalAlignment="Left"
-                                                       FontFamily="Consolas"/>
-                                            <TextBlock Text="{Binding Timestamp}" 
-                                                       FontSize="10" 
-                                                       Foreground="{StaticResource TertiaryLabel}" 
-                                                       HorizontalAlignment="Left"
-                                                       Margin="0,4,0,0"/>
-                                        </StackPanel>
-                                    </Border>
+        <!-- Whois messages (formatted bubble) -->
+        <Border Grid.Column="0" 
+                Style="{StaticResource WhoisMessageBubbleStyle}"
+                Visibility="{Binding IsWhoisMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+            <StackPanel>
+                <TextBlock Text="{Binding Content}" 
+                           TextWrapping="Wrap" 
+                           FontSize="13" 
+                           Foreground="White"
+                           FontWeight="Normal"
+                           HorizontalAlignment="Left"
+                           FontFamily="Consolas"/>
+                <TextBlock Text="{Binding Timestamp}" 
+                           FontSize="10" 
+                           Foreground="White" 
+                           Opacity="0.7"
+                           HorizontalAlignment="Left"
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

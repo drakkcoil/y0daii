@@ -29,6 +29,7 @@ namespace Y0daiiIRC
         private CommandProcessor _commandProcessor;
         private DCCService _dccService;
         private MessageGroupingService _messageGroupingService;
+        private UpdateService _updateService;
         // private TabItem? _consoleTab; // Removed - using Office 365-style navigation
         
         // Command history support
@@ -47,6 +48,7 @@ namespace Y0daiiIRC
             _dccService = new DCCService();
             _commandProcessor = new CommandProcessor(_ircClient, _serverListService);
             _messageGroupingService = new MessageGroupingService();
+            _updateService = new UpdateService();
 
             SetupEventHandlers();
             SetupUIContextMenus();
@@ -54,6 +56,9 @@ namespace Y0daiiIRC
             InitializeConsole();
             LoadCompactViewSetting();
             UpdateUI();
+            
+            // Check for updates on startup if enabled
+            _ = Task.Run(async () => await CheckForUpdatesOnStartupAsync());
         }
 
         private void SetupEventHandlers()
@@ -103,18 +108,22 @@ namespace Y0daiiIRC
             {
                 _channels.Remove(channel);
                 
-                // Remove channel button from UI
-                var buttonToRemove = ChannelList.Children.OfType<Button>()
-                    .FirstOrDefault(b => b.Tag == channel);
-                if (buttonToRemove != null)
+                // Remove channel button from UI (button is wrapped in a StackPanel)
+                var containerToRemove = ChannelList.Children.OfType<StackPanel>()
+                    .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                        .Any(b => b.Tag == channel));
+                if (containerToRemove != null)
                 {
-                    ChannelList.Children.Remove(buttonToRemove);
+                    ChannelList.Children.Remove(containerToRemove);
                 }
             }
             
             // Clear users
             _users.Clear();
             UserList.Children.Clear();
+            
+            // Clear message list safely
+            MessageList.ItemsSource = null;
             
             // Switch to console if not already there
             var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
@@ -145,18 +154,18 @@ namespace Y0daiiIRC
             LoadCompactViewSetting();
             // Force UI refresh to apply the new compact view setting
             // Since static properties don't trigger data binding updates, we need to force a refresh
-            // by clearing and re-adding all items
-            var currentItems = MessageList.Items.Cast<object>().ToList();
-            MessageList.Items.Clear();
-            
-            // Add a small delay to ensure the UI has time to process the clear
-            Dispatcher.BeginInvoke(new Action(() =>
+            // by temporarily clearing and re-setting the ItemsSource
+            if (_currentChannel != null && _channelMessages.ContainsKey(_currentChannel.Name))
             {
-                foreach (var item in currentItems)
+                var currentItemsSource = MessageList.ItemsSource;
+                MessageList.ItemsSource = null;
+                
+                // Add a small delay to ensure the UI has time to process the clear
+                Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    MessageList.Items.Add(item);
-                }
-            }), System.Windows.Threading.DispatcherPriority.Render);
+                    MessageList.ItemsSource = currentItemsSource;
+                }), System.Windows.Threading.DispatcherPriority.Render);
+            }
         }
 
         private void InitializeConsole()
@@ -224,11 +233,11 @@ namespace Y0daiiIRC
                             try
                             {
                                 await _ircClient.SendCommandAsync($"JOIN {channel}");
-                                AddSystemMessage($"🔄 Auto-rejoining {channel}...");
+                                Dispatcher.Invoke(() => AddSystemMessage($"🔄 Auto-rejoining {channel}..."));
                             }
                             catch (Exception ex)
                             {
-                                AddSystemMessage($"❌ Failed to rejoin {channel}: {ex.Message}");
+                                Dispatcher.Invoke(() => AddSystemMessage($"❌ Failed to rejoin {channel}: {ex.Message}"));
                             }
                         }
                     });
@@ -409,27 +418,24 @@ namespace Y0daiiIRC
                 var user = message.Sender;
                 if (user == _ircClient.Nickname)
                 {
-                    AddChannelSystemMessage($"✅ Successfully joined {channel}");
-                    
                     // Create the channel in the UI if it doesn't exist
                     if (!_channels.Any(c => c.Name == channel))
                     {
                         var newChannel = new Channel { Name = channel, Type = ChannelType.Channel };
                         _channels.Add(newChannel);
                         AddChannelButton(newChannel);
+                        
+                        // Switch to the new channel to ensure messages go there
+                        SwitchToChannel(newChannel);
                     }
+                    
+                    // Add the join message to the correct channel
+                    AddChannelSystemMessage($"✅ Successfully joined {channel}");
                     
                     // Add to auto-rejoin list (only for regular channels, not private messages)
                     if (channel.StartsWith("#") && !_channelsToRejoin.Contains(channel))
                     {
                         _channelsToRejoin.Add(channel);
-                    }
-                    
-                    // Switch to the newly joined channel
-                    var joinedChannel = _channels.FirstOrDefault(c => c.Name == channel);
-                    if (joinedChannel != null)
-                    {
-                        SwitchToChannel(joinedChannel);
                     }
                 }
                 else
@@ -458,12 +464,13 @@ namespace Y0daiiIRC
                         // Remove from auto-rejoin list (user manually left)
                         _channelsToRejoin.Remove(channel);
                         
-                        // Remove the channel button from UI
-                        var buttonToRemove = ChannelList.Children.OfType<Button>()
-                            .FirstOrDefault(b => b.Tag == channelToRemove);
-                        if (buttonToRemove != null)
+                        // Remove the channel button from UI (button is wrapped in a StackPanel)
+                        var containerToRemove = ChannelList.Children.OfType<StackPanel>()
+                            .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                                .Any(b => b.Tag == channelToRemove));
+                        if (containerToRemove != null)
                         {
-                            ChannelList.Children.Remove(buttonToRemove);
+                            ChannelList.Children.Remove(containerToRemove);
                         }
                         
                         // If this was the current channel, switch to console
@@ -485,15 +492,73 @@ namespace Y0daiiIRC
             else if (message.IsQuit)
             {
                 var user = message.Sender;
-                AddSystemMessage($"{user} quit IRC");
+                var quitReason = message.Content ?? "No reason given";
+                
+                // Add quit message to all channels where the user was present
+                foreach (var channel in _channels.Where(c => c.Name != "console"))
+                {
+                    var quitMessage = new ChatMessage
+                    {
+                        Sender = "System",
+                        Content = $"👋 {user} quit IRC: {quitReason}",
+                        Timestamp = DateTime.Now.ToString("HH:mm:ss"),
+                        SenderColor = Colors.Blue,
+                        Type = MessageType.System,
+                        IsUserMessage = false,
+                        IsOtherMessage = false,
+                        IsSystemMessage = false,
+                        IsConsoleMessage = false,
+                        IsChannelSystemMessage = true,
+                        CurrentUserNickname = _ircClient.Nickname
+                    };
+
+                    if (!_channelMessages.ContainsKey(channel.Name))
+                    {
+                        _channelMessages[channel.Name] = new List<ChatMessage>();
+                    }
+                    _channelMessages[channel.Name].Add(quitMessage);
+                }
+                
+                // Update UI if this is the current channel
+                if (_currentChannel != null && _currentChannel.Name != "console")
+                {
+                    MessageList.ItemsSource = null;
+                    MessageList.ItemsSource = _channelMessages[_currentChannel.Name];
+                }
+                
                 RemoveUser(user);
             }
             else if (message.IsNick)
             {
                 var oldNick = message.Sender;
                 var newNick = message.Parameters.FirstOrDefault();
-                AddSystemMessage($"{oldNick} is now known as {newNick}");
-                UpdateUserNick(oldNick, newNick);
+                
+                // Check if this is our own nickname change
+                if (oldNick == _ircClient.Nickname)
+                {
+                    // Update our nickname in the IRC client
+                    _ircClient.UpdateNickname(newNick);
+                    
+                    // Update user settings to remember the new nickname
+                    try
+                    {
+                        var settings = AppSettings.Load();
+                        settings.User.DefaultNickname = newNick;
+                        settings.Save();
+                        AddSystemMessage($"✅ Nickname changed to {newNick} and saved to settings");
+                    }
+                    catch (Exception ex)
+                    {
+                        AddSystemMessage($"✅ Nickname changed to {newNick} (failed to save to settings: {ex.Message})");
+                    }
+                }
+                else
+                {
+                    AddSystemMessage($"{oldNick} is now known as {newNick}");
+                }
+                
+                // Update user list in all channels
+                UpdateUserNickInAllChannels(oldNick, newNick);
             }
             else if (message.IsMode)
             {
@@ -573,11 +638,12 @@ namespace Y0daiiIRC
             var groupId = $"whois_{targetUser}";
             var groupTitle = $"ℹ️ Whois: {targetUser}";
 
-            // Create a message for this whois response
+            // Create a message for this whois response (but don't display it as system message)
+            // Store the raw IRC message for proper parsing
             var whoisMessage = new ChatMessage
             {
                 Sender = "System",
-                Content = $"{responseType}: {message.Content}",
+                Content = $"{responseType}: {string.Join(" ", message.Parameters.Skip(1))}",
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
                 SenderColor = Colors.Gray,
                 Type = MessageType.System
@@ -601,17 +667,165 @@ namespace Y0daiiIRC
         private void CreateFormattedWhoisMessage(string targetUser, List<ChatMessage> whoisData)
         {
             var formattedContent = new System.Text.StringBuilder();
-            formattedContent.AppendLine($"┌─ Whois Information: {targetUser} ─┐");
-            formattedContent.AppendLine("│");
+            formattedContent.AppendLine($"---");
+            formattedContent.AppendLine($"===");
             
+            string ircname = "";
+            string hostname = "";
+            string realName = "";
+            string server = "";
+            string channels = "";
+            string idleTime = "";
+            string signonTime = "";
+            bool isOperator = false;
+            string actualHost = "";
+            
+            // Parse the whois data
             foreach (var data in whoisData)
             {
-                var cleanContent = data.Content.Replace("User Info: ", "").Replace("Server Info: ", "").Replace("Operator Info: ", "").Replace("Idle Time: ", "").Replace("Channels: ", "").Replace("Special Info: ", "").Replace("End of /WHOIS list: ", "");
-                formattedContent.AppendLine($"│ {cleanContent}");
+                var content = data.Content;
+                if (content.StartsWith("User Info:"))
+                {
+                    // Parse RPL_WHOISUSER (311): nick user host * :realname
+                    var whoisContent = content.Substring("User Info: ".Length);
+                    var parts = whoisContent.Split(' ');
+                    if (parts.Length >= 4)
+                    {
+                        ircname = parts[1]; // username
+                        hostname = parts[2]; // hostname
+                        if (parts.Length > 4)
+                        {
+                            realName = string.Join(" ", parts.Skip(4)).TrimStart(':'); // realname
+                        }
+                    }
+                }
+                else if (content.StartsWith("Server Info:"))
+                {
+                    // Parse RPL_WHOISSERVER (312): nick server :server info
+                    var whoisContent = content.Substring("Server Info: ".Length);
+                    var parts = whoisContent.Split(' ');
+                    if (parts.Length >= 2)
+                    {
+                        server = parts[1]; // server name
+                        if (parts.Length > 2)
+                        {
+                            server += " " + string.Join(" ", parts.Skip(2)).TrimStart(':'); // server description
+                        }
+                    }
+                }
+                else if (content.StartsWith("Operator Info:"))
+                {
+                    isOperator = true;
+                }
+                else if (content.StartsWith("Idle Time:"))
+                {
+                    // Parse RPL_WHOISIDLE (317): nick seconds signon_time :seconds idle, signon time
+                    var whoisContent = content.Substring("Idle Time: ".Length);
+                    var parts = whoisContent.Split(' ');
+                    if (parts.Length >= 2)
+                    {
+                        idleTime = parts[1]; // seconds
+                        if (parts.Length > 2)
+                        {
+                            signonTime = parts[2]; // signon timestamp
+                        }
+                    }
+                }
+                else if (content.StartsWith("Channels:"))
+                {
+                    // Parse RPL_WHOISCHANNELS (319): nick :channels
+                    var whoisContent = content.Substring("Channels: ".Length);
+                    var parts = whoisContent.Split(' ');
+                    if (parts.Length >= 1)
+                    {
+                        channels = string.Join(" ", parts.Skip(1)).TrimStart(':');
+                    }
+                }
+                else if (content.StartsWith("Actual Host:"))
+                {
+                    // Parse RPL_WHOISACTUALLY (338): nick :actually using host
+                    var whoisContent = content.Substring("Actual Host: ".Length);
+                    var parts = whoisContent.Split(' ');
+                    if (parts.Length >= 1)
+                    {
+                        actualHost = string.Join(" ", parts.Skip(1)).TrimStart(':');
+                    }
+                }
+                else if (content.StartsWith("Away Info:"))
+                {
+                    // Parse RPL_AWAY (301): nick :away message
+                    var whoisContent = content.Substring("Away Info: ".Length);
+                    var parts = whoisContent.Split(' ');
+                    if (parts.Length >= 1)
+                    {
+                        // Store away message for potential use
+                        var awayMessage = string.Join(" ", parts.Skip(1)).TrimStart(':');
+                    }
+                }
             }
             
-            formattedContent.AppendLine("│");
-            formattedContent.AppendLine("└─────────────────────────────────────┘");
+            // Format the output like BitchX
+            // Line 1: | nick (~user@hostmask) (Commercial)
+            var userHostmask = !string.IsNullOrEmpty(ircname) && !string.IsNullOrEmpty(hostname) ? $"~{ircname}@{hostname}" : "";
+            var commercial = "Commercial"; // Could be determined from server info
+            formattedContent.AppendLine($"| {targetUser} ({userHostmask}) ({commercial})");
+            
+            // Line 2: = ircname: Real Name
+            if (!string.IsNullOrEmpty(realName))
+                formattedContent.AppendLine($"= ircname: {realName}");
+            
+            // Line 3: | channels: @#channel
+            if (!string.IsNullOrEmpty(channels))
+                formattedContent.AppendLine($"| channels: {channels}");
+            
+            // Line 4: = server: Server Name (Network)
+            if (!string.IsNullOrEmpty(server))
+                formattedContent.AppendLine($"= server: {server}");
+            
+            // Line 5: | actually: User actually using host IP
+            if (!string.IsNullOrEmpty(actualHost))
+                formattedContent.AppendLine($"| actually: {actualHost}");
+            
+            // Line 6: = idle: X hours Y mins Z secs (signon: timestamp)
+            if (!string.IsNullOrEmpty(idleTime) || !string.IsNullOrEmpty(signonTime))
+            {
+                var timeInfo = new List<string>();
+                if (!string.IsNullOrEmpty(idleTime))
+                {
+                    // Convert seconds to human readable format
+                    if (int.TryParse(idleTime, out int seconds))
+                    {
+                        var hours = seconds / 3600;
+                        var minutes = (seconds % 3600) / 60;
+                        var secs = seconds % 60;
+                        if (hours > 0)
+                            timeInfo.Add($"idle: {hours}h {minutes}m {secs}s");
+                        else if (minutes > 0)
+                            timeInfo.Add($"idle: {minutes}m {secs}s");
+                        else
+                            timeInfo.Add($"idle: {secs}s");
+                    }
+                    else
+                    {
+                        timeInfo.Add($"idle: {idleTime}");
+                    }
+                }
+                if (!string.IsNullOrEmpty(signonTime))
+                {
+                    // Try to parse signon time as Unix timestamp
+                    if (long.TryParse(signonTime, out long timestamp))
+                    {
+                        var signonDate = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
+                        timeInfo.Add($"signon: {signonDate:yyyy-MM-dd HH:mm:ss}");
+                    }
+                    else
+                    {
+                        timeInfo.Add($"signon: {signonTime}");
+                    }
+                }
+                if (timeInfo.Any())
+                    formattedContent.AppendLine($"= {string.Join(", ", timeInfo)}");
+            }
 
             var whoisMessage = new ChatMessage
             {
@@ -767,6 +981,12 @@ namespace Y0daiiIRC
                 case "320": // RPL_WHOISSPECIAL
                     HandleWhoisResponse(message, "Special Info");
                     break;
+                case "301": // RPL_AWAY - User is away
+                    HandleWhoisResponse(message, "Away Info");
+                    break;
+                case "338": // RPL_WHOISACTUALLY - Actually using host
+                    HandleWhoisResponse(message, "Actual Host");
+                    break;
                 case "332": // RPL_TOPIC
                     HandleTopicMessage(message);
                     break;
@@ -864,7 +1084,10 @@ namespace Y0daiiIRC
 
             if (channel == _currentChannel?.Name)
             {
-                MessageList.Items.Add(message);
+                // Force UI refresh by temporarily clearing and re-setting ItemsSource
+                var currentItemsSource = MessageList.ItemsSource;
+                MessageList.ItemsSource = null;
+                MessageList.ItemsSource = currentItemsSource;
                 ScrollToBottom();
             }
         }
@@ -909,7 +1132,10 @@ namespace Y0daiiIRC
 
             if (channel == _currentChannel?.Name)
             {
-                MessageList.Items.Add(message);
+                // Force UI refresh by temporarily clearing and re-setting ItemsSource
+                var currentItemsSource = MessageList.ItemsSource;
+                MessageList.ItemsSource = null;
+                MessageList.ItemsSource = currentItemsSource;
                 ScrollToBottom();
             }
         }
@@ -1064,7 +1290,21 @@ namespace Y0daiiIRC
                 CurrentUserNickname = _ircClient.Nickname
             };
 
-            AddMessageToChannels(message);
+            // Only add to current channel, not to console
+            if (_currentChannel != null && _currentChannel.Name != "console")
+            {
+                if (!_channelMessages.ContainsKey(_currentChannel.Name))
+                {
+                    _channelMessages[_currentChannel.Name] = new List<ChatMessage>();
+                }
+                _channelMessages[_currentChannel.Name].Add(message);
+                
+                // Force UI refresh by temporarily clearing and re-setting ItemsSource
+                var currentItemsSource = MessageList.ItemsSource;
+                MessageList.ItemsSource = null;
+                MessageList.ItemsSource = currentItemsSource;
+                ScrollToBottom();
+            }
         }
 
         private void AddSystemMessage(ChatMessage message)
@@ -1081,8 +1321,8 @@ namespace Y0daiiIRC
             }
             _channelMessages["console"].Add(message);
 
-            // Add to current channel if it exists
-            if (_currentChannel != null)
+            // Add to current channel if it exists and is not console
+            if (_currentChannel != null && _currentChannel.Name != "console")
             {
                 if (!_channelMessages.ContainsKey(_currentChannel.Name))
                 {
@@ -1091,8 +1331,22 @@ namespace Y0daiiIRC
                 _channelMessages[_currentChannel.Name].Add(message);
             }
 
-            // Show in current view
-            MessageList.Items.Add(message);
+            // Show in current view - update ItemsSource instead of using Items.Add
+            if (_currentChannel != null && _currentChannel.Name == "console")
+            {
+                // If we're in the console, always show console messages
+                MessageList.ItemsSource = _channelMessages["console"];
+            }
+            else if (_currentChannel != null && MessageList.ItemsSource != _channelMessages[_currentChannel.Name])
+            {
+                // If we're in a regular channel, show that channel's messages
+                MessageList.ItemsSource = _channelMessages[_currentChannel.Name];
+            }
+            else if (_currentChannel == null && MessageList.ItemsSource != _channelMessages["console"])
+            {
+                // If no current channel, show console messages
+                MessageList.ItemsSource = _channelMessages["console"];
+            }
             ScrollToBottom();
         }
 
@@ -1127,20 +1381,32 @@ namespace Y0daiiIRC
             }
         }
 
-        private void UpdateUserNick(string oldNick, string newNick)
+        private void UpdateUserNickInAllChannels(string oldNick, string newNick)
         {
+            // Update user list in current channel if it exists
             var user = _users.FirstOrDefault(u => u.Nickname == oldNick);
             if (user != null)
             {
                 user.Nickname = newNick;
                 SortAndRefreshUserList();
-                
-                // Add channel system message notification for nickname change
-                if (_currentChannel != null && _currentChannel.Name != "console")
-                {
-                    AddChannelSystemMessage($"🔄 {oldNick} is now known as {newNick}");
-                }
             }
+            
+            // Add notification bubble to the currently focused tab
+            if (_currentChannel != null && _currentChannel.Name != "console")
+            {
+                AddChannelSystemMessage($"🔄 {oldNick} is now known as {newNick}");
+            }
+            else
+            {
+                // If we're in console, show system message
+                AddSystemMessage($"🔄 {oldNick} is now known as {newNick}");
+            }
+        }
+
+        private void UpdateUserNick(string oldNick, string newNick)
+        {
+            // This method is kept for backward compatibility but now calls the new method
+            UpdateUserNickInAllChannels(oldNick, newNick);
         }
 
         private void SortAndRefreshUserList()
@@ -1352,14 +1618,30 @@ namespace Y0daiiIRC
             // Update button highlighting
             UpdateChannelButtonHighlighting();
             
-            MessageList.Items.Clear();
+            // Clear existing items and set ItemsSource
+            MessageList.ItemsSource = null;
             if (_channelMessages.ContainsKey(channel.Name))
             {
-                foreach (var message in _channelMessages[channel.Name])
-                {
-                    MessageList.Items.Add(message);
-                }
+                MessageList.ItemsSource = _channelMessages[channel.Name];
             }
+            
+            // Clear and repopulate user list for the current channel
+            _users.Clear();
+            UserList.Children.Clear();
+            if (channel.Type == ChannelType.Channel)
+            {
+                // Request user list for the channel
+                _ = _ircClient.SendCommandAsync($"NAMES {channel.Name}");
+            }
+            else if (channel.Type == ChannelType.Console)
+            {
+                // Console doesn't have a user list - already cleared above
+            }
+            else
+            {
+                // Private message - show just the other user - already cleared above
+            }
+            
             ScrollToBottom();
         }
 
@@ -1492,11 +1774,6 @@ namespace Y0daiiIRC
             var modeString = message.Parameters[1];
             var target = message.Parameters[2];
             
-            // Only handle user mode changes in the current channel
-            if (channel != _currentChannel?.Name) return;
-            
-            var user = _users.FirstOrDefault(u => u.Nickname == target);
-            if (user == null) return;
             
             var isAdding = modeString.StartsWith('+');
             var modeChar = modeString.Length > 1 ? modeString[1] : '\0';
@@ -1504,13 +1781,21 @@ namespace Y0daiiIRC
             var modeChange = GetUserModeFromPrefix(modeChar);
             if (modeChange == UserMode.None) return;
             
+            // Find the user in the current channel's user list, or create if not found
+            var user = _users.FirstOrDefault(u => u.Nickname == target);
+            if (user == null)
+            {
+                // Create a new user if not found (this can happen if mode change happens before user list is populated)
+                user = new User { Nickname = target, Mode = UserMode.None };
+                _users.Add(user);
+            }
+            
             if (isAdding)
             {
                 user.Mode |= modeChange;
-                AddSystemMessage($"🔧 {target} was given {GetModeDescription(modeChange)} by {message.Sender}");
                 
-                // Add channel system message notification for mode change
-                if (_currentChannel != null && _currentChannel.Name != "console")
+                // Add channel system message notification for mode change (primary display)
+                if (_currentChannel != null && _currentChannel.Name != "console" && channel == _currentChannel.Name)
                 {
                     AddChannelSystemMessage($"🔧 {target} was given {GetModeDescription(modeChange)} by {message.Sender}");
                 }
@@ -1518,16 +1803,15 @@ namespace Y0daiiIRC
             else
             {
                 user.Mode &= ~modeChange;
-                AddSystemMessage($"🔧 {target} lost {GetModeDescription(modeChange)} by {message.Sender}");
                 
-                // Add channel system message notification for mode change
-                if (_currentChannel != null && _currentChannel.Name != "console")
+                // Add channel system message notification for mode change (primary display)
+                if (_currentChannel != null && _currentChannel.Name != "console" && channel == _currentChannel.Name)
                 {
                     AddChannelSystemMessage($"🔧 {target} lost {GetModeDescription(modeChange)} by {message.Sender}");
                 }
             }
             
-            // Refresh the user list to maintain proper sorting
+            // Refresh the user list to maintain proper sorting and show updated prefixes
             SortAndRefreshUserList();
         }
 
@@ -1582,8 +1866,10 @@ namespace Y0daiiIRC
                 if (dialog.ShowDialog() == true && dialog.SelectedServer != null)
                 {
                     var server = dialog.SelectedServer;
+                    var settings = AppSettings.Load();
+                    
                     AddSystemMessage($"🔄 Attempting to connect to {server.Host}:{server.Port} {(server.UseSSL ? "(SSL)" : "")}...");
-                    AddSystemMessage($"📝 Using nickname: {server.Nickname ?? "Y0daiiUser"}");
+                    AddSystemMessage($"📝 Using nickname: {settings.User.DefaultNickname}");
                     
                     // Test connectivity first
                     AddSystemMessage("🔍 Testing connectivity...");
@@ -1599,7 +1885,6 @@ namespace Y0daiiIRC
             AddSystemMessage("✅ Server is reachable, establishing IRC connection...");
             
             // Test ident server connectivity if ident is enabled
-            var settings = AppSettings.Load();
             if (settings.Connection.EnableIdentServer)
             {
                 // First test if we can use the standard ident port 113
@@ -1630,8 +1915,8 @@ namespace Y0daiiIRC
                 AddSystemMessage("🔧 Ident server disabled in Settings (modern approach)");
             }
                     var success = await _ircClient.ConnectWithFallbackAsync(
-                        server.Host, server.Port, server.Nickname ?? "Y0daiiUser", 
-                        server.Username ?? "y0daii", server.RealName ?? "y0daii IRC User",
+                        server.Host, server.Port, settings.User.DefaultNickname, 
+                        settings.User.DefaultUsername, settings.User.DefaultRealName,
                         server.UseSSL, null, server.IdentServer, server.IdentPort);
                     
                     if (!success)
@@ -1655,13 +1940,9 @@ namespace Y0daiiIRC
             var dialog = new JoinChannelDialog();
             if (dialog.ShowDialog() == true)
             {
-                AddChannelSystemMessage($"🔄 Joining channel {dialog.ChannelName}...");
+                AddSystemMessage($"🔄 Joining channel {dialog.ChannelName}...");
                 await _ircClient.JoinChannelAsync(dialog.ChannelName);
-                
-                var channel = new Channel { Name = dialog.ChannelName, Type = ChannelType.Channel };
-                _channels.Add(channel);
-                AddChannelButton(channel);
-                SwitchToChannel(channel);
+                // Channel will be created when server responds with successful join
             }
         }
 
@@ -2133,6 +2414,87 @@ namespace Y0daiiIRC
                 len = len / 1024;
             }
             return $"{len:0.##} {sizes[order]}";
+        }
+
+        private async Task CheckForUpdatesOnStartupAsync()
+        {
+            try
+            {
+                var settings = AppSettings.Load();
+                
+                // Check if update checking is enabled
+                if (!settings.Updates.CheckForUpdatesOnStartup)
+                    return;
+                
+                // Check if enough time has passed since last check
+                var timeSinceLastCheck = DateTime.Now - settings.Updates.LastUpdateCheck;
+                if (timeSinceLastCheck.TotalDays < settings.Updates.UpdateCheckIntervalDays)
+                    return;
+                
+                // Check for updates
+                var result = await _updateService.CheckForUpdatesAsync();
+                
+                if (result.IsError)
+                {
+                    // Log error but don't show to user on startup
+                    System.Diagnostics.Debug.WriteLine($"Update check failed: {result.ErrorMessage}");
+                    return;
+                }
+                
+                if (result.HasUpdate && result.LatestVersion != null)
+                {
+                    // Update the last check time
+                    settings.Updates.LastUpdateCheck = DateTime.Now;
+                    settings.Updates.LastCheckedVersion = result.LatestVersion.Version;
+                    settings.Save();
+                    
+                    // Show notification if enabled
+                    if (settings.Updates.NotifyOnUpdateAvailable)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            ShowUpdateNotification(result.LatestVersion);
+                        });
+                    }
+                }
+                else
+                {
+                    // Update the last check time even if no update
+                    settings.Updates.LastUpdateCheck = DateTime.Now;
+                    settings.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Update check failed: {ex.Message}");
+            }
+        }
+
+        private void ShowUpdateNotification(UpdateInfo updateInfo)
+        {
+            try
+            {
+                var result = MessageBox.Show(
+                    $"A new version of y0daii IRC Client is available!\n\n" +
+                    $"Current Version: {VersionInfo.Version}\n" +
+                    $"Latest Version: {updateInfo.Version}\n\n" +
+                    $"Would you like to download and install the update now?",
+                    "Update Available",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    // Open the update dialog
+                    var updateDialog = new UpdateDialog();
+                    updateDialog.Owner = this;
+                    updateDialog.ShowDialog();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to show update notification: {ex.Message}");
+            }
         }
     }
 }

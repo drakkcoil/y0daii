@@ -58,16 +58,16 @@
                     
                     <StackPanel HorizontalAlignment="Center" >
                         <TextBlock x:Name="AppTitleText" Text="y0daii IRC Client" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="#323130"/>
-                        <TextBlock x:Name="VersionText" Text="Version 1.0.0" FontSize="16" HorizontalAlignment="Center" Foreground="#605E5C"/>
-                        <TextBlock x:Name="BuildText" Text="Build 1.0.0.0 (2025-01-01)" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
+                        <TextBlock x:Name="VersionText" Text="Version 1.0.3" FontSize="16" HorizontalAlignment="Center" Foreground="#605E5C"/>
+                        <TextBlock x:Name="BuildText" Text="Build 1.0.3.0 (2025-01-21)" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- Description -->
                 <Border Background="#F8F9FA" Padding="16" CornerRadius="8">
                     <TextBlock TextWrapping="Wrap" FontSize="14" Foreground="#323130" TextAlignment="Center">
-                        A modern, full-featured IRC client built with C# and WPF, featuring a beautiful Office 365-style user interface. 
-                        Connect to IRC servers, join channels, send private messages, and enjoy a professional chatting experience.
+                        A modern, full-featured IRC client built with C# and WPF, featuring a beautiful macOS-inspired user interface. 
+                        Connect to IRC servers, join channels, send private messages, and enjoy a professional chatting experience with iMessage-style bubbles.
                     </TextBlock>
                 </Border>
 
@@ -77,7 +77,11 @@
                     <StackPanel >
                         <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
-                            <TextBlock Text="Modern Office 365-style interface" FontSize="14" Foreground="#323130"/>
+                            <TextBlock Text="Beautiful macOS-inspired interface" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" >
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="iMessage-style chat bubbles" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
@@ -97,7 +101,11 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" >
                             <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
-                            <TextBlock Text="Ident server support and notifications" FontSize="14" Foreground="#323130"/>
+                            <TextBlock Text="DCC file transfer support" FontSize="14" Foreground="#323130"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" >
+                            <materialDesign:PackIcon Kind="Check" Width="16" Height="16" Foreground="#107C10" VerticalAlignment="Center"/>
+                            <TextBlock Text="Real-time user list updates" FontSize="14" Foreground="#323130"/>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
@@ -117,7 +125,7 @@
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" >
                                 <TextBlock Text="Build Date:" FontWeight="SemiBold" FontSize="14" Foreground="#323130" Width="100"/>
-                                <TextBlock x:Name="BuildDateText" Text="2025-01-01" FontSize="14" Foreground="#323130"/>
+                                <TextBlock x:Name="BuildDateText" Text="2025-01-21" FontSize="14" Foreground="#323130"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>

@@ -65,6 +65,11 @@ namespace Y0daiiIRC.IRC
         public string? Server { get; private set; }
         public int Port { get; private set; }
         public string? Nickname { get; private set; }
+        
+        public void UpdateNickname(string newNickname)
+        {
+            Nickname = newNickname;
+        }
         public string? Username { get; private set; }
         public string? RealName { get; private set; }
 
