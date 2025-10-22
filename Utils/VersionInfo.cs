@@ -8,11 +8,11 @@ namespace Y0daiiIRC.Utils
         private static readonly Assembly _assembly = Assembly.GetExecutingAssembly();
         
         public static string Version => _assembly.GetName().Version?.ToString() ?? "1.0.0.0";
-        public static string ProductName => GetAssemblyAttribute<AssemblyProductAttribute>()?.Product ?? "Y0daii IRC Client";
+        public static string ProductName => GetAssemblyAttribute<AssemblyProductAttribute>()?.Product ?? "y0daii IRC Client";
         public static string Company => GetAssemblyAttribute<AssemblyCompanyAttribute>()?.Company ?? "Y0daii";
         public static string Copyright => GetAssemblyAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? "Copyright © 2025 Y0daii. All rights reserved.";
         public static string Description => GetAssemblyAttribute<AssemblyDescriptionAttribute>()?.Description ?? "Modern IRC Client with Beautiful UX";
-        public static string Title => GetAssemblyAttribute<AssemblyTitleAttribute>()?.Title ?? "Y0daii IRC Client";
+        public static string Title => GetAssemblyAttribute<AssemblyTitleAttribute>()?.Title ?? "y0daii IRC Client";
         
         public static DateTime BuildDate
         {

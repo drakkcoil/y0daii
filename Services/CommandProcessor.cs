@@ -190,7 +190,11 @@ namespace Y0daiiIRC.Services
                         return false;
                 }
 
-                CommandExecuted?.Invoke(this, command);
+                // Don't show confirmation for certain commands that are self-explanatory
+                if (cmd != "me" && cmd != "msg" && cmd != "privmsg" && cmd != "notice")
+                {
+                    CommandExecuted?.Invoke(this, command);
+                }
                 return true;
             }
             catch (Exception ex)
@@ -213,7 +217,7 @@ namespace Y0daiiIRC.Services
             var nickname = args.Length > 2 ? args[2] : "Y0daiiUser";
             var useSSL = args.Length > 3 && bool.TryParse(args[3], out bool ssl) ? ssl : false;
 
-            var success = await _ircClient.ConnectAsync(server, port, nickname, "y0daii", "Y0daii IRC User", useSSL, null);
+            var success = await _ircClient.ConnectAsync(server, port, nickname, "y0daii", "y0daii IRC User", useSSL, null);
             if (success)
             {
                 CommandExecuted?.Invoke(this, $"Connected to {server}:{port} {(useSSL ? "(SSL)" : "")}");
@@ -226,7 +230,7 @@ namespace Y0daiiIRC.Services
 
         private async Task HandleDisconnectCommand(string[] args)
         {
-            var reason = args.Length > 0 ? string.Join(" ", args) : "Y0daii IRC Client";
+            var reason = args.Length > 0 ? string.Join(" ", args) : "y0daii IRC Client";
             await _ircClient.SendCommandAsync($"QUIT :{reason}");
         }
 
@@ -570,7 +574,7 @@ namespace Y0daiiIRC.Services
 
         private void HandleAboutCommand()
         {
-            CommandExecuted?.Invoke(this, "Y0daii IRC Client v1.0 - Modern IRC client with beautiful UX");
+            CommandExecuted?.Invoke(this, "y0daii IRC Client v1.0 - Modern IRC client with beautiful UX");
         }
 
         private async Task HandleRawCommand(string[] args)

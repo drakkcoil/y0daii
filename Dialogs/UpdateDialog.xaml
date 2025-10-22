@@ -91,7 +91,7 @@
                                 <materialDesign:PackIcon Kind="CheckCircle" Width="20" Height="20" Foreground="#107C10"/>
                                 <TextBlock Text="You're up to date!" FontSize="14" FontWeight="SemiBold" Foreground="#107C10"/>
                             </StackPanel>
-                            <TextBlock Text="You have the latest version of Y0daii IRC Client." FontSize="14" Foreground="#323130"/>
+                            <TextBlock Text="You have the latest version of y0daii IRC Client." FontSize="14" Foreground="#323130"/>
                         </StackPanel>
                     </Border>
 

@@ -660,8 +660,16 @@ namespace Y0daiiIRC.IRC
             }
             catch (Exception ex)
             {
-                LogError($"Error in message listening: {ex.Message}");
-                OnErrorOccurred(ex);
+                // Don't show errors if we're disconnecting or the operation was cancelled
+                if (!token.IsCancellationRequested && _isConnected)
+                {
+                    LogError($"Error in message listening: {ex.Message}");
+                    OnErrorOccurred(ex);
+                }
+                else
+                {
+                    LogInfo("Message listening stopped (disconnecting or cancelled)");
+                }
             }
         }
 
@@ -774,6 +782,7 @@ namespace Y0daiiIRC.IRC
             if (string.IsNullOrWhiteSpace(line))
                 return message;
 
+
             var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
                 return message;
@@ -814,6 +823,7 @@ namespace Y0daiiIRC.IRC
             message.Parameters = parameters;
             // Content is read-only, so we don't set it here
 
+
             return message;
         }
 
@@ -832,7 +842,13 @@ namespace Y0daiiIRC.IRC
                 {
                     try
                     {
-                        await _writer.WriteLineAsync("QUIT :Y0daii IRC Client").ConfigureAwait(false);
+                        // Load settings to get the configured quit message
+                        var settings = Configuration.AppSettings.Load();
+                        var quitMessage = !string.IsNullOrEmpty(settings.User.QuitMessage) 
+                            ? settings.User.QuitMessage 
+                            : "y0daii IRC Client";
+                        
+                        await _writer.WriteLineAsync($"QUIT :{quitMessage}").ConfigureAwait(false);
                         await _writer.FlushAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)

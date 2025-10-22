@@ -1,8 +1,9 @@
 <Window x:Class="Y0daiiIRC.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Y0daii IRC Client" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:local="clr-namespace:Y0daiiIRC.Models"
+        Title="y0daii IRC Client" 
         Height="800" 
         Width="1200"
         MinHeight="600"
@@ -180,6 +181,41 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- Compact View Styles -->
+        <Style x:Key="CompactMessageBorderStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Background" Value="{StaticResource OfficeGray50}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Type}" Value="System">
+                    <Setter Property="Background" Value="{StaticResource OfficeBlue50}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue300}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Type}" Value="Action">
+                    <Setter Property="Background" Value="{StaticResource OfficeGreen50}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource OfficeGreen200}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                    <Setter Property="Background" Value="{StaticResource OfficePurple50}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource OfficePurple300}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+
+
+        <!-- Easing Functions -->
+        <CubicEase x:Key="CubicEaseOut" EasingMode="EaseOut"/>
+        <CubicEase x:Key="CubicEaseIn" EasingMode="EaseIn"/>
+        <CubicEase x:Key="CubicEaseInOut" EasingMode="EaseInOut"/>
+
         
         <Style x:Key="NavigationItemStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -230,7 +266,7 @@
                 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0">
                     <materialDesign:PackIcon Kind="Chat" Width="20" Height="20" VerticalAlignment="Center" Foreground="{StaticResource OfficeBlue}" Margin="0,0,8,0"/>
-                    <TextBlock Text="Y0daii IRC Client" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
+                    <TextBlock Text="y0daii IRC Client" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource OfficeGray900}"/>
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="16,0">
@@ -296,7 +332,7 @@
                             Margin="0,0,8,0">
                         <Button.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="About Y0daii IRC Client" Click="AboutMenuItem_Click">
+                                <MenuItem Header="About y0daii IRC Client" Click="AboutMenuItem_Click">
                                     <MenuItem.Icon>
                                         <materialDesign:PackIcon Kind="Information" Width="16" Height="16"/>
                                     </MenuItem.Icon>
@@ -421,13 +457,28 @@
                         <ItemsControl x:Name="MessageList" ContextMenu="{StaticResource MessageContextMenu}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Margin="0,6" Padding="16,12" CornerRadius="12">
+                                    <Border>
                                         <Border.Style>
                                             <Style TargetType="Border">
+                                                <!-- Default Normal View Style -->
+                                                <Setter Property="Margin" Value="0,6"/>
+                                                <Setter Property="Padding" Value="16,12"/>
+                                                <Setter Property="CornerRadius" Value="12"/>
                                                 <Setter Property="Background" Value="{StaticResource OfficeGray50}"/>
                                                 <Setter Property="BorderBrush" Value="{StaticResource OfficeGray200}"/>
                                                 <Setter Property="BorderThickness" Value="1"/>
                                                 <Style.Triggers>
+                                                    <!-- Compact view without animation -->
+                                                    <MultiDataTrigger>
+                                                        <MultiDataTrigger.Conditions>
+                                                            <Condition Binding="{Binding Source={x:Static local:ChatMessage.UseCompactView}}" Value="True"/>
+                                                            <Condition Binding="{Binding Source={x:Static local:ChatMessage.EnableAnimations}}" Value="False"/>
+                                                        </MultiDataTrigger.Conditions>
+                                                        <Setter Property="Margin" Value="0,2"/>
+                                                        <Setter Property="Padding" Value="8,4"/>
+                                                        <Setter Property="CornerRadius" Value="6"/>
+                                                    </MultiDataTrigger>
+                                                    <!-- Message Type Triggers for Normal View -->
                                                     <DataTrigger Binding="{Binding Type}" Value="System">
                                                         <Setter Property="Background" Value="{StaticResource OfficeBlue50}"/>
                                                         <Setter Property="BorderBrush" Value="{StaticResource OfficeBlue300}"/>
@@ -447,65 +498,114 @@
                                             </Style>
                                         </Border.Style>
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                                <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="15"/>
-                                                <TextBlock Text="{Binding Timestamp}" FontSize="12" Foreground="{StaticResource OfficeGray500}" Margin="12,0,0,0" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <!-- Content area - either simple text or grouped content -->
-                                            <ContentPresenter>
-                                                <ContentPresenter.Style>
-                                                    <Style TargetType="ContentPresenter">
-                                                        <Setter Property="Content" Value="{Binding Content}"/>
+                                            <!-- Normal View Layout -->
+                                            <StackPanel>
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
                                                         <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Grouped">
-                                                                <Setter Property="Content">
-                                                                    <Setter.Value>
-                                                                        <StackPanel>
-                                                                            <TextBlock Text="{Binding GroupTitle}" FontWeight="SemiBold" FontSize="16" 
-                                                                                       Foreground="{StaticResource OfficePurple700}" Margin="0,0,0,8"/>
-                                                                            <ItemsControl ItemsSource="{Binding SubMessages}">
-                                                                                <ItemsControl.ItemTemplate>
-                                                                                    <DataTemplate>
-                                                                                        <Border Margin="0,2" Padding="8,4" CornerRadius="6" 
-                                                                                                Background="{StaticResource OfficePurple25}" 
-                                                                                                BorderBrush="{StaticResource OfficePurple200}" 
-                                                                                                BorderThickness="1">
-                                                                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="14" 
-                                                                                                       Foreground="{StaticResource OfficePurple800}"/>
-                                                                                        </Border>
-                                                                                    </DataTemplate>
-                                                                                </ItemsControl.ItemTemplate>
-                                                                            </ItemsControl>
-                                                                        </StackPanel>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ContentPresenter.Style>
-                                            </ContentPresenter>
-                                            
-                                            <!-- Fallback for non-grouped messages -->
-                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="15" LineHeight="20">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="{StaticResource OfficeGray900}"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding Type}" Value="System">
-                                                                <Setter Property="Foreground" Value="{StaticResource OfficeBlue700}"/>
-                                                                <Setter Property="FontStyle" Value="Italic"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Action">
-                                                                <Setter Property="Foreground" Value="{StaticResource OfficeGreen700}"/>
-                                                                <Setter Property="FontStyle" Value="Italic"/>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                            <DataTrigger Binding="{Binding Source={x:Static local:ChatMessage.UseCompactView}}" Value="True">
                                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
+                                                </StackPanel.Style>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                    <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="15"/>
+                                                    <TextBlock Text="{Binding Timestamp}" FontSize="12" Foreground="{StaticResource OfficeGray500}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Simple content display for non-grouped messages -->
+                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <!-- Normal View Style -->
+                                                            <Setter Property="FontSize" Value="15"/>
+                                                            <Setter Property="LineHeight" Value="20"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource OfficeGray900}"/>
+                                                            <!-- Message Type Triggers for Normal View -->
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Type}" Value="System">
+                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeBlue700}"/>
+                                                                    <Setter Property="FontStyle" Value="Italic"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Action">
+                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeGreen700}"/>
+                                                                    <Setter Property="FontStyle" Value="Italic"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            
+                                            <!-- Compact View Layout - Single Line -->
+                                            <StackPanel Orientation="Horizontal">
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Source={x:Static local:ChatMessage.UseCompactView}}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Text="{Binding Timestamp}" FontSize="11" Foreground="{StaticResource OfficeGray500}" VerticalAlignment="Center"/>
+                                                <TextBlock Text=" " FontSize="11" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="{Binding SenderColor}" FontSize="13" VerticalAlignment="Center"/>
+                                                <TextBlock Text=" - " FontSize="13" Foreground="{StaticResource OfficeGray600}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Content}" FontSize="13" Foreground="{StaticResource OfficeGray900}" VerticalAlignment="Center">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Type}" Value="System">
+                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeBlue700}"/>
+                                                                    <Setter Property="FontStyle" Value="Italic"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Action">
+                                                                    <Setter Property="Foreground" Value="{StaticResource OfficeGreen700}"/>
+                                                                    <Setter Property="FontStyle" Value="Italic"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            
+                                            <!-- Grouped content display -->
+                                            <StackPanel>
+                                                <StackPanel.Style>
+                                                    <Style TargetType="StackPanel">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Type}" Value="Grouped">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </StackPanel.Style>
+                                                <TextBlock Text="{Binding GroupTitle}" FontWeight="SemiBold" FontSize="16" 
+                                                           Foreground="{StaticResource OfficePurple700}" Margin="0,0,0,8"/>
+                                                <ItemsControl ItemsSource="{Binding SubMessages}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Margin="0,2" Padding="8,4" CornerRadius="6" 
+                                                                    Background="{StaticResource OfficePurple25}" 
+                                                                    BorderBrush="{StaticResource OfficePurple200}" 
+                                                                    BorderThickness="1">
+                                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap" FontSize="14" 
+                                                                           Foreground="{StaticResource OfficePurple800}"/>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
                                         </StackPanel>
                                     </Border>
                                 </DataTemplate>

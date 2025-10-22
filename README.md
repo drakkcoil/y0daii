@@ -1,4 +1,4 @@
-# Y0daii IRC Client
+# y0daii IRC Client
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/drakkcoil/y0daii)
 [![.NET](https://img.shields.io/badge/.NET-8.0-blue.svg)](https://dotnet.microsoft.com/download/dotnet/8.0)

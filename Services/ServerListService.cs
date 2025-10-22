@@ -156,7 +156,7 @@ namespace Y0daiiIRC.Services
                     UseSSL = false,
                     Nickname = "Y0daiiUser",
                     Username = "y0daii",
-                    RealName = "Y0daii IRC User",
+                    RealName = "y0daii IRC User",
                     IsFavorite = true
                 },
                 new ServerInfo
@@ -167,7 +167,7 @@ namespace Y0daiiIRC.Services
                     UseSSL = true,
                     Nickname = "Y0daiiUser",
                     Username = "y0daii",
-                    RealName = "Y0daii IRC User",
+                    RealName = "y0daii IRC User",
                     IsFavorite = true
                 },
                 new ServerInfo
@@ -178,7 +178,7 @@ namespace Y0daiiIRC.Services
                     UseSSL = false,
                     Nickname = "Y0daiiUser",
                     Username = "y0daii",
-                    RealName = "Y0daii IRC User",
+                    RealName = "y0daii IRC User",
                     IsFavorite = true
                 },
                 new ServerInfo

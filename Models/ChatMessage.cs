@@ -5,6 +5,9 @@ namespace Y0daiiIRC.Models
 {
     public class ChatMessage
     {
+        public static bool UseCompactView { get; set; } = false;
+        public static bool EnableAnimations { get; set; } = true;
+        
         public string Sender { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
         public string Timestamp { get; set; } = string.Empty;

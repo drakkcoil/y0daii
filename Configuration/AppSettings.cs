@@ -63,6 +63,8 @@ namespace Y0daiiIRC.Configuration
         public string FontSize { get; set; } = "Medium";
         public bool ShowTimestamps { get; set; } = true;
         public bool ShowJoinPart { get; set; } = true;
+        public bool UseCompactView { get; set; } = false;
+        public bool EnableAnimations { get; set; } = true;
     }
 
     public class ConnectionSettings
@@ -113,7 +115,8 @@ namespace Y0daiiIRC.Configuration
     {
         public string DefaultNickname { get; set; } = "Y0daiiUser";
         public string DefaultUsername { get; set; } = "y0daii";
-        public string DefaultRealName { get; set; } = "Y0daii IRC User";
+        public string DefaultRealName { get; set; } = "y0daii IRC User";
+        public string QuitMessage { get; set; } = "y0daii IRC Client";
         public string IdentServer { get; set; } = "127.0.0.1";
         public int IdentPort { get; set; } = 113;
         public bool UseIdent { get; set; } = false;

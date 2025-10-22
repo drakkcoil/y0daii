@@ -27,6 +27,8 @@ namespace Y0daiiIRC
             ThemeComboBox.SelectedIndex = settings.Appearance.Theme == "Dark" ? 0 : 1;
             PrimaryColorComboBox.SelectedIndex = GetColorIndex(settings.Appearance.PrimaryColor);
             FontSizeComboBox.SelectedIndex = GetFontSizeIndex(settings.Appearance.FontSize);
+            UseCompactViewCheckBox.IsChecked = settings.Appearance.UseCompactView;
+            EnableAnimationsCheckBox.IsChecked = settings.Appearance.EnableAnimations;
             
             // Load connection settings
             AutoReconnectCheckBox.IsChecked = settings.Behavior.AutoReconnect;
@@ -58,6 +60,7 @@ namespace Y0daiiIRC
             DefaultNicknameTextBox.Text = settings.User.DefaultNickname;
             DefaultUsernameTextBox.Text = settings.User.DefaultUsername;
             DefaultRealNameTextBox.Text = settings.User.DefaultRealName;
+            QuitMessageTextBox.Text = settings.User.QuitMessage;
             UseIdentCheckBox.IsChecked = settings.User.UseIdent;
             IdentServerTextBox.Text = settings.User.IdentServer;
             IdentPortTextBox.Text = settings.User.IdentPort.ToString();
@@ -71,6 +74,8 @@ namespace Y0daiiIRC
             settings.Appearance.Theme = ThemeComboBox.SelectedIndex == 0 ? "Dark" : "Light";
             settings.Appearance.PrimaryColor = GetSelectedColor();
             settings.Appearance.FontSize = GetSelectedFontSize();
+            settings.Appearance.UseCompactView = UseCompactViewCheckBox.IsChecked ?? false;
+            settings.Appearance.EnableAnimations = EnableAnimationsCheckBox.IsChecked ?? true;
             
             // Save connection settings
             settings.Behavior.AutoReconnect = AutoReconnectCheckBox.IsChecked ?? false;
@@ -104,6 +109,7 @@ namespace Y0daiiIRC
             settings.User.DefaultNickname = DefaultNicknameTextBox.Text.Trim();
             settings.User.DefaultUsername = DefaultUsernameTextBox.Text.Trim();
             settings.User.DefaultRealName = DefaultRealNameTextBox.Text.Trim();
+            settings.User.QuitMessage = QuitMessageTextBox.Text.Trim();
             settings.User.UseIdent = UseIdentCheckBox.IsChecked ?? false;
             settings.User.IdentServer = IdentServerTextBox.Text.Trim();
             if (int.TryParse(IdentPortTextBox.Text, out int identPort))
@@ -189,6 +195,11 @@ namespace Y0daiiIRC
             try
             {
                 SaveSettings();
+                
+                // Refresh appearance settings in main window if it's open
+                var mainWindow = Application.Current.MainWindow as MainWindow;
+                mainWindow?.RefreshCompactViewSetting();
+                
                 MessageBox.Show("Settings saved successfully!", "Settings", 
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;

@@ -171,7 +171,7 @@
                                     </ComboBox>
                                 </StackPanel>
 
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="Font Size:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
                                     <ComboBox x:Name="FontSizeComboBox" Width="150">
                                         <ComboBoxItem Content="Small"/>
@@ -179,6 +179,16 @@
                                         <ComboBoxItem Content="Large"/>
                                     </ComboBox>
                                 </StackPanel>
+
+                                <CheckBox x:Name="UseCompactViewCheckBox"
+                                          Content="Use compact view (inline message bubbles)"
+                                          FontWeight="SemiBold"
+                                          Margin="0,8,0,0"/>
+
+                                <CheckBox x:Name="EnableAnimationsCheckBox"
+                                          Content="Enable smooth animations for message bubbles"
+                                          FontWeight="SemiBold"
+                                          Margin="0,8,0,0"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -204,7 +214,12 @@
 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <TextBlock Text="Default Real Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                    <TextBox x:Name="DefaultRealNameTextBox" Width="300" Text="Y0daii IRC User" Padding="8"/>
+                                    <TextBox x:Name="DefaultRealNameTextBox" Width="300" Text="y0daii IRC User" Padding="8"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="Quit Message:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="QuitMessageTextBox" Width="300" Text="y0daii IRC Client" Padding="8"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

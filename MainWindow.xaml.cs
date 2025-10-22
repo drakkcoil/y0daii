@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using Y0daiiIRC.Configuration;
 using Y0daiiIRC.IRC;
 using Y0daiiIRC.Models;
@@ -49,6 +50,7 @@ namespace Y0daiiIRC
             SetupEventHandlers();
             SetupUIContextMenus();
             InitializeConsole();
+            LoadCompactViewSetting();
             UpdateUI();
         }
 
@@ -107,10 +109,45 @@ namespace Y0daiiIRC
             }
         }
 
+        private void LoadCompactViewSetting()
+        {
+            try
+            {
+                var settings = Configuration.AppSettings.Load();
+                ChatMessage.UseCompactView = settings.Appearance.UseCompactView;
+                ChatMessage.EnableAnimations = settings.Appearance.EnableAnimations;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load appearance settings: {ex.Message}");
+                ChatMessage.UseCompactView = false;
+                ChatMessage.EnableAnimations = true;
+            }
+        }
+
+        public void RefreshCompactViewSetting()
+        {
+            LoadCompactViewSetting();
+            // Force UI refresh to apply the new compact view setting
+            // Since static properties don't trigger data binding updates, we need to force a refresh
+            // by clearing and re-adding all items
+            var currentItems = MessageList.Items.Cast<object>().ToList();
+            MessageList.Items.Clear();
+            
+            // Add a small delay to ensure the UI has time to process the clear
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                foreach (var item in currentItems)
+                {
+                    MessageList.Items.Add(item);
+                }
+            }), System.Windows.Threading.DispatcherPriority.Render);
+        }
+
         private void InitializeConsole()
         {
             // Console is now the default view, no need for tab management
-            AddSystemMessage("Welcome to Y0daii IRC Client! Type /help for available commands.");
+            AddSystemMessage("Welcome to y0daii IRC Client! Type /help for available commands.");
         }
 
         private void OnIRCMessageReceived(object? sender, IRCMessage message)
@@ -147,7 +184,8 @@ namespace Y0daiiIRC
         {
             Dispatcher.Invoke(() =>
             {
-                StatusText.Text = status;
+                // Display "Connecting..." with ellipsis for connecting status
+                StatusText.Text = status == "Connecting" ? "Connecting..." : status;
                 ConnectButton.Content = status == "Connected" ? "Disconnect" : "Connect";
                 
                 // Log connection status changes to console
@@ -325,6 +363,11 @@ namespace Y0daiiIRC
                         // Private action
                         AddPrivateAction(sender, action);
                     }
+                }
+                else if (message.IsCTCPRequest && message.Content?.StartsWith("\x01") == true && message.Content.EndsWith("\x01") && message.Content.Length > 2)
+                {
+                    // Handle other CTCP requests (VERSION, TIME, PING, etc.)
+                    _ = Task.Run(async () => await HandleCTCPRequest(message));
                 }
                 else
                 {
@@ -534,6 +577,51 @@ namespace Y0daiiIRC
             }
         }
 
+        private async Task HandleCTCPRequest(IRCMessage message)
+        {
+            var sender = message.Sender;
+            var ctcpType = message.CTCPType;
+            var ctcpParameter = message.CTCPParameter;
+            var content = message.Content;
+
+
+            // Additional validation to ensure this is actually a CTCP request
+            if (string.IsNullOrEmpty(sender) || string.IsNullOrEmpty(ctcpType) || 
+                !content?.StartsWith("\x01") == true || !content?.EndsWith("\x01") == true ||
+                content.Length <= 2)
+                return;
+
+            switch (ctcpType.ToUpperInvariant())
+            {
+                case "VERSION":
+                    var version = Utils.VersionInfo.Version;
+                    var versionResponse = $"y0daii IRC Client {version}";
+                    await _ircClient.SendNoticeAsync(sender, $"\x01VERSION {versionResponse}\x01");
+                    break;
+
+                case "TIME":
+                    var timeResponse = DateTime.Now.ToString("ddd MMM dd HH:mm:ss yyyy");
+                    await _ircClient.SendNoticeAsync(sender, $"\x01TIME {timeResponse}\x01");
+                    break;
+
+                case "PING":
+                    // Echo back the ping parameter or current timestamp
+                    var pingResponse = !string.IsNullOrEmpty(ctcpParameter) ? ctcpParameter : DateTime.Now.Ticks.ToString();
+                    await _ircClient.SendNoticeAsync(sender, $"\x01PING {pingResponse}\x01");
+                    break;
+
+                case "CLIENTINFO":
+                    var clientInfo = "VERSION TIME PING CLIENTINFO";
+                    await _ircClient.SendNoticeAsync(sender, $"\x01CLIENTINFO {clientInfo}\x01");
+                    break;
+
+                default:
+                    // Unknown CTCP request - send ERRMSG
+                    await _ircClient.SendNoticeAsync(sender, $"\x01ERRMSG {ctcpType} :Unknown CTCP command\x01");
+                    break;
+            }
+        }
+
         private void HandleNumericMessage(IRCMessage message)
         {
             switch (message.Command)
@@ -624,6 +712,12 @@ namespace Y0daiiIRC
                 case "320": // RPL_WHOISSPECIAL
                     HandleWhoisResponse(message, "Special Info");
                     break;
+                case "332": // RPL_TOPIC
+                    HandleTopicMessage(message);
+                    break;
+                case "333": // RPL_TOPICWHOTIME
+                    HandleTopicTimeMessage(message);
+                    break;
                 case "433": // ERR_NICKNAMEINUSE
                     AddSystemMessage($"❌ Nickname {message.Parameters[1]} is already in use");
                     _ircClient.SetConnected(false);
@@ -692,6 +786,17 @@ namespace Y0daiiIRC
             };
 
             _channelMessages[channel].Add(message);
+
+            // Increment unread count if this is not the current channel
+            if (_currentChannel?.Name != channel)
+            {
+                var channelObj = _channels.FirstOrDefault(c => c.Name == channel);
+                if (channelObj != null)
+                {
+                    channelObj.UnreadCount++;
+                    UpdateUnreadIndicator(channelObj);
+                }
+            }
 
             if (channel == _currentChannel?.Name)
             {
@@ -763,12 +868,14 @@ namespace Y0daiiIRC
             // Remove the private message channel
             _channels.Remove(channel);
             
-            // Remove the channel button from UI
-            var buttonToRemove = ChannelList.Children.OfType<Button>()
-                .FirstOrDefault(b => b.Tag == channel);
-            if (buttonToRemove != null)
+            // Remove the channel button from UI (now it's in a StackPanel)
+            var containerToRemove = PrivateMessageList.Children.OfType<StackPanel>()
+                .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                    .Any(b => b.Tag is { } tagObj && 
+                             tagObj.GetType().GetProperty("Channel")?.GetValue(tagObj) == channel));
+            if (containerToRemove != null)
             {
-                ChannelList.Children.Remove(buttonToRemove);
+                PrivateMessageList.Children.Remove(containerToRemove);
             }
             
             // If this was the current channel, switch to console
@@ -779,6 +886,80 @@ namespace Y0daiiIRC
                 {
                     SwitchToChannel(consoleChannel);
                 }
+            }
+        }
+
+        private void HandleTopicMessage(IRCMessage message)
+        {
+            // RPL_TOPIC (332): Channel topic
+            if (message.Parameters.Count >= 3)
+            {
+                var channelName = message.Parameters[1];
+                var topic = message.Content ?? "";
+                
+                // Find the channel and update its topic
+                var channel = _channels.FirstOrDefault(c => c.Name == channelName);
+                if (channel != null)
+                {
+                    channel.Topic = topic;
+                    UpdateChannelHeader();
+                }
+            }
+        }
+
+        private void HandleTopicTimeMessage(IRCMessage message)
+        {
+            // RPL_TOPICWHOTIME (333): Who set the topic and when
+            if (message.Parameters.Count >= 4)
+            {
+                var channelName = message.Parameters[1];
+                var topicSetBy = message.Parameters[2];
+                var topicSetTime = message.Parameters[3];
+                
+                // Find the channel and update topic metadata
+                var channel = _channels.FirstOrDefault(c => c.Name == channelName);
+                if (channel != null)
+                {
+                    channel.TopicSetBy = topicSetBy;
+                    
+                    // Parse Unix timestamp
+                    if (long.TryParse(topicSetTime, out long unixTimestamp))
+                    {
+                        channel.TopicSetDate = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).DateTime;
+                    }
+                    
+                    UpdateChannelHeader();
+                }
+            }
+        }
+
+        private void UpdateChannelHeader()
+        {
+            if (_currentChannel != null)
+            {
+                // Update the chat header with topic information
+                var headerText = GetDisplayChannelName(_currentChannel);
+                
+                if (!string.IsNullOrEmpty(_currentChannel.Topic))
+                {
+                    headerText += $" - {_currentChannel.Topic}";
+                }
+                
+                ChatTitle.Text = headerText;
+                
+                // Update tooltip with detailed information
+                var tooltipText = $"Channel: {_currentChannel.Name}";
+                if (!string.IsNullOrEmpty(_currentChannel.Topic))
+                {
+                    tooltipText += $"\nTopic: {_currentChannel.Topic}";
+                }
+                if (_currentChannel.TopicSetBy != null && _currentChannel.TopicSetDate != null)
+                {
+                    var formattedDate = _currentChannel.TopicSetDate.Value.ToString("MMM dd, yyyy 'at' HH:mm");
+                    tooltipText += $"\nSet by: {_currentChannel.TopicSetBy} on {formattedDate}";
+                }
+                
+                ChatTitle.ToolTip = tooltipText;
             }
         }
 
@@ -856,11 +1037,20 @@ namespace Y0daiiIRC
 
         private void AddChannelButton(Channel channel)
         {
+            // Create a container for the button and unread indicator
+            var container = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(8, 2, 8, 2)
+            };
+
             var button = new Button
             {
                 Content = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
                 Style = (Style)FindResource("NavigationItemStyle"),
-                Tag = channel
+                Tag = channel,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left
             };
             button.Click += (s, e) => SwitchToChannel(channel);
             
@@ -889,7 +1079,32 @@ namespace Y0daiiIRC
             }
             
             button.ContextMenu = contextMenu;
-            ChannelList.Children.Add(button);
+            container.Children.Add(button);
+
+            // Add unread message indicator (red dot)
+            var unreadIndicator = new Ellipse
+            {
+                Width = 8,
+                Height = 8,
+                Fill = new SolidColorBrush(Colors.Red),
+                Margin = new Thickness(4, 0, 0, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                Visibility = channel.HasUnreadMessages ? Visibility.Visible : Visibility.Collapsed
+            };
+            container.Children.Add(unreadIndicator);
+
+            // Store references for updating unread count
+            button.Tag = new { Channel = channel, UnreadIndicator = unreadIndicator };
+
+            // Add to appropriate list based on channel type
+            if (channel.Type == ChannelType.Channel)
+            {
+                ChannelList.Children.Add(container);
+            }
+            else if (channel.Type == ChannelType.Private)
+            {
+                PrivateMessageList.Children.Add(container);
+            }
         }
 
         private void AddChannelTab(Channel channel)
@@ -962,11 +1177,15 @@ namespace Y0daiiIRC
 
         private string GetDisplayChannelName(Channel channel)
         {
-            // Remove the # prefix for display since we're using an icon
+            // Remove prefixes for display since we're using icons and proper organization
             var name = channel.Name;
             if (name.StartsWith("#"))
             {
                 name = name.Substring(1);
+            }
+            else if (name.StartsWith("PM:"))
+            {
+                name = name.Substring(3); // Remove "PM:" prefix
             }
             return name;
         }
@@ -986,9 +1205,13 @@ namespace Y0daiiIRC
         {
             _currentChannel = channel;
             
+            // Clear unread count when switching to a channel
+            channel.UnreadCount = 0;
+            UpdateUnreadIndicator(channel);
+            
             // Update chat header
-            ChatTitle.Text = GetDisplayChannelName(channel);
             ChatIcon.Text = GetChannelIcon(channel);
+            UpdateChannelHeader();
             
             // Update button highlighting
             UpdateChannelButtonHighlighting();
@@ -1004,10 +1227,36 @@ namespace Y0daiiIRC
             ScrollToBottom();
         }
 
+        private void UpdateUnreadIndicator(Channel channel)
+        {
+            // Find the button for this channel and update its unread indicator
+            var allButtons = ChannelList.Children.OfType<StackPanel>()
+                .Concat(PrivateMessageList.Children.OfType<StackPanel>())
+                .SelectMany(sp => sp.Children.OfType<Button>())
+                .Where(b => b.Tag is { } tagObj && 
+                           tagObj.GetType().GetProperty("Channel")?.GetValue(tagObj) == channel);
+
+            foreach (var button in allButtons)
+            {
+                if (button.Tag is { } tagObj)
+                {
+                    var unreadIndicator = tagObj.GetType().GetProperty("UnreadIndicator")?.GetValue(tagObj) as Ellipse;
+                    if (unreadIndicator != null)
+                    {
+                        unreadIndicator.Visibility = channel.HasUnreadMessages ? Visibility.Visible : Visibility.Collapsed;
+                    }
+                }
+            }
+        }
+
         private void UpdateChannelButtonHighlighting()
         {
             // Reset all channel buttons to normal style
-            foreach (Button button in ChannelList.Children.OfType<Button>())
+            var allChannelButtons = ChannelList.Children.OfType<StackPanel>()
+                .Concat(PrivateMessageList.Children.OfType<StackPanel>())
+                .SelectMany(sp => sp.Children.OfType<Button>());
+            
+            foreach (Button button in allChannelButtons)
             {
                 button.Style = (Style)FindResource("NavigationItemStyle");
             }
@@ -1021,8 +1270,9 @@ namespace Y0daiiIRC
             // Highlight the current channel button
             if (_currentChannel != null)
             {
-                var currentButton = ChannelList.Children.OfType<Button>()
-                    .FirstOrDefault(b => b.Tag == _currentChannel);
+                var currentButton = allChannelButtons
+                    .FirstOrDefault(b => b.Tag is { } tagObj && 
+                                       tagObj.GetType().GetProperty("Channel")?.GetValue(tagObj) == _currentChannel);
                 if (currentButton != null)
                 {
                     // Create a highlighted style
@@ -1233,7 +1483,7 @@ namespace Y0daiiIRC
             }
                     var success = await _ircClient.ConnectWithFallbackAsync(
                         server.Host, server.Port, server.Nickname ?? "Y0daiiUser", 
-                        server.Username ?? "y0daii", server.RealName ?? "Y0daii IRC User",
+                        server.Username ?? "y0daii", server.RealName ?? "y0daii IRC User",
                         server.UseSSL, null, server.IdentServer, server.IdentPort);
                     
                     if (!success)

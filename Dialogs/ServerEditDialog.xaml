@@ -168,7 +168,7 @@
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="Real Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBox x:Name="RealNameTextBox" Width="300" Text="Y0daii IRC User" Padding="8"/>
+                            <TextBox x:Name="RealNameTextBox" Width="300" Text="y0daii IRC User" Padding="8"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
