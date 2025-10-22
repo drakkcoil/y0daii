@@ -83,8 +83,16 @@
         
         <Style x:Key="SystemMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
             <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="MaxWidth" Value="400"/>
+        </Style>
+        
+        <!-- Channel System Message Style (different color bubble) -->
+        <Style x:Key="ChannelSystemMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
+            <Setter Property="Background" Value="{StaticResource SystemBlue}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="MaxWidth" Value="500"/>
+            <Setter Property="Margin" Value="8,4,50,4"/>
         </Style>
         
         <!-- Console System Message Style (no bubble) -->
@@ -732,8 +740,8 @@
                                             </StackPanel>
                                         </Border>
                                             
-                                        <!-- System messages (center, grey) -->
-                                        <Border Grid.Column="1" 
+                                        <!-- System messages (left, grey) -->
+                                        <Border Grid.Column="0" 
                                                 Style="{StaticResource SystemMessageBubbleStyle}"
                                                 Visibility="{Binding IsSystemMessage, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <StackPanel>
@@ -742,11 +750,11 @@
                                                            FontSize="13" 
                                                            Foreground="{StaticResource SecondaryLabel}"
                                                            FontWeight="Normal"
-                                                           HorizontalAlignment="Center"/>
+                                                           HorizontalAlignment="Left"/>
                                                 <TextBlock Text="{Binding Timestamp}" 
                                                            FontSize="10" 
                                                            Foreground="{StaticResource TertiaryLabel}" 
-                                                           HorizontalAlignment="Center"
+                                                           HorizontalAlignment="Left"
                                                            Margin="0,2,0,0"/>
                                         </StackPanel>
                                                             </Border>
@@ -789,6 +797,26 @@
                                                        Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
+                                    
+                                    <!-- Channel system messages (blue bubble) -->
+                                    <Border Grid.Column="0" 
+                                            Style="{StaticResource ChannelSystemMessageBubbleStyle}"
+                                            Visibility="{Binding IsChannelSystemMessage, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Content}" 
+                                                       TextWrapping="Wrap" 
+                                                       FontSize="13" 
+                                                       Foreground="White"
+                                                       FontWeight="Normal"
+                                                       HorizontalAlignment="Left"/>
+                                            <TextBlock Text="{Binding Timestamp}" 
+                                                       FontSize="10" 
+                                                       Foreground="White" 
+                                                       Opacity="0.7"
+                                                       HorizontalAlignment="Left"
+                                                       Margin="0,2,0,0"/>
+                                        </StackPanel>
+                                    </Border>
                                     </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -807,7 +835,7 @@
                                 <TextBox x:Name="MessageTextBox" 
                                          Background="Transparent"
                                          BorderThickness="0"
-                                         Padding="8,6"
+                                         Padding="6,4"
                                          FontSize="15"
                                          KeyDown="MessageTextBox_KeyDown"
                                          VerticalAlignment="Center"
@@ -837,7 +865,7 @@
                                     Grid.Column="1"
                                     Style="{StaticResource macOSButtonStyle}"
                                     Click="SendButton_Click"
-                                    Padding="12,6"
+                                    Padding="8,4"
                                     FontSize="15"
                                     FontWeight="SemiBold">
                                 <StackPanel Orientation="Horizontal">

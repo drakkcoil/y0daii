@@ -409,7 +409,7 @@ namespace Y0daiiIRC
                 var user = message.Sender;
                 if (user == _ircClient.Nickname)
                 {
-                    AddSystemMessage($"✅ Successfully joined {channel}");
+                    AddChannelSystemMessage($"✅ Successfully joined {channel}");
                     
                     // Create the channel in the UI if it doesn't exist
                     if (!_channels.Any(c => c.Name == channel))
@@ -434,7 +434,7 @@ namespace Y0daiiIRC
                 }
                 else
                 {
-                    AddSystemMessage($"👤 {user} joined {channel}");
+                    AddChannelSystemMessage($"👤 {user} joined {channel}");
                 }
                 if (channel == _currentChannel?.Name)
                 {
@@ -445,7 +445,7 @@ namespace Y0daiiIRC
             {
                 var channel = message.Target;
                 var user = message.Sender;
-                AddSystemMessage($"{user} left {channel}");
+                AddChannelSystemMessage($"{user} left {channel}");
                 
                 if (user == _ircClient.Nickname)
                 {
@@ -1012,6 +1012,26 @@ namespace Y0daiiIRC
             AddMessageToChannels(message);
         }
 
+        private void AddChannelSystemMessage(string content)
+        {
+            var message = new ChatMessage
+            {
+                Sender = "System",
+                Content = content,
+                Timestamp = DateTime.Now.ToString("HH:mm:ss"),
+                SenderColor = Colors.Blue,
+                Type = MessageType.System,
+                IsUserMessage = false,
+                IsOtherMessage = false,
+                IsSystemMessage = false,
+                IsConsoleMessage = false,
+                IsChannelSystemMessage = true, // Channel system messages use blue bubbles
+                CurrentUserNickname = _ircClient.Nickname
+            };
+
+            AddMessageToChannels(message);
+        }
+
         private void AddSystemMessage(ChatMessage message)
         {
             AddMessageToChannels(message);
@@ -1570,7 +1590,7 @@ namespace Y0daiiIRC
             var dialog = new JoinChannelDialog();
             if (dialog.ShowDialog() == true)
             {
-                AddSystemMessage($"🔄 Joining channel {dialog.ChannelName}...");
+                AddChannelSystemMessage($"🔄 Joining channel {dialog.ChannelName}...");
                 await _ircClient.JoinChannelAsync(dialog.ChannelName);
                 
                 var channel = new Channel { Name = dialog.ChannelName, Type = ChannelType.Channel };
@@ -1690,7 +1710,7 @@ namespace Y0daiiIRC
                 }
                 else
                 {
-                    AddSystemMessage("No channel selected. Join a channel first.");
+                    AddChannelSystemMessage("No channel selected. Join a channel first.");
                 }
             }
         }
