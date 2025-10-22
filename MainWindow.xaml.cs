@@ -866,7 +866,8 @@ namespace Y0daiiIRC
                 Content = $"* {sender} {displayAction}",
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
                 SenderColor = GetUserColor(sender),
-                Type = MessageType.Action // We'll need to add this to the enum
+                Type = MessageType.Action,
+                IsActionMessage = true
             };
 
             _channelMessages[channel].Add(message);
@@ -1003,7 +1004,8 @@ namespace Y0daiiIRC
                 Type = MessageType.System,
                 IsUserMessage = false,
                 IsOtherMessage = false,
-                IsSystemMessage = true,
+                IsSystemMessage = false, // Console messages should not use system message bubbles
+                IsConsoleMessage = true, // System messages in console should not use bubbles
                 CurrentUserNickname = _ircClient.Nickname
             };
 

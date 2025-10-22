@@ -20,6 +20,8 @@ namespace Y0daiiIRC.Models
         public bool IsUserMessage { get; set; } = false;
         public bool IsOtherMessage { get; set; } = false;
         public bool IsSystemMessage { get; set; } = false;
+        public bool IsConsoleMessage { get; set; } = false;
+        public bool IsActionMessage { get; set; } = false;
         public string CurrentUserNickname { get; set; } = string.Empty;
     }
 
