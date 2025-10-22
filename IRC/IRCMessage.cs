@@ -42,8 +42,8 @@ namespace Y0daiiIRC.IRC
         public bool IsPong => Command == "PONG";
         public bool IsNumeric => int.TryParse(Command, out _);
         
-        public bool IsCTCPAction => IsPrivateMessage && IsValidCTCPContent() && Content?.StartsWith("\x01ACTION ") == true && Content.EndsWith("\x01");
-        public string? CTCPAction => IsCTCPAction ? Content?.Substring(8, Content.Length - 9) : null;
+        public bool IsCTCPAction => IsPrivateMessage && ((IsValidCTCPContent() && Content?.StartsWith("\x01ACTION ") == true && Content.EndsWith("\x01")) || Content?.StartsWith("ACTION ") == true);
+        public string? CTCPAction => IsCTCPAction ? (Content?.StartsWith("\x01") == true ? Content?.Substring(8, Content.Length - 9) : Content?.Substring(7)) : null;
         
         public bool IsCTCPRequest => IsPrivateMessage && IsValidCTCPContent() && Content?.StartsWith("\x01") == true && Content.EndsWith("\x01") && !IsCTCPAction;
         public string? CTCPCommand => IsCTCPRequest ? Content?.Substring(1, Content.Length - 2) : null;
