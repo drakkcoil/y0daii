@@ -752,7 +752,7 @@
                                                             </Border>
                                     
                                     <!-- Console system messages (no bubble) -->
-                                    <Border Grid.Column="1" 
+                                    <Border Grid.Column="0" 
                                             Style="{StaticResource ConsoleSystemMessageStyle}"
                                             Visibility="{Binding IsConsoleMessage, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <StackPanel>

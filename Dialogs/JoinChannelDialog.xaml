@@ -25,6 +25,8 @@
         <SolidColorBrush x:Key="TertiaryLabel" Color="#3C3C43"/>
         <SolidColorBrush x:Key="QuaternaryLabel" Color="#2C2C2E"/>
         <SolidColorBrush x:Key="AccentColor" Color="#007AFF"/>
+        <SolidColorBrush x:Key="AccentColorHover" Color="#0056CC"/>
+        <SolidColorBrush x:Key="AccentColorPressed" Color="#004499"/>
         <SolidColorBrush x:Key="SystemRed" Color="#FF3B30"/>
         <SolidColorBrush x:Key="SystemGreen" Color="#34C759"/>
         <SolidColorBrush x:Key="SystemBlue" Color="#007AFF"/>
