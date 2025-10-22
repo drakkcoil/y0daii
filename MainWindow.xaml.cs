@@ -1108,7 +1108,7 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = $"{GetChannelIcon(channel)} {GetDisplayChannelName(channel)}",
-                Style = (Style)FindResource("macOSmacOSNavigationItemStyle"),
+                Style = (Style)FindResource("macOSNavigationItemStyle"),
                 Tag = channel,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 HorizontalContentAlignment = HorizontalAlignment.Left
@@ -1192,7 +1192,7 @@ namespace Y0daiiIRC
             var button = new Button
             {
                 Content = displayName,
-                Style = (Style)FindResource("macOSmacOSNavigationItemStyle"),
+                Style = (Style)FindResource("macOSNavigationItemStyle"),
                 Tag = user
             };
             button.MouseDoubleClick += (s, e) => StartPrivateMessage(user);
@@ -1319,13 +1319,13 @@ namespace Y0daiiIRC
             
             foreach (Button button in allChannelButtons)
             {
-                button.Style = (Style)FindResource("macOSmacOSNavigationItemStyle");
+                button.Style = (Style)FindResource("macOSNavigationItemStyle");
             }
             
             // Reset all user buttons to normal style
             foreach (Button button in UserList.Children.OfType<Button>())
             {
-                button.Style = (Style)FindResource("macOSmacOSNavigationItemStyle");
+                button.Style = (Style)FindResource("macOSNavigationItemStyle");
             }
             
             // Highlight the current channel button
