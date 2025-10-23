@@ -90,7 +90,7 @@ namespace Y0daiiIRC.IRC
                     var identTask = Task.Run(() => StartIdentServer("0.0.0.0", 113, username, _cancellationTokenSource.Token), _cancellationTokenSource.Token);
                     
                     // Give it time to start up
-                await Task.Delay(1000).ConfigureAwait(false);
+                    await Task.Delay(1000).ConfigureAwait(false);
                     LogInfo("✅ Ident server on port 113 should be ready");
                     
                     // Test ident server connectivity
@@ -437,6 +437,13 @@ namespace Y0daiiIRC.IRC
                 LogWarn("💡 Consider enabling 'Enable Ident Server' in Settings > Connection tab");
             }
             
+            // Add a small delay before initial connection attempt to avoid rate limiting
+            if (isTraditionalNetwork)
+            {
+                LogInfo("⏳ Waiting 2 seconds before initial connection attempt (traditional network)");
+                await Task.Delay(2000);
+            }
+            
             // Strategy 1: Try with user's preferred ident setting (respect user choice)
             LogInfo($"🔄 Strategy 1: Connection with ident server {(userWantsIdent ? "enabled" : "disabled")} (user preference)");
             var success = await ConnectAsync(server, port, nickname, username, realName, useSSL, password, identServer, identPort, connectionTimeoutSeconds, sslTimeoutSeconds, userWantsIdent);
@@ -450,7 +457,11 @@ namespace Y0daiiIRC.IRC
             // Strategy 2: Try with different nickname (in case of conflicts)
             LogWarn("❌ Strategy 1 failed, trying Strategy 2: Alternative nickname");
             await DisconnectAsync();
-            await Task.Delay(300); // Short delay
+            
+            // Longer delay for traditional networks like EFNet to avoid rate limiting
+            var delay = isTraditionalNetwork ? 10000 : 1000; // 10 seconds for EFNet, 1 second for others
+            LogInfo($"⏳ Waiting {delay}ms before retry (traditional network: {isTraditionalNetwork})");
+            await Task.Delay(delay);
             
             var altNickname = $"{nickname}_";
             LogInfo($"🔄 Strategy 2: Trying with alternative nickname: {altNickname}");

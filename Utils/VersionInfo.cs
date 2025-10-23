@@ -7,7 +7,7 @@ namespace Y0daiiIRC.Utils
     {
         private static readonly Assembly _assembly = Assembly.GetExecutingAssembly();
         
-        public static string Version => _assembly.GetName().Version?.ToString() ?? "1.0.0.0";
+        public static string Version => GetFileVersion() ?? _assembly.GetName().Version?.ToString() ?? "1.0.0.0";
         public static string ProductName => GetAssemblyAttribute<AssemblyProductAttribute>()?.Product ?? "y0daii IRC Client";
         public static string Company => GetAssemblyAttribute<AssemblyCompanyAttribute>()?.Company ?? "Y0daii";
         public static string Copyright => GetAssemblyAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? "Copyright © 2025 Y0daii. All rights reserved.";
@@ -30,6 +30,19 @@ namespace Y0daiiIRC.Utils
         
         public static string BuildInfo => $"Build {Version} ({BuildDate:yyyy-MM-dd})";
         public static string FullVersionInfo => $"{ProductName} {Version}";
+        
+        private static string? GetFileVersion()
+        {
+            try
+            {
+                var fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(_assembly.Location);
+                return fileVersionInfo.FileVersion;
+            }
+            catch
+            {
+                return null;
+            }
+        }
         
         private static T? GetAssemblyAttribute<T>() where T : Attribute
         {

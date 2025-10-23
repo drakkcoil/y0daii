@@ -113,6 +113,40 @@ namespace Y0daiiIRC
                 }
             }
             
+            // Clear private messages
+            var privateChannelsToRemove = _channels.Where(c => c.Type == ChannelType.Private).ToList();
+            foreach (var channel in privateChannelsToRemove)
+            {
+                _channels.Remove(channel);
+                
+                // Remove private message button from UI (button is wrapped in a StackPanel)
+                var containerToRemove = PrivateMessageList.Children.OfType<StackPanel>()
+                    .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                        .Any(b => {
+                            if (b.Tag == null) return false;
+                            
+                            // Handle both direct Channel and anonymous type with Channel property
+                            if (b.Tag is Channel channelTag)
+                            {
+                                return channelTag == channel;
+                            }
+                            
+                            // Handle anonymous type with Channel property
+                            var channelProperty = b.Tag.GetType().GetProperty("Channel");
+                            if (channelProperty != null)
+                            {
+                                var channelFromTag = channelProperty.GetValue(b.Tag) as Channel;
+                                return channelFromTag == channel;
+                            }
+                            
+                            return false;
+                        }));
+                if (containerToRemove != null)
+                {
+                    PrivateMessageList.Children.Remove(containerToRemove);
+                }
+            }
+            
             // Clear users
             _users.Clear();
             UserList.Children.Clear();
@@ -1212,22 +1246,50 @@ namespace Y0daiiIRC
 
         private void ClosePrivateMessage(Channel channel)
         {
+            Console.WriteLine($"[DEBUG] ClosePrivateMessage called for channel: {channel.Name}");
+            
             // Remove the private message channel
-            _channels.Remove(channel);
+            bool removed = _channels.Remove(channel);
+            Console.WriteLine($"[DEBUG] Channel removed from _channels: {removed}");
             
             // Remove the channel button from UI (now it's in a StackPanel)
             var containerToRemove = PrivateMessageList.Children.OfType<StackPanel>()
                 .FirstOrDefault(sp => sp.Children.OfType<Button>()
-                    .Any(b => b.Tag is { } tagObj && 
-                             tagObj.GetType().GetProperty("Channel")?.GetValue(tagObj) == channel));
+                    .Any(b => {
+                        if (b.Tag == null) return false;
+                        
+                        // Handle both direct Channel and anonymous type with Channel property
+                        if (b.Tag is Channel channelTag)
+                        {
+                            return channelTag == channel;
+                        }
+                        
+                        // Handle anonymous type with Channel property
+                        var channelProperty = b.Tag.GetType().GetProperty("Channel");
+                        if (channelProperty != null)
+                        {
+                            var channelFromTag = channelProperty.GetValue(b.Tag) as Channel;
+                            return channelFromTag == channel;
+                        }
+                        
+                        return false;
+                    }));
+            
+            Console.WriteLine($"[DEBUG] Found container to remove: {containerToRemove != null}");
             if (containerToRemove != null)
             {
                 PrivateMessageList.Children.Remove(containerToRemove);
+                Console.WriteLine($"[DEBUG] Container removed from UI");
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] No container found to remove");
             }
             
             // If this was the current channel, switch to console
             if (channel == _currentChannel)
             {
+                Console.WriteLine($"[DEBUG] This was the current channel, switching to console");
                 var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
                 if (consoleChannel != null)
                 {
@@ -1485,7 +1547,7 @@ namespace Y0daiiIRC
 
         private void AddChannelButton(Channel channel)
         {
-            Console.WriteLine($"[DEBUG] AddChannelButton called for channel: {channel.Name}, type: {channel.GetType().Name}");
+            Console.WriteLine($"[DEBUG] AddChannelButton called for channel: {channel.Name}, type: {channel.Type}");
             
             // Store channel in local variable to avoid closure issues
             var channelForTag = channel;
@@ -1507,33 +1569,20 @@ namespace Y0daiiIRC
             };
             
             Console.WriteLine($"[DEBUG] Button created with Tag: {button.Tag?.GetType().Name ?? "null"}");
+            Console.WriteLine($"[DEBUG] Button Tag channel name: {((Channel)button.Tag)?.Name ?? "null"}");
             button.Click += (s, e) => SwitchToChannel(channel);
             
-            // Add context menu for channel
-            var contextMenu = new ContextMenu();
-            
-            if (channel.Type == ChannelType.Channel)
+            // Use the appropriate context menu based on channel type
+            if (channel.Type == ChannelType.Private)
             {
-                var leaveItem = new MenuItem { Header = "🚪 Leave Channel" };
-                leaveItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"PART {channel.Name}");
-                contextMenu.Items.Add(leaveItem);
-                
-                var whoItem = new MenuItem { Header = "👥 Who's Here" };
-                whoItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"NAMES {channel.Name}");
-                contextMenu.Items.Add(whoItem);
-                
-                var topicItem = new MenuItem { Header = "📋 View Topic" };
-                topicItem.Click += (s, e) => _ = _ircClient.SendCommandAsync($"TOPIC {channel.Name}");
-                contextMenu.Items.Add(topicItem);
+                button.ContextMenu = (ContextMenu)FindResource("PrivateMessageContextMenu");
+                button.ContextMenuOpening += PrivateMessageContextMenu_ContextMenuOpening;
             }
-            else if (channel.Type == ChannelType.Private)
+            else
             {
-                var closeItem = new MenuItem { Header = "❌ Close Chat" };
-                closeItem.Click += (s, e) => ClosePrivateMessage(channel);
-                contextMenu.Items.Add(closeItem);
+                button.ContextMenu = (ContextMenu)FindResource("ChannelContextMenu");
+                button.ContextMenuOpening += ChannelList_ContextMenuOpening;
             }
-            
-            button.ContextMenu = contextMenu;
             container.Children.Add(button);
 
             // Add unread message indicator (red dot)
@@ -1597,6 +1646,7 @@ namespace Y0daiiIRC
             
             // Use the enhanced context menu from XAML
             button.ContextMenu = (ContextMenu)FindResource("UserContextMenu");
+            button.ContextMenuOpening += UserButton_ContextMenuOpening;
             UserList.Children.Add(button);
         }
 
@@ -1713,6 +1763,18 @@ namespace Y0daiiIRC
                 // Create empty collection for new channels
                 _channelMessages[channel.Name] = new ObservableCollection<ChatMessage>();
                 MessageList.ItemsSource = _channelMessages[channel.Name];
+            }
+            
+            // Show/hide user list based on channel type
+            if (channel.Type == ChannelType.Private)
+            {
+                // Hide user list for private messages
+                UserListBorder.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                // Show user list for channels and console
+                UserListBorder.Visibility = Visibility.Visible;
             }
             
             // Clear and repopulate user list for the current channel
@@ -2473,8 +2535,17 @@ namespace Y0daiiIRC
             }
         }
 
-        private void UserList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        private void UserButton_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
+            // Get the user from the button's tag
+            var button = sender as Button;
+            var user = button?.Tag as User;
+            
+            if (user == null) return;
+            
+            // Set the selected user
+            _selectedUser = user.Nickname;
+            
             // Check if current user is an operator in the current channel
             bool isOperator = false;
             if (_currentChannel != null && _currentChannel.Name != "console")
@@ -2484,18 +2555,21 @@ namespace Y0daiiIRC
             }
 
             // Enable/disable op/deop menu items based on operator status
-            var contextMenu = (ContextMenu)e.Source;
-            var opMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UserContextMenu_Op");
-            var deopMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UserContextMenu_Deop");
-
-            if (opMenuItem != null)
+            var contextMenu = button?.ContextMenu;
+            if (contextMenu != null)
             {
-                opMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedUser);
-            }
+                var opMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UserContextMenu_Op");
+                var deopMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UserContextMenu_Deop");
 
-            if (deopMenuItem != null)
-            {
-                deopMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedUser);
+                if (opMenuItem != null)
+                {
+                    opMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedUser);
+                }
+
+                if (deopMenuItem != null)
+                {
+                    deopMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedUser);
+                }
             }
         }
 
@@ -2545,6 +2619,15 @@ namespace Y0daiiIRC
 
         private void ChannelList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
+            // Get the channel from the button's tag
+            var button = sender as Button;
+            var channel = button?.Tag as Channel;
+            
+            if (channel == null) return;
+            
+            // Set the selected channel
+            _selectedChannel = channel.Name;
+            
             // Check if current user is an operator in the current channel
             bool isOperator = false;
             if (_currentChannel != null && _currentChannel.Name != "console")
@@ -2554,12 +2637,85 @@ namespace Y0daiiIRC
             }
 
             // Enable/disable change topic menu item based on operator status
-            var contextMenu = (ContextMenu)e.Source;
-            var changeTopicMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "ChannelContextMenu_ChangeTopic");
-
-            if (changeTopicMenuItem != null)
+            var contextMenu = button?.ContextMenu;
+            if (contextMenu != null)
             {
-                changeTopicMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedChannel);
+                var changeTopicMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "ChannelContextMenu_ChangeTopic");
+
+                if (changeTopicMenuItem != null)
+                {
+                    changeTopicMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedChannel);
+                }
+            }
+        }
+
+        private void PrivateMessageContextMenu_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            Console.WriteLine($"[DEBUG] PrivateMessageContextMenu_ContextMenuOpening called");
+            // Get the channel from the button's tag
+            var button = sender as Button;
+            Console.WriteLine($"[DEBUG] Button: {button}");
+            Console.WriteLine($"[DEBUG] Button Tag: {button?.Tag}");
+            Console.WriteLine($"[DEBUG] Button Tag type: {button?.Tag?.GetType().Name ?? "null"}");
+            
+            // The Tag is an anonymous type containing Channel and UnreadIndicator
+            // We need to extract the Channel from it
+            Channel channel = null;
+            if (button?.Tag != null)
+            {
+                // Use reflection to get the Channel property from the anonymous type
+                var channelProperty = button.Tag.GetType().GetProperty("Channel");
+                if (channelProperty != null)
+                {
+                    channel = channelProperty.GetValue(button.Tag) as Channel;
+                }
+            }
+            
+            Console.WriteLine($"[DEBUG] Channel: {channel?.Name}, Type: {channel?.Type}");
+            
+            if (channel == null) 
+            {
+                Console.WriteLine($"[DEBUG] Channel is null, returning");
+                return;
+            }
+            
+            // Set the selected channel
+            _selectedChannel = channel.Name;
+            Console.WriteLine($"[DEBUG] Set _selectedChannel to: {_selectedChannel}");
+        }
+
+        private void PrivateMessageContextMenu_Close_Click(object sender, RoutedEventArgs e)
+        {
+            Console.WriteLine($"[DEBUG] Close chat clicked, _selectedChannel: {_selectedChannel}");
+            if (!string.IsNullOrEmpty(_selectedChannel))
+            {
+                var channel = _channels.FirstOrDefault(c => c.Name == _selectedChannel);
+                Console.WriteLine($"[DEBUG] Found channel: {channel?.Name}, Type: {channel?.Type}");
+                if (channel != null)
+                {
+                    Console.WriteLine($"[DEBUG] Calling ClosePrivateMessage for {channel.Name}");
+                    ClosePrivateMessage(channel);
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] Channel not found in _channels collection");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] _selectedChannel is null or empty");
+            }
+        }
+
+        private void PrivateMessageContextMenu_Whois_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedChannel) && _selectedChannel.StartsWith("PM:"))
+            {
+                var userNickname = _selectedChannel.Substring(3); // Remove "PM:" prefix
+                if (_ircClient.IsConnected)
+                {
+                    _ = _ircClient.SendCommandAsync($"WHOIS {userNickname}");
+                }
             }
         }
 
