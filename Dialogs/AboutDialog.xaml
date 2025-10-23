@@ -53,7 +53,7 @@
                 <!-- App Icon and Title -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
                     <Border Background="#0078D4" Width="80" Height="80" CornerRadius="16">
-                        <materialDesign:PackIcon Kind="Chat" Width="48" Height="48" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Image Source="pack://application:,,,/y0daii.ico" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     
                     <StackPanel HorizontalAlignment="Center" >

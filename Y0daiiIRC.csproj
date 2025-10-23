@@ -17,6 +17,7 @@
     <AssemblyProduct>y0daii IRC Client</AssemblyProduct>
     <AssemblyCompany>Y0daii</AssemblyCompany>
     <AssemblyCopyright>Copyright Â© 2025 Y0daii. All rights reserved.</AssemblyCopyright>
+    <ApplicationIcon>y0daii.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
