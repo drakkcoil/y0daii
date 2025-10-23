@@ -9,8 +9,8 @@
         MinHeight="600"
         MinWidth="800"
         WindowStartupLocation="CenterScreen"
-        WindowStyle="None"
-        AllowsTransparency="True"
+        WindowStyle="SingleBorderWindow"
+        AllowsTransparency="False"
         Background="#F8F9FA"
         TextElement.Foreground="#323130"
         TextElement.FontWeight="Regular"
@@ -114,11 +114,12 @@
             <Setter Property="Padding" Value="0"/>
         </Style>
         
-        <!-- Action Message Style (italic, different color) -->
+        <!-- Action Message Style (italic, orange color) -->
         <Style x:Key="ActionMessageBubbleStyle" TargetType="Border" BasedOn="{StaticResource ChatBubbleStyle}">
-            <Setter Property="Background" Value="{StaticResource SystemTertiaryBackground}"/>
+            <Setter Property="Background" Value="{StaticResource SystemOrange}"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="MaxWidth" Value="400"/>
+            <Setter Property="MaxWidth" Value="500"/>
+            <Setter Property="Margin" Value="8,4,50,4"/>
         </Style>
         
         <!-- Speech Tail Paths -->
@@ -434,6 +435,17 @@
                     <materialDesign:PackIcon Kind="AccountCancel" Width="16" Height="16"/>
                 </MenuItem.Icon>
             </MenuItem>
+            <Separator/>
+            <MenuItem x:Name="UserContextMenu_Op" Header="Give Operator" Click="UserContextMenu_Op_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Shield" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem x:Name="UserContextMenu_Deop" Header="Remove Operator" Click="UserContextMenu_Deop_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="ShieldOff" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
         </ContextMenu>
 
         <ContextMenu x:Key="ChannelContextMenu">
@@ -451,6 +463,12 @@
             <MenuItem Header="Channel Settings" Click="ChannelContextMenu_Settings_Click">
                 <MenuItem.Icon>
                     <materialDesign:PackIcon Kind="Settings" Width="16" Height="16"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem x:Name="ChannelContextMenu_ChangeTopic" Header="Change Topic" Click="ChannelContextMenu_ChangeTopic_Click">
+                <MenuItem.Icon>
+                    <materialDesign:PackIcon Kind="Edit" Width="16" Height="16"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
@@ -492,50 +510,12 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- macOS Title Bar -->
-        <Border Grid.Row="0" Background="{StaticResource SystemBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Grid Height="28">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <!-- macOS Traffic Lights -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0">
-                    <Ellipse Width="12" Height="12" Fill="{StaticResource SystemRed}" Margin="0,0,8,0"/>
-                    <Ellipse Width="12" Height="12" Fill="{StaticResource SystemYellow}" Margin="0,0,8,0"/>
-                    <Ellipse Width="12" Height="12" Fill="{StaticResource SystemGreen}"/>
-                </StackPanel>
-                
-                <!-- App Title -->
-                <TextBlock Grid.Column="1" x:Name="AppTitle" Text="y0daii IRC Client" 
-                           Style="{StaticResource HeadlineStyle}" 
-                           HorizontalAlignment="Center" 
-                           VerticalAlignment="Center"/>
-                
-                <!-- Window Controls -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,12,0">
-                    <Button x:Name="MinimizeButton" Content="−" FontSize="14" Width="20" Height="20" Margin="2" 
-                            Background="Transparent" BorderThickness="0" Click="MinimizeButton_Click"
-                            Foreground="{StaticResource Label}"/>
-                    <Button x:Name="MaximizeButton" Content="□" FontSize="12" Width="20" Height="20" Margin="2" 
-                            Background="Transparent" BorderThickness="0" Click="MaximizeButton_Click"
-                            Foreground="{StaticResource Label}"/>
-                    <Button x:Name="CloseButton" Content="×" FontSize="14" Width="20" Height="20" Margin="2" 
-                            Background="Transparent" BorderThickness="0" Click="CloseButton_Click"
-                            Foreground="{StaticResource Label}"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- macOS Toolbar -->
-        <Border Grid.Row="1" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,0,0,1">
             <Grid Height="48">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="280"/>
@@ -624,7 +604,7 @@
         </Border>
 
         <!-- Main Content Area -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250" MinWidth="200"/>
                 <ColumnDefinition Width="*"/>
@@ -652,11 +632,16 @@
                         <StackPanel Margin="0,12,0,0">
                             <!-- Server Section -->
                             <TextBlock Text="SERVERS" Style="{StaticResource Caption1Style}" Margin="16,8,16,6" Foreground="{StaticResource SecondaryLabel}"/>
-                            <Button x:Name="ConnectButtonNav" Content="🔌 Connect to Server" Style="{StaticResource macOSNavigationItemStyle}" Click="ConnectButton_Click" Margin="8,0,8,8"/>
+                            <Border x:Name="ServerInfoPanel" Background="{StaticResource SystemTertiaryBackground}" CornerRadius="8" Margin="8,0,8,8" Padding="12,8">
+                                <StackPanel>
+                                    <TextBlock x:Name="ServerStatusText" Text="🔌 Not Connected" Style="{StaticResource SubheadStyle}" Foreground="{StaticResource SecondaryLabel}"/>
+                                    <TextBlock x:Name="ServerInfoText" Text="No server connected" Style="{StaticResource Caption1Style}" Foreground="{StaticResource TertiaryLabel}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
                             
                             <!-- Channels Section -->
                             <TextBlock Text="CHANNELS" Style="{StaticResource Caption1Style}" Margin="16,16,16,6" Foreground="{StaticResource SecondaryLabel}"/>
-                            <StackPanel x:Name="ChannelList" Margin="0,0,0,8"/>
+                            <StackPanel x:Name="ChannelList" Margin="0,0,0,8" ContextMenu="{StaticResource ChannelContextMenu}" ContextMenuOpening="ChannelList_ContextMenuOpening"/>
                             
                             <!-- Private Messages Section -->
                             <TextBlock Text="PRIVATE MESSAGES" Style="{StaticResource Caption1Style}" Margin="16,16,16,6" Foreground="{StaticResource SecondaryLabel}"/>
@@ -708,48 +693,71 @@
                                         </Grid.ColumnDefinitions>
                                         
                                         <!-- User's own messages (right side, blue) -->
-                                        <Border Grid.Column="1" Grid.ColumnSpan="2" 
-                                                Style="{StaticResource UserMessageBubbleStyle}"
-                                                Visibility="{Binding IsUserMessage, Converter={StaticResource BoolToVisibilityConverter}}">
-                                            <StackPanel>
+                                        <Grid Grid.Column="1" Grid.ColumnSpan="2" 
+                                              Visibility="{Binding IsUserMessage, Converter={StaticResource BoolToVisibilityConverter}}"
+                                              Margin="50,4,8,4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Message bubble -->
+                                            <Border Grid.Row="0" 
+                                                    Style="{StaticResource UserMessageBubbleStyle}"
+                                                    Margin="0,0,0,0">
                                                 <TextBlock Text="{Binding Content}" 
                                                            TextWrapping="Wrap" 
                                                            FontSize="14" 
                                                            Foreground="White"
                                                            FontWeight="Normal"/>
-                                                <TextBlock Text="{Binding Timestamp}" 
-                                                           FontSize="11" 
-                                                           Foreground="White" 
-                                                           Opacity="0.7"
-                                                           HorizontalAlignment="Right"
-                                                           Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
+                                            </Border>
+                                            
+                                            <!-- Timestamp outside bubble -->
+                                            <TextBlock Grid.Row="1"
+                                                       Text="{Binding Timestamp}" 
+                                                       FontSize="10" 
+                                                       Foreground="{StaticResource TertiaryLabel}" 
+                                                       HorizontalAlignment="Right"
+                                                       Margin="0,2,0,0"/>
+                                        </Grid>
                                         
                                         <!-- Other users' messages (left side, green) -->
-                                        <Border Grid.Column="0" Grid.ColumnSpan="2" 
-                                                Style="{StaticResource OtherMessageBubbleStyle}"
-                                                Visibility="{Binding IsOtherMessage, Converter={StaticResource BoolToVisibilityConverter}}">
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Sender}" 
-                                                           FontWeight="SemiBold" 
-                                                           FontSize="12" 
-                                                           Foreground="White" 
-                                                           Opacity="0.8"
-                                                           Margin="0,0,0,2"/>
+                                        <Grid Grid.Column="0" Grid.ColumnSpan="2" 
+                                              Visibility="{Binding IsOtherMessage, Converter={StaticResource BoolToVisibilityConverter}}"
+                                              Margin="8,4,50,4">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            
+                                            <!-- Nickname outside bubble -->
+                                            <TextBlock Grid.Row="0"
+                                                       Text="{Binding Sender}" 
+                                                       FontWeight="SemiBold" 
+                                                       FontSize="12" 
+                                                       Foreground="{StaticResource Label}" 
+                                                       Margin="0,0,0,4"/>
+                                            
+                                            <!-- Message bubble -->
+                                            <Border Grid.Row="1" 
+                                                    Style="{StaticResource OtherMessageBubbleStyle}"
+                                                    Margin="0,0,0,0">
                                                 <TextBlock Text="{Binding Content}" 
                                                            TextWrapping="Wrap" 
                                                            FontSize="14" 
                                                            Foreground="White"
                                                            FontWeight="Normal"/>
-                                                <TextBlock Text="{Binding Timestamp}" 
-                                                           FontSize="11" 
-                                                           Foreground="White" 
-                                                           Opacity="0.7"
-                                                           HorizontalAlignment="Left"
-                                                           Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                        </Border>
+                                            </Border>
+                                            
+                                            <!-- Timestamp outside bubble -->
+                                            <TextBlock Grid.Row="2"
+                                                       Text="{Binding Timestamp}" 
+                                                       FontSize="10" 
+                                                       Foreground="{StaticResource TertiaryLabel}" 
+                                                       HorizontalAlignment="Right"
+                                                       Margin="0,2,0,0"/>
+                                        </Grid>
                                             
                                         <!-- System messages (left, grey) -->
                                         <Border Grid.Column="0" 
@@ -789,23 +797,24 @@
                                             </StackPanel>
                                     </Border>
                                     
-                                    <!-- Action messages (italic, different color) -->
+                                    <!-- Action messages (inline, orange color) -->
                                     <Border Grid.Column="0" 
                                             Style="{StaticResource ActionMessageBubbleStyle}"
                                             Visibility="{Binding IsActionMessage, Converter={StaticResource BoolToVisibilityConverter}}">
                                         <StackPanel>
                                             <TextBlock Text="{Binding Content}" 
                                                        TextWrapping="Wrap" 
-                                                       FontSize="13" 
-                                                       Foreground="{StaticResource Label}"
+                                                       FontSize="14" 
+                                                       Foreground="White"
                                                        FontStyle="Italic"
-                                                       FontWeight="Medium"
+                                                       FontWeight="SemiBold"
                                                        HorizontalAlignment="Left"/>
                                             <TextBlock Text="{Binding Timestamp}" 
                                                        FontSize="10" 
-                                                       Foreground="{StaticResource TertiaryLabel}" 
-                                                       HorizontalAlignment="Center"
-                                                       Margin="0,2,0,0"/>
+                                                       Foreground="White" 
+                                                       Opacity="0.8"
+                                                       HorizontalAlignment="Left"
+                                                       Margin="0,4,0,0"/>
                                         </StackPanel>
                                     </Border>
                                     
@@ -855,7 +864,7 @@
                         </ItemsControl>
                     </ScrollViewer>
 
-                    <!-- macOS Message Input -->
+                    <!-- Message Input -->
                     <Border Grid.Row="2" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
                         <Grid Margin="20,16">
                             <Grid.ColumnDefinitions>
@@ -928,14 +937,14 @@
                     
                     <!-- User List -->
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="{StaticResource SystemBackground}">
-                        <StackPanel x:Name="UserList" Margin="12,12,12,0" ContextMenu="{StaticResource UserContextMenu}"/>
+                        <StackPanel x:Name="UserList" Margin="12,12,12,0" ContextMenu="{StaticResource UserContextMenu}" ContextMenuOpening="UserList_ContextMenuOpening"/>
                     </ScrollViewer>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- macOS Status Bar -->
-        <Border Grid.Row="3" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="{StaticResource SystemSecondaryBackground}" BorderBrush="{StaticResource OpaqueSeparator}" BorderThickness="0,1,0,0">
             <Grid Height="28">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

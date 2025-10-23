@@ -373,7 +373,8 @@ namespace Y0daiiIRC.Services
                 target = target.Substring(3); // Remove "PM:" prefix
             }
             
-            await _ircClient.SendCommandAsync($"PRIVMSG {target} :\x01ACTION {action}\x01");
+            // Use the proper CTCP method for sending actions
+            await _ircClient.SendCTCPAsync(target, "ACTION", action);
         }
 
         private async Task HandlePingCommand(string[] args)

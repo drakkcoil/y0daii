@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -23,7 +24,7 @@ namespace Y0daiiIRC
         private List<Channel> _channels;
         private List<User> _users;
         private Channel? _currentChannel;
-        private Dictionary<string, List<ChatMessage>> _channelMessages;
+        private Dictionary<string, ObservableCollection<ChatMessage>> _channelMessages;
         private List<string> _channelsToRejoin; // Track channels to auto-rejoin on reconnect
         private ServerListService _serverListService;
         private CommandProcessor _commandProcessor;
@@ -42,7 +43,7 @@ namespace Y0daiiIRC
             _ircClient = new IRCClient();
             _channels = new List<Channel>();
             _users = new List<User>();
-            _channelMessages = new Dictionary<string, List<ChatMessage>>();
+            _channelMessages = new Dictionary<string, ObservableCollection<ChatMessage>>();
             _channelsToRejoin = new List<string>();
             _serverListService = new ServerListService();
             _dccService = new DCCService();
@@ -74,17 +75,17 @@ namespace Y0daiiIRC
 
         private void SetupUIContextMenus()
         {
-            // Add context menu to Connect button
-            var connectContextMenu = new ContextMenu();
+            // Add context menu to server info panel
+            var serverContextMenu = new ContextMenu();
             var connectItem = new MenuItem { Header = "🔌 Connect to Server" };
             connectItem.Click += (s, e) => ConnectButton_Click(s, e);
-            connectContextMenu.Items.Add(connectItem);
+            serverContextMenu.Items.Add(connectItem);
             
             var disconnectItem = new MenuItem { Header = "🔌 Disconnect" };
             disconnectItem.Click += (s, e) => ConnectButton_Click(s, e);
-            connectContextMenu.Items.Add(disconnectItem);
+            serverContextMenu.Items.Add(disconnectItem);
             
-            ConnectButtonNav.ContextMenu = connectContextMenu;
+            ServerInfoPanel.ContextMenu = serverContextMenu;
         }
 
         private void SetupWindowDragging()
@@ -92,13 +93,7 @@ namespace Y0daiiIRC
             // Window dragging is now handled by the title bar event handler
         }
 
-        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed)
-            {
-                this.DragMove();
-            }
-        }
+        // Removed custom title bar - using native Windows title bar
 
         private void ClearChannelsAndUsers()
         {
@@ -122,8 +117,7 @@ namespace Y0daiiIRC
             _users.Clear();
             UserList.Children.Clear();
             
-            // Clear message list safely
-            MessageList.ItemsSource = null;
+            // Clear message list safely - let SwitchToChannel handle ItemsSource
             
             // Switch to console if not already there
             var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
@@ -157,6 +151,7 @@ namespace Y0daiiIRC
             // by temporarily clearing and re-setting the ItemsSource
             if (_currentChannel != null && _channelMessages.ContainsKey(_currentChannel.Name))
             {
+                // Force a refresh by temporarily clearing and re-setting the ItemsSource
                 var currentItemsSource = MessageList.ItemsSource;
                 MessageList.ItemsSource = null;
                 
@@ -175,6 +170,9 @@ namespace Y0daiiIRC
             _channels.Add(consoleChannel);
             AddChannelButton(consoleChannel);
             SwitchToChannel(consoleChannel);
+            
+            // Initialize server display
+            UpdateServerDisplay("Disconnected");
             
             AddSystemMessage("Welcome to y0daii IRC Client! Type /help for available commands.");
         }
@@ -217,6 +215,9 @@ namespace Y0daiiIRC
                 // Display "Connecting..." with ellipsis for connecting status
                 StatusText.Text = status == "Connecting" ? "Connecting..." : status;
                 ConnectButton.Content = status == "Connected" ? "Disconnect" : "Connect";
+                
+                // Update server display
+                UpdateServerDisplay(status);
                 
                 // Log connection status changes to console
                 if (status == "Connected")
@@ -580,17 +581,12 @@ namespace Y0daiiIRC
 
                     if (!_channelMessages.ContainsKey(channel.Name))
                     {
-                        _channelMessages[channel.Name] = new List<ChatMessage>();
+                        _channelMessages[channel.Name] = new ObservableCollection<ChatMessage>();
                     }
                     _channelMessages[channel.Name].Add(quitMessage);
                 }
                 
-                // Update UI if this is the current channel
-                if (_currentChannel != null && _currentChannel.Name != "console")
-                {
-                    MessageList.ItemsSource = null;
-                    MessageList.ItemsSource = _channelMessages[_currentChannel.Name];
-                }
+                // ObservableCollection will automatically update the UI when messages are added
                 
                 RemoveUser(user);
             }
@@ -1093,7 +1089,7 @@ namespace Y0daiiIRC
         {
             if (!_channelMessages.ContainsKey(channel))
             {
-                _channelMessages[channel] = new List<ChatMessage>();
+                _channelMessages[channel] = new ObservableCollection<ChatMessage>();
             }
 
             // Parse ANSI colors
@@ -1150,10 +1146,7 @@ namespace Y0daiiIRC
 
             if (channel == _currentChannel?.Name)
             {
-                // Force UI refresh by temporarily clearing and re-setting ItemsSource
-                var currentItemsSource = MessageList.ItemsSource;
-                MessageList.ItemsSource = null;
-                MessageList.ItemsSource = currentItemsSource;
+                // ObservableCollection will automatically update the UI
                 ScrollToBottom();
             }
         }
@@ -1176,18 +1169,18 @@ namespace Y0daiiIRC
         {
             if (!_channelMessages.ContainsKey(channel))
             {
-                _channelMessages[channel] = new List<ChatMessage>();
+                _channelMessages[channel] = new ObservableCollection<ChatMessage>();
             }
 
             // Parse ANSI colors
             var formattedAction = ANSIColorParser.ParseANSIText(action);
             var displayAction = string.Join("", formattedAction.Select(f => f.Text));
 
-            // Create action message with special formatting
+            // Create action message with inline formatting like BitchX
             var message = new ChatMessage
             {
                 Sender = sender,
-                Content = $"* {sender} {displayAction}",
+                Content = $"{sender} {displayAction}", // Inline format: "nickname action"
                 Timestamp = DateTime.Now.ToString("HH:mm:ss"),
                 SenderColor = GetUserColor(sender),
                 Type = MessageType.Action,
@@ -1198,10 +1191,7 @@ namespace Y0daiiIRC
 
             if (channel == _currentChannel?.Name)
             {
-                // Force UI refresh by temporarily clearing and re-setting ItemsSource
-                var currentItemsSource = MessageList.ItemsSource;
-                MessageList.ItemsSource = null;
-                MessageList.ItemsSource = currentItemsSource;
+                // ObservableCollection will automatically update the UI
                 ScrollToBottom();
             }
         }
@@ -1339,13 +1329,9 @@ namespace Y0daiiIRC
 
             AddMessageToChannels(message);
             
-            // Force UI refresh for console messages
+            // ObservableCollection will automatically update the UI
             if (_currentChannel != null && _currentChannel.Name == "console")
             {
-                Console.WriteLine($"[DEBUG] Forcing UI refresh for console message");
-                var currentItemsSource = MessageList.ItemsSource;
-                MessageList.ItemsSource = null;
-                MessageList.ItemsSource = currentItemsSource;
                 ScrollToBottom();
             }
         }
@@ -1372,14 +1358,11 @@ namespace Y0daiiIRC
             {
                 if (!_channelMessages.ContainsKey(_currentChannel.Name))
                 {
-                    _channelMessages[_currentChannel.Name] = new List<ChatMessage>();
+                    _channelMessages[_currentChannel.Name] = new ObservableCollection<ChatMessage>();
                 }
                 _channelMessages[_currentChannel.Name].Add(message);
                 
-                // Force UI refresh by temporarily clearing and re-setting ItemsSource
-                var currentItemsSource = MessageList.ItemsSource;
-                MessageList.ItemsSource = null;
-                MessageList.ItemsSource = currentItemsSource;
+                // ObservableCollection will automatically update the UI
                 ScrollToBottom();
             }
         }
@@ -1394,7 +1377,7 @@ namespace Y0daiiIRC
             // Always add to console
             if (!_channelMessages.ContainsKey("console"))
             {
-                _channelMessages["console"] = new List<ChatMessage>();
+                _channelMessages["console"] = new ObservableCollection<ChatMessage>();
             }
             _channelMessages["console"].Add(message);
 
@@ -1403,33 +1386,13 @@ namespace Y0daiiIRC
             {
                 if (!_channelMessages.ContainsKey(_currentChannel.Name))
                 {
-                    _channelMessages[_currentChannel.Name] = new List<ChatMessage>();
+                    _channelMessages[_currentChannel.Name] = new ObservableCollection<ChatMessage>();
                 }
                 _channelMessages[_currentChannel.Name].Add(message);
             }
 
-            // Show in current view - update ItemsSource instead of using Items.Add
-            if (_currentChannel != null && _currentChannel.Name == "console")
-            {
-                // If we're in the console, always show console messages
-                MessageList.ItemsSource = _channelMessages["console"];
-            }
-            else if (_currentChannel != null && _currentChannel.Name != "console")
-            {
-                // If we're in a regular channel, show that channel's messages
-                if (MessageList.ItemsSource != _channelMessages[_currentChannel.Name])
-                {
-                    MessageList.ItemsSource = _channelMessages[_currentChannel.Name];
-                }
-            }
-            else
-            {
-                // If no current channel or we're in console, show console messages
-                if (MessageList.ItemsSource != _channelMessages["console"])
-                {
-                    MessageList.ItemsSource = _channelMessages["console"];
-                }
-            }
+            // ObservableCollection will automatically update the UI when messages are added
+            // No need to manually manipulate ItemsSource
             ScrollToBottom();
         }
 
@@ -1669,17 +1632,49 @@ namespace Y0daiiIRC
 
         private string GetDisplayChannelName(Channel channel)
         {
-            // Remove prefixes for display since we're using icons and proper organization
+            // Add '#' prefix to channel names for display
             var name = channel.Name;
-            if (name.StartsWith("#"))
+            if (name.StartsWith("PM:"))
             {
-                name = name.Substring(1);
+                name = name.Substring(3); // Remove "PM:" prefix for private messages
             }
-            else if (name.StartsWith("PM:"))
+            else if (!name.StartsWith("#") && name != "console")
             {
-                name = name.Substring(3); // Remove "PM:" prefix
+                name = "#" + name; // Add '#' prefix to channel names
             }
             return name;
+        }
+
+        private void UpdateServerDisplay(string status)
+        {
+            if (status == "Connected")
+            {
+                ServerStatusText.Text = "🟢 Connected";
+                ServerStatusText.Foreground = new SolidColorBrush(Colors.Green);
+                ServerInfoText.Text = $"{_ircClient.Server}:{_ircClient.Port}";
+                ServerInfoText.Foreground = new SolidColorBrush(Colors.Gray);
+            }
+            else if (status == "Connecting")
+            {
+                ServerStatusText.Text = "🟡 Connecting...";
+                ServerStatusText.Foreground = new SolidColorBrush(Colors.Orange);
+                ServerInfoText.Text = $"{_ircClient.Server}:{_ircClient.Port}";
+                ServerInfoText.Foreground = new SolidColorBrush(Colors.Gray);
+            }
+            else if (status == "Disconnected")
+            {
+                ServerStatusText.Text = "🔌 Not Connected";
+                ServerStatusText.Foreground = new SolidColorBrush(Colors.Gray);
+                ServerInfoText.Text = "No server connected";
+                ServerInfoText.Foreground = new SolidColorBrush(Colors.Gray);
+            }
+            else if (status == "Failed")
+            {
+                ServerStatusText.Text = "❌ Connection Failed";
+                ServerStatusText.Foreground = new SolidColorBrush(Colors.Red);
+                ServerInfoText.Text = "Failed to connect";
+                ServerInfoText.Foreground = new SolidColorBrush(Colors.Gray);
+            }
         }
 
         private Color GetUserColor(string nickname)
@@ -1708,10 +1703,15 @@ namespace Y0daiiIRC
             // Update button highlighting
             UpdateChannelButtonHighlighting();
             
-            // Clear existing items and set ItemsSource
-            MessageList.ItemsSource = null;
+            // Set ItemsSource to the channel's messages (ObservableCollection will handle updates automatically)
             if (_channelMessages.ContainsKey(channel.Name))
             {
+                MessageList.ItemsSource = _channelMessages[channel.Name];
+            }
+            else
+            {
+                // Create empty collection for new channels
+                _channelMessages[channel.Name] = new ObservableCollection<ChatMessage>();
                 MessageList.ItemsSource = _channelMessages[channel.Name];
             }
             
@@ -1845,6 +1845,19 @@ namespace Y0daiiIRC
             };
         }
 
+        private UserMode GetUserModeFromIRCChar(char modeChar)
+        {
+            return modeChar switch
+            {
+                'o' => UserMode.Op,
+                'h' => UserMode.HalfOp,
+                'v' => UserMode.Voice,
+                'a' => UserMode.Admin,
+                'q' => UserMode.Owner,
+                _ => UserMode.None
+            };
+        }
+
         private string GetModePrefix(UserMode mode)
         {
             // Return the highest priority mode prefix
@@ -1858,31 +1871,49 @@ namespace Y0daiiIRC
 
         private void HandleModeChange(IRCMessage message)
         {
-            if (message.Parameters.Count < 3) return;
+            Console.WriteLine($"[DEBUG] HandleModeChange called with {message.Parameters.Count} parameters: {string.Join(", ", message.Parameters)}");
+            
+            if (message.Parameters.Count < 3) 
+            {
+                Console.WriteLine($"[DEBUG] HandleModeChange: Not enough parameters ({message.Parameters.Count} < 3), returning");
+                return;
+            }
             
             var channel = message.Parameters[0];
             var modeString = message.Parameters[1];
             var target = message.Parameters[2];
             
+            Console.WriteLine($"[DEBUG] HandleModeChange: channel={channel}, modeString={modeString}, target={target}");
             
             var isAdding = modeString.StartsWith('+');
             var modeChar = modeString.Length > 1 ? modeString[1] : '\0';
             
-            var modeChange = GetUserModeFromPrefix(modeChar);
-            if (modeChange == UserMode.None) return;
+            Console.WriteLine($"[DEBUG] HandleModeChange: isAdding={isAdding}, modeChar={modeChar}");
+            
+            var modeChange = GetUserModeFromIRCChar(modeChar);
+            Console.WriteLine($"[DEBUG] HandleModeChange: modeChange={modeChange}");
+            if (modeChange == UserMode.None) 
+            {
+                Console.WriteLine($"[DEBUG] HandleModeChange: modeChange is None, returning");
+                return;
+            }
             
             // Find the user in the current channel's user list, or create if not found
             var user = _users.FirstOrDefault(u => u.Nickname == target);
+            Console.WriteLine($"[DEBUG] HandleModeChange: Found user {user?.Nickname} with mode {user?.Mode}");
+            
             if (user == null)
             {
                 // Create a new user if not found (this can happen if mode change happens before user list is populated)
                 user = new User { Nickname = target, Mode = UserMode.None };
                 _users.Add(user);
+                Console.WriteLine($"[DEBUG] HandleModeChange: Created new user {user.Nickname} with mode {user.Mode}");
             }
             
             if (isAdding)
             {
                 user.Mode |= modeChange;
+                Console.WriteLine($"[DEBUG] HandleModeChange: Added mode {modeChange} to user {user.Nickname}, new mode: {user.Mode}");
                 
                 // Add channel system message notification for mode change (primary display)
                 if (_currentChannel != null && _currentChannel.Name != "console" && channel == _currentChannel.Name)
@@ -1893,6 +1924,7 @@ namespace Y0daiiIRC
             else
             {
                 user.Mode &= ~modeChange;
+                Console.WriteLine($"[DEBUG] HandleModeChange: Removed mode {modeChange} from user {user.Nickname}, new mode: {user.Mode}");
                 
                 // Add channel system message notification for mode change (primary display)
                 if (_currentChannel != null && _currentChannel.Name != "console" && channel == _currentChannel.Name)
@@ -1902,6 +1934,7 @@ namespace Y0daiiIRC
             }
             
             // Refresh the user list to maintain proper sorting and show updated prefixes
+            Console.WriteLine($"[DEBUG] HandleModeChange: Calling SortAndRefreshUserList");
             SortAndRefreshUserList();
         }
 
@@ -2157,20 +2190,7 @@ namespace Y0daiiIRC
             // This method is kept for compatibility but functionality moved to navigation pane
         }
 
-        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState.Minimized;
-        }
-
-        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
-        {
-            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-        }
-
-        private void CloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
+        // Removed fake macOS button handlers - using native window controls
 
         private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -2437,6 +2457,48 @@ namespace Y0daiiIRC
             }
         }
 
+        private async void UserContextMenu_Op_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected && _currentChannel != null)
+            {
+                await _ircClient.SendCommandAsync($"MODE {_currentChannel.Name} +o {_selectedUser}");
+            }
+        }
+
+        private async void UserContextMenu_Deop_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedUser) && _ircClient.IsConnected && _currentChannel != null)
+            {
+                await _ircClient.SendCommandAsync($"MODE {_currentChannel.Name} -o {_selectedUser}");
+            }
+        }
+
+        private void UserList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            // Check if current user is an operator in the current channel
+            bool isOperator = false;
+            if (_currentChannel != null && _currentChannel.Name != "console")
+            {
+                var currentUser = _users.FirstOrDefault(u => u.Nickname == _ircClient.Nickname);
+                isOperator = currentUser?.Mode.HasFlag(UserMode.Op) == true;
+            }
+
+            // Enable/disable op/deop menu items based on operator status
+            var contextMenu = (ContextMenu)e.Source;
+            var opMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UserContextMenu_Op");
+            var deopMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "UserContextMenu_Deop");
+
+            if (opMenuItem != null)
+            {
+                opMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedUser);
+            }
+
+            if (deopMenuItem != null)
+            {
+                deopMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedUser);
+            }
+        }
+
         private void ChannelContextMenu_Join_Click(object sender, RoutedEventArgs e)
         {
             if (!string.IsNullOrEmpty(_selectedChannel))
@@ -2463,6 +2525,42 @@ namespace Y0daiiIRC
             // TODO: Implement channel settings dialog
             MessageBox.Show("Channel settings not yet implemented.", "Information", 
                 MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private async void ChannelContextMenu_ChangeTopic_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(_selectedChannel) && _ircClient.IsConnected && _currentChannel != null)
+            {
+                var newTopic = Microsoft.VisualBasic.Interaction.InputBox(
+                    $"Enter new topic for {_selectedChannel}:", 
+                    "Change Channel Topic", 
+                    "");
+                
+                if (!string.IsNullOrEmpty(newTopic))
+                {
+                    await _ircClient.SendCommandAsync($"TOPIC {_selectedChannel} :{newTopic}");
+                }
+            }
+        }
+
+        private void ChannelList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        {
+            // Check if current user is an operator in the current channel
+            bool isOperator = false;
+            if (_currentChannel != null && _currentChannel.Name != "console")
+            {
+                var currentUser = _users.FirstOrDefault(u => u.Nickname == _ircClient.Nickname);
+                isOperator = currentUser?.Mode.HasFlag(UserMode.Op) == true;
+            }
+
+            // Enable/disable change topic menu item based on operator status
+            var contextMenu = (ContextMenu)e.Source;
+            var changeTopicMenuItem = contextMenu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Name == "ChannelContextMenu_ChangeTopic");
+
+            if (changeTopicMenuItem != null)
+            {
+                changeTopicMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedChannel);
+            }
         }
 
         private void MessageContextMenu_Copy_Click(object sender, RoutedEventArgs e)
