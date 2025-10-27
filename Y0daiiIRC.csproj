@@ -8,9 +8,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyTitle>y0daii IRC Client</AssemblyTitle>
     <AssemblyDescription>Modern IRC Client with Beautiful UX</AssemblyDescription>
-    <AssemblyVersion>1.0.7.0</AssemblyVersion>
-    <FileVersion>1.0.7.0</FileVersion>
-    <Version>1.0.7.20251022</Version>
+    <AssemblyVersion>1.0.8.0</AssemblyVersion>
+    <FileVersion>1.0.8.0</FileVersion>
+    <Version>1.0.8</Version>
     <Product>y0daii IRC Client</Product>
     <Company>Y0daii</Company>
     <Copyright>Copyright Â© 2025 Y0daii. All rights reserved.</Copyright>
@@ -33,5 +33,6 @@
   </ItemGroup>
 
 </Project>
+
 
 

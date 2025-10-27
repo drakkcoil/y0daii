@@ -61,8 +61,8 @@
                     
                     <StackPanel HorizontalAlignment="Center" >
                         <TextBlock x:Name="AppTitleText" Text="y0daii IRC Client" FontSize="24" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="#323130"/>
-                        <TextBlock x:Name="VersionText" Text="Version 1.0.3" FontSize="16" HorizontalAlignment="Center" Foreground="#605E5C"/>
-                        <TextBlock x:Name="BuildText" Text="Build 1.0.3.0 (2025-01-21)" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
+                        <TextBlock x:Name="VersionText" Text="Version 1.0.8" FontSize="16" HorizontalAlignment="Center" Foreground="#605E5C"/>
+                        <TextBlock x:Name="BuildText" Text="Build 1.0.8.0 (2025-01-26)" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
                     </StackPanel>
                 </StackPanel>
 
