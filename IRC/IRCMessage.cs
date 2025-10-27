@@ -38,6 +38,8 @@ namespace Y0daiiIRC.IRC
         public bool IsQuit => Command == "QUIT";
         public bool IsNick => Command == "NICK";
         public bool IsMode => Command == "MODE";
+        public bool IsKick => Command == "KICK";
+        public bool IsTopic => Command == "TOPIC";
         public bool IsPing => Command == "PING";
         public bool IsPong => Command == "PONG";
         public bool IsNumeric => int.TryParse(Command, out _);

@@ -150,7 +150,7 @@
                     <Border x:Name="InstallProgressPanel" Background="#F8F9FA" Padding="16" CornerRadius="8" Visibility="Collapsed">
                         <StackPanel >
                             <StackPanel Orientation="Horizontal" >
-                                <materialDesign:PackIcon Kind="Install" Width="20" Height="20" Foreground="#0078D4"/>
+                                <materialDesign:PackIcon Kind="Package" Width="20" Height="20" Foreground="#0078D4"/>
                                 <TextBlock Text="Installing Update..." FontSize="14" FontWeight="SemiBold" Foreground="#323130"/>
                             </StackPanel>
                             <TextBlock Text="Please wait while the update is being installed. The application will restart automatically." FontSize="14" Foreground="#323130"/>

@@ -655,7 +655,7 @@
                             
                             <!-- Channels Section -->
                             <TextBlock Text="CHANNELS" Style="{StaticResource Caption1Style}" Margin="16,16,16,6" Foreground="{StaticResource SecondaryLabel}"/>
-                            <StackPanel x:Name="ChannelList" Margin="0,0,0,8" ContextMenu="{StaticResource ChannelContextMenu}" ContextMenuOpening="ChannelList_ContextMenuOpening"/>
+                            <StackPanel x:Name="ChannelList" Margin="0,0,0,8"/>
                             
                             <!-- Private Messages Section -->
                             <TextBlock Text="PRIVATE MESSAGES" Style="{StaticResource Caption1Style}" Margin="16,16,16,6" Foreground="{StaticResource SecondaryLabel}"/>
@@ -892,7 +892,7 @@
                                          BorderThickness="0"
                                          Padding="6,4"
                                          FontSize="15"
-                                         KeyDown="MessageTextBox_KeyDown"
+                                         PreviewKeyDown="MessageTextBox_KeyDown"
                                          VerticalAlignment="Center"
                                          ToolTip="Type your message here...">
                                     <TextBox.Style>

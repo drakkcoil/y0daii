@@ -52,8 +52,11 @@
             <StackPanel Margin="32">
                 <!-- App Icon and Title -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,0,0,24">
-                    <Border Background="#0078D4" Width="80" Height="80" CornerRadius="16">
-                        <Image Source="pack://application:,,,/y0daii.ico" Width="48" Height="48" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="160" Height="160" CornerRadius="24" Background="Transparent">
+                        <Border.Effect>
+                            <DropShadowEffect Color="Black" Direction="315" ShadowDepth="8" Opacity="0.3" BlurRadius="12"/>
+                        </Border.Effect>
+                        <Image Source="pack://application:,,,/y0daii_logo.png" Width="120" Height="120" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     
                     <StackPanel HorizontalAlignment="Center" >
@@ -133,7 +136,7 @@
 
                 <!-- Copyright -->
                 <StackPanel HorizontalAlignment="Center" >
-                    <TextBlock x:Name="CopyrightText" Text="Copyright © 2025 Y0daii. All rights reserved." FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
+                    <TextBlock x:Name="CopyrightText" Text="Copyright &#169; 2025 Y0daii. All rights reserved." FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
                     <TextBlock Text="Built with ❤️ using C# and WPF" FontSize="12" HorizontalAlignment="Center" Foreground="#8A8886"/>
                 </StackPanel>
             </StackPanel>

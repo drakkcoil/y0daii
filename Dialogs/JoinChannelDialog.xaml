@@ -168,12 +168,12 @@
                         
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <TextBlock Text="Channel Name:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBox x:Name="ChannelTextBox" Width="250" Text="#" Padding="8"/>
+                            <TextBox x:Name="ChannelTextBox" Width="250" Text="#" Padding="8" KeyDown="ChannelTextBox_KeyDown"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Password:" Width="120" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                            <TextBox x:Name="PasswordTextBox" Width="250" Padding="8"/>
+                            <TextBox x:Name="PasswordTextBox" Width="250" Padding="8" KeyDown="PasswordTextBox_KeyDown"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>

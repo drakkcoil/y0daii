@@ -590,6 +590,130 @@ namespace Y0daiiIRC
                     }
                 }
             }
+            else if (message.IsKick)
+            {
+                var channel = message.Target;
+                var kickedUser = message.Parameters.Count > 1 ? message.Parameters[1] : null;
+                var kickReason = message.Content ?? "No reason given";
+                
+                Console.WriteLine($"[DEBUG] KICK message received - Channel: {channel}, KickedUser: {kickedUser}, OurNick: {_ircClient.Nickname}");
+                
+                if (kickedUser == _ircClient.Nickname)
+                {
+                    // We were kicked from the channel
+                    Console.WriteLine($"[DEBUG] We were kicked from {channel}, removing channel...");
+                    AddSystemMessage($"🚫 You were kicked from {channel}: {kickReason}");
+                    
+                    // Remove the channel from UI and auto-rejoin list
+                    var channelToRemove = _channels.FirstOrDefault(c => c.Name == channel);
+                    if (channelToRemove != null)
+                    {
+                        Console.WriteLine($"[DEBUG] Found channel to remove: {channelToRemove.Name}");
+                        _channels.Remove(channelToRemove);
+                        _channelsToRejoin.Remove(channel);
+                        
+                        // Remove the channel button from UI
+                        var containerToRemove = ChannelList.Children.OfType<StackPanel>()
+                            .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                                .Any(b => {
+                                    if (b.Tag == null) return false;
+                                    
+                                    // Handle both direct Channel objects and anonymous types with Channel property
+                                    if (b.Tag is Channel tagChannel)
+                                    {
+                                        return tagChannel.Name == channel;
+                                    }
+                                    else if (b.Tag.GetType().GetProperty("Channel") != null)
+                                    {
+                                        var channelProperty = b.Tag.GetType().GetProperty("Channel");
+                                        var channelValue = channelProperty?.GetValue(b.Tag) as Channel;
+                                        return channelValue?.Name == channel;
+                                    }
+                                    return false;
+                                }));
+                        
+                        if (containerToRemove != null)
+                        {
+                            Console.WriteLine($"[DEBUG] Found container to remove for channel: {channel}");
+                            ChannelList.Children.Remove(containerToRemove);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[DEBUG] No container found for channel: {channel}");
+                            Console.WriteLine($"[DEBUG] Available containers: {ChannelList.Children.Count}");
+                            foreach (var child in ChannelList.Children.OfType<StackPanel>())
+                            {
+                                var button = child.Children.OfType<Button>().FirstOrDefault();
+                                if (button != null)
+                                {
+                                    Console.WriteLine($"[DEBUG] Container button tag: {button.Tag?.GetType().Name}");
+                                    if (button.Tag is Channel tagChannel)
+                                    {
+                                        Console.WriteLine($"[DEBUG] Container button channel: {tagChannel.Name}");
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // If we were viewing this channel, switch to console
+                        if (_currentChannel?.Name == channel)
+                        {
+                            var consoleChannel = _channels.FirstOrDefault(c => c.Name == "console");
+                            if (consoleChannel != null)
+                            {
+                                SwitchToChannel(consoleChannel);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DEBUG] Channel {channel} not found in _channels list");
+                    }
+                }
+                else
+                {
+                    // Someone else was kicked - show message in current channel if it matches
+                    if (channel == _currentChannel?.Name)
+                    {
+                        AddChannelSystemMessage($"🚫 {kickedUser} was kicked from {channel}: {kickReason}");
+                        RemoveUser(kickedUser);
+                    }
+                }
+            }
+            else if (message.IsTopic)
+            {
+                var channel = message.Target;
+                var topic = message.Content ?? "";
+                var setter = message.Sender;
+                
+                Console.WriteLine($"[DEBUG] TOPIC message received - Channel: {channel}, Topic: {topic}, Setter: {setter}");
+                
+                // Find the channel and update its topic
+                var channelObj = _channels.FirstOrDefault(c => c.Name == channel);
+                if (channelObj != null)
+                {
+                    channelObj.Topic = topic;
+                    Console.WriteLine($"[DEBUG] Updated channel {channel} topic to: {topic}");
+                    
+                    // Only update the header if this is the currently active channel
+                    if (_currentChannel?.Name == channel)
+                    {
+                        UpdateChannelHeader();
+                    }
+                    
+                    UpdateChannelButtonText(channelObj);
+                    
+                    // Show topic change message in the channel
+                    if (channel == _currentChannel?.Name)
+                    {
+                        AddChannelSystemMessage($"📝 Topic changed by {setter}: {topic}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] Channel {channel} not found for topic update");
+                }
+            }
             else if (message.IsQuit)
             {
                 var user = message.Sender;
@@ -1311,7 +1435,14 @@ namespace Y0daiiIRC
                 if (channel != null)
                 {
                     channel.Topic = topic;
-                    UpdateChannelHeader();
+                    
+                    // Only update the header if this is the currently active channel
+                    if (_currentChannel?.Name == channelName)
+                    {
+                        UpdateChannelHeader();
+                    }
+                    
+                    UpdateChannelButtonText(channel);
                 }
             }
         }
@@ -1337,7 +1468,13 @@ namespace Y0daiiIRC
                         channel.TopicSetDate = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).DateTime;
                     }
                     
-                    UpdateChannelHeader();
+                    // Only update the header if this is the currently active channel
+                    if (_currentChannel?.Name == channelName)
+                    {
+                        UpdateChannelHeader();
+                    }
+                    
+                    UpdateChannelButtonText(channel);
                 }
             }
         }
@@ -1369,6 +1506,108 @@ namespace Y0daiiIRC
                 }
                 
                 ChatTitle.ToolTip = tooltipText;
+            }
+            
+            // Also update the channel button text for the current channel
+            UpdateChannelButtonText(_currentChannel);
+        }
+
+        private void UpdateChannelButtonText(Channel? channel)
+        {
+            if (channel == null) return;
+            
+            Console.WriteLine($"[DEBUG] UpdateChannelButtonText called for channel: {channel.Name}, topic: {channel.Topic}");
+            
+            // Find the channel button in the UI and update its text
+            var channelIcon = GetChannelIcon(channel);
+            var displayName = GetDisplayChannelName(channel);
+            var buttonText = $"{channelIcon} {displayName}";
+            
+            Console.WriteLine($"[DEBUG] Button text will be: {buttonText}");
+            
+            // Update the button text in the channel list
+            var container = ChannelList.Children.OfType<StackPanel>()
+                .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                    .Any(b => {
+                        if (b.Tag == null) return false;
+                        
+                        // Handle both direct Channel and anonymous type with Channel property
+                        if (b.Tag is Channel tagChannel)
+                        {
+                            return tagChannel.Name == channel.Name;
+                        }
+                        else if (b.Tag.GetType().GetProperty("Channel") != null)
+                        {
+                            var channelProperty = b.Tag.GetType().GetProperty("Channel");
+                            var channelValue = channelProperty?.GetValue(b.Tag) as Channel;
+                            return channelValue?.Name == channel.Name;
+                        }
+                        return false;
+                    }));
+            
+            if (container != null)
+            {
+                var button = container.Children.OfType<Button>().FirstOrDefault();
+                if (button != null)
+                {
+                    Console.WriteLine($"[DEBUG] Found button, updating content from '{button.Content}' to '{buttonText}'");
+                    button.Content = buttonText;
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG] Container found but no button found");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[DEBUG] No container found for channel: {channel.Name}");
+                Console.WriteLine($"[DEBUG] Available containers: {ChannelList.Children.Count}");
+                foreach (var child in ChannelList.Children)
+                {
+                    if (child is StackPanel sp)
+                    {
+                        var button = sp.Children.OfType<Button>().FirstOrDefault();
+                        if (button != null)
+                        {
+                            Console.WriteLine($"[DEBUG] Container has button with Tag: {button.Tag?.GetType().Name ?? "null"}");
+                            if (button.Tag is Channel tagChannel)
+                            {
+                                Console.WriteLine($"[DEBUG] Button Tag channel name: {tagChannel.Name}");
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Also update in private message list if it's a private message
+            if (channel.Type == ChannelType.Private)
+            {
+                var privateContainer = PrivateMessageList.Children.OfType<StackPanel>()
+                    .FirstOrDefault(sp => sp.Children.OfType<Button>()
+                        .Any(b => {
+                            if (b.Tag == null) return false;
+                            
+                            if (b.Tag is Channel tagChannel)
+                            {
+                                return tagChannel.Name == channel.Name;
+                            }
+                            else if (b.Tag.GetType().GetProperty("Channel") != null)
+                            {
+                                var channelProperty = b.Tag.GetType().GetProperty("Channel");
+                                var channelValue = channelProperty?.GetValue(b.Tag) as Channel;
+                                return channelValue?.Name == channel.Name;
+                            }
+                            return false;
+                        }));
+                
+                if (privateContainer != null)
+                {
+                    var privateButton = privateContainer.Children.OfType<Button>().FirstOrDefault();
+                    if (privateButton != null)
+                    {
+                        privateButton.Content = buttonText;
+                    }
+                }
             }
         }
 
@@ -1545,6 +1784,85 @@ namespace Y0daiiIRC
             return 6; // Regular users (no mode)
         }
 
+        private ContextMenu CreateChannelContextMenu(Channel channel)
+        {
+            var contextMenu = new ContextMenu();
+            
+            // Join Channel
+            var joinItem = new MenuItem
+            {
+                Header = "Join Channel",
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountPlus, Width = 16, Height = 16 },
+                Tag = channel
+            };
+            joinItem.Click += ChannelContextMenu_Join_Click;
+            contextMenu.Items.Add(joinItem);
+            
+            // Leave Channel
+            var leaveItem = new MenuItem
+            {
+                Header = "Leave Channel",
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.AccountMinus, Width = 16, Height = 16 },
+                Tag = channel
+            };
+            leaveItem.Click += ChannelContextMenu_Leave_Click;
+            contextMenu.Items.Add(leaveItem);
+            
+            // Separator
+            contextMenu.Items.Add(new Separator());
+            
+            // Channel Settings
+            var settingsItem = new MenuItem
+            {
+                Header = "Channel Settings",
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.Settings, Width = 16, Height = 16 },
+                Tag = channel
+            };
+            settingsItem.Click += ChannelContextMenu_Settings_Click;
+            contextMenu.Items.Add(settingsItem);
+            
+            // Separator
+            contextMenu.Items.Add(new Separator());
+            
+            // Change Topic
+            var changeTopicItem = new MenuItem
+            {
+                Header = "Change Topic",
+                Name = "ChannelContextMenu_ChangeTopic",
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.Edit, Width = 16, Height = 16 },
+                Tag = channel
+            };
+            changeTopicItem.Click += ChannelContextMenu_ChangeTopic_Click;
+            contextMenu.Items.Add(changeTopicItem);
+            
+            return contextMenu;
+        }
+        
+        private ContextMenu CreatePrivateMessageContextMenu()
+        {
+            var contextMenu = new ContextMenu();
+            
+            // Close Chat
+            var closeItem = new MenuItem
+            {
+                Header = "❌ Close Chat",
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.Close, Width = 16, Height = 16 }
+            };
+            closeItem.Click += PrivateMessageContextMenu_Close_Click;
+            contextMenu.Items.Add(closeItem);
+            
+            // User Info
+            var userInfoItem = new MenuItem
+            {
+                Header = "👤 User Info",
+                Icon = new MaterialDesignThemes.Wpf.PackIcon { Kind = MaterialDesignThemes.Wpf.PackIconKind.Account, Width = 16, Height = 16 }
+            };
+            userInfoItem.Click += PrivateMessageContextMenu_Whois_Click;
+            contextMenu.Items.Add(userInfoItem);
+            
+            return contextMenu;
+        }
+        
         private void AddChannelButton(Channel channel)
         {
             Console.WriteLine($"[DEBUG] AddChannelButton called for channel: {channel.Name}, type: {channel.Type}");
@@ -1575,13 +1893,12 @@ namespace Y0daiiIRC
             // Use the appropriate context menu based on channel type
             if (channel.Type == ChannelType.Private)
             {
-                button.ContextMenu = (ContextMenu)FindResource("PrivateMessageContextMenu");
+                button.ContextMenu = CreatePrivateMessageContextMenu();
                 button.ContextMenuOpening += PrivateMessageContextMenu_ContextMenuOpening;
             }
             else
             {
-                button.ContextMenu = (ContextMenu)FindResource("ChannelContextMenu");
-                button.ContextMenuOpening += ChannelList_ContextMenuOpening;
+                button.ContextMenu = CreateChannelContextMenu(channel);
             }
             container.Children.Add(button);
 
@@ -2157,27 +2474,44 @@ namespace Y0daiiIRC
 
         private void NavigateHistory(int direction)
         {
-            if (_commandHistory.Count == 0) return;
-
-            if (direction == -1) // Up arrow
+            if (_commandHistory.Count == 0) 
             {
-                if (_historyIndex < _commandHistory.Count - 1)
+                return;
+            }
+
+            if (direction == -1) // Up arrow - go to previous (older) command
+            {
+                if (_historyIndex == -1)
                 {
+                    // First up arrow press - show most recent command
+                    _historyIndex = 0;
+                }
+                else if (_historyIndex < _commandHistory.Count - 1)
+                {
+                    // Go to older command
                     _historyIndex++;
-                    MessageTextBox.Text = _commandHistory[_commandHistory.Count - 1 - _historyIndex];
+                }
+                
+                if (_historyIndex >= 0 && _historyIndex < _commandHistory.Count)
+                {
+                    var commandToShow = _commandHistory[_commandHistory.Count - 1 - _historyIndex];
+                    MessageTextBox.Text = commandToShow;
                     MessageTextBox.CaretIndex = MessageTextBox.Text.Length;
                 }
             }
-            else if (direction == 1) // Down arrow
+            else if (direction == 1) // Down arrow - go to next (newer) command
             {
                 if (_historyIndex > 0)
                 {
+                    // Go to newer command
                     _historyIndex--;
-                    MessageTextBox.Text = _commandHistory[_commandHistory.Count - 1 - _historyIndex];
+                    var commandToShow = _commandHistory[_commandHistory.Count - 1 - _historyIndex];
+                    MessageTextBox.Text = commandToShow;
                     MessageTextBox.CaretIndex = MessageTextBox.Text.Length;
                 }
                 else if (_historyIndex == 0)
                 {
+                    // Clear text box when going past the most recent command
                     _historyIndex = -1;
                     MessageTextBox.Clear();
                 }
@@ -2588,9 +2922,12 @@ namespace Y0daiiIRC
 
         private async void ChannelContextMenu_Leave_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(_selectedChannel) && _ircClient.IsConnected)
+            var menuItem = sender as MenuItem;
+            var channel = menuItem?.Tag as Channel;
+            
+            if (channel != null && _ircClient.IsConnected)
             {
-                await _ircClient.LeaveChannelAsync(_selectedChannel);
+                await _ircClient.LeaveChannelAsync(channel.Name);
             }
         }
 
@@ -2603,30 +2940,40 @@ namespace Y0daiiIRC
 
         private async void ChannelContextMenu_ChangeTopic_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(_selectedChannel) && _ircClient.IsConnected && _currentChannel != null)
+            var menuItem = sender as MenuItem;
+            var channel = menuItem?.Tag as Channel;
+            
+            if (channel != null && _ircClient.IsConnected)
             {
                 var newTopic = Microsoft.VisualBasic.Interaction.InputBox(
-                    $"Enter new topic for {_selectedChannel}:", 
+                    $"Enter new topic for {channel.Name}:", 
                     "Change Channel Topic", 
                     "");
                 
                 if (!string.IsNullOrEmpty(newTopic))
                 {
-                    await _ircClient.SendCommandAsync($"TOPIC {_selectedChannel} :{newTopic}");
+                    await _ircClient.SendCommandAsync($"TOPIC {channel.Name} :{newTopic}");
                 }
             }
         }
 
-        private void ChannelList_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+        private void ChannelButton_ContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             // Get the channel from the button's tag
             var button = sender as Button;
             var channel = button?.Tag as Channel;
             
-            if (channel == null) return;
+            AddSystemMessage($"🔍 Context menu opening. Button: {button?.Name}, Channel: {channel?.Name}");
+            
+            if (channel == null) 
+            {
+                AddSystemMessage("🔍 No channel found in button tag");
+                return;
+            }
             
             // Set the selected channel
             _selectedChannel = channel.Name;
+            AddSystemMessage($"🔍 Set _selectedChannel to: {_selectedChannel}");
             
             // Check if current user is an operator in the current channel
             bool isOperator = false;
@@ -2645,6 +2992,7 @@ namespace Y0daiiIRC
                 if (changeTopicMenuItem != null)
                 {
                     changeTopicMenuItem.IsEnabled = isOperator && !string.IsNullOrEmpty(_selectedChannel);
+                    AddSystemMessage($"🔍 Change Topic menu item enabled: {changeTopicMenuItem.IsEnabled}");
                 }
             }
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Y0daiiIRC.Models;
 using Y0daiiIRC.Services;
 
@@ -13,6 +14,8 @@ namespace Y0daiiIRC
         private readonly ServerListService _serverListService;
         private readonly List<ServerInfo> _servers = new();
         private ServerInfo? _selectedServer;
+        private DateTime _lastClickTime = DateTime.MinValue;
+        private const int DoubleClickThreshold = 500; // milliseconds
 
         public ServerInfo? SelectedServer => _selectedServer;
 
@@ -96,6 +99,18 @@ namespace Y0daiiIRC
 
             // Add click handler for selection
             border.MouseLeftButtonDown += (s, e) => SelectServer(server, border);
+            
+            // Add double-click handler for connection
+            border.MouseLeftButtonUp += (s, e) => 
+            {
+                var now = DateTime.Now;
+                if ((now - _lastClickTime).TotalMilliseconds < DoubleClickThreshold)
+                {
+                    // Double click detected
+                    ConnectButton_Click(this, e);
+                }
+                _lastClickTime = now;
+            };
 
             return border;
         }
